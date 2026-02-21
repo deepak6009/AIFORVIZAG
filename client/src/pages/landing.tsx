@@ -290,7 +290,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "nav-glass-scrolled border-b border-gray-200/40 shadow-sm" : "border-b border-transparent"}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "nav-glass-scrolled border-b border-gray-200/40 shadow-sm" : "border-b border-gray-200/30"}`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center">
             <span className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900" data-testid="text-app-name">
