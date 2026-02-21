@@ -10,8 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
-  FolderOpen, FolderPlus, Upload, Plus, Home, ChevronRight,
-  Image as ImageIcon, Video, FileIcon, MoreVertical, Trash2, X
+  FolderOpen, FolderPlus, Upload, Home, ChevronRight,
+  Image as ImageIcon, Video, FileIcon, MoreVertical, Trash2
 } from "lucide-react";
 import { useState, useCallback, useRef } from "react";
 
@@ -146,22 +146,22 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex items-center gap-2 text-sm flex-wrap mb-4">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-sm overflow-x-auto mb-3 sm:mb-4 -mx-1 px-1 pb-1">
           <button
             onClick={() => setCurrentFolderId(null)}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground active:text-foreground transition-colors shrink-0 py-1"
             data-testid="breadcrumb-root"
           >
             <Home className="w-3.5 h-3.5" />
             Root
           </button>
           {crumbs.map(crumb => (
-            <span key={crumb.id} className="flex items-center gap-2">
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            <span key={crumb.id} className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <button
                 onClick={() => setCurrentFolderId(crumb.id)}
-                className="hover:text-foreground text-muted-foreground transition-colors"
+                className="hover:text-foreground active:text-foreground text-muted-foreground transition-colors truncate max-w-[120px] sm:max-w-none py-1"
               >
                 {crumb.name}
               </button>
@@ -169,13 +169,13 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <h2 className="font-semibold text-lg flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
             <FolderOpen className="w-5 h-5 text-primary" />
             {currentFolderId ? crumbs[crumbs.length - 1]?.name || "Folder" : "All Folders"}
           </h2>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)} data-testid="button-create-folder">
+            <Button variant="outline" size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => setCreateOpen(true)} data-testid="button-create-folder">
               <FolderPlus className="w-4 h-4 mr-1.5" />
               New Folder
             </Button>
@@ -190,7 +190,7 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                   onChange={handleFileUpload}
                   data-testid="input-file-upload"
                 />
-                <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-files">
+                <Button size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-files">
                   <Upload className="w-4 h-4 mr-1.5" />
                   {uploading ? "Uploading..." : "Upload"}
                 </Button>
@@ -200,17 +200,17 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
         </div>
 
         {foldersLoading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16" />)}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-14" />)}
           </div>
         ) : (
           <>
             {currentFolders.length > 0 && (
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                 {currentFolders.map(folder => (
                   <div
                     key={folder.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card cursor-pointer group hover:bg-accent/50 transition-colors"
+                    className="flex items-center gap-3 p-3.5 sm:p-3 rounded-lg border bg-card cursor-pointer group hover:bg-accent/50 active:bg-accent transition-colors"
                     onClick={() => setCurrentFolderId(folder.id)}
                     data-testid={`folder-${folder.id}`}
                   >
@@ -218,8 +218,8 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                     <span className="text-sm font-medium truncate flex-1">{folder.name}</span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7">
-                          <MoreVertical className="w-3.5 h-3.5" />
+                        <Button variant="ghost" size="icon" className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-10 w-10" data-testid={`button-folder-menu-${folder.id}`}>
+                          <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -239,19 +239,19 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
             {currentFolderId && (
               <>
                 {filesLoading ? (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mt-4">
                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-40" />)}
                   </div>
                 ) : files && files.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mt-4">
                     {files.map(file => (
                       <Card
                         key={file.id}
-                        className="border group cursor-pointer hover:bg-accent/30 transition-colors"
+                        className="border group cursor-pointer hover:bg-accent/30 active:bg-accent/50 transition-colors"
                         onClick={() => setPreviewFile(file)}
                         data-testid={`file-${file.id}`}
                       >
-                        <CardContent className="p-3">
+                        <CardContent className="p-2 sm:p-3">
                           <div className="aspect-square rounded-md bg-muted flex items-center justify-center mb-2 relative overflow-hidden">
                             {isImage(file.type) ? (
                               <img src={file.objectPath} alt={file.name} className="w-full h-full object-cover rounded-md" />
@@ -263,7 +263,8 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                                 <Button
                                   variant="secondary"
                                   size="icon"
-                                  className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
+                                  className="absolute top-1 right-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-8 w-8"
+                                  data-testid={`button-file-menu-${file.id}`}
                                 >
                                   <MoreVertical className="w-3.5 h-3.5" />
                                 </Button>
@@ -279,8 +280,8 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                             </DropdownMenu>
                           </div>
                           <div className="space-y-0.5">
-                            <p className="text-sm font-medium truncate">{file.name}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <p className="text-xs sm:text-sm font-medium truncate">{file.name}</p>
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
                               {getFileIcon(file.type)}
                               <span>{formatSize(file.size)}</span>
                             </div>
@@ -290,10 +291,10 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 border rounded-lg bg-card/50 mt-4">
+                  <div className="text-center py-10 sm:py-12 border rounded-lg bg-card/50 mt-4">
                     <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No files in this folder yet</p>
-                    <Button size="sm" onClick={() => fileInputRef.current?.click()} data-testid="button-upload-empty">
+                    <Button size="sm" className="h-10 sm:h-9" onClick={() => fileInputRef.current?.click()} data-testid="button-upload-empty">
                       <Upload className="w-4 h-4 mr-1.5" />
                       Upload Files
                     </Button>
@@ -303,13 +304,13 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
             )}
 
             {!currentFolderId && currentFolders.length === 0 && (
-              <div className="text-center py-16">
+              <div className="text-center py-12 sm:py-16">
                 <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                   <FolderOpen className="w-7 h-7 text-muted-foreground" />
                 </div>
                 <h3 className="font-semibold mb-1">No folders yet</h3>
                 <p className="text-sm text-muted-foreground mb-4">Create a folder to start organizing your files</p>
-                <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="button-create-first-folder">
+                <Button size="sm" className="h-10 sm:h-9" onClick={() => setCreateOpen(true)} data-testid="button-create-first-folder">
                   <FolderPlus className="w-4 h-4 mr-1.5" />
                   Create Folder
                 </Button>
@@ -317,7 +318,7 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
             )}
 
             {!currentFolderId && currentFolders.length > 0 && (
-              <div className="text-center py-8 border rounded-lg bg-muted/30 mt-3">
+              <div className="text-center py-6 sm:py-8 border rounded-lg bg-muted/30 mt-3">
                 <p className="text-sm text-muted-foreground">Select a folder to view and upload files</p>
               </div>
             )}
@@ -337,6 +338,7 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                 placeholder="e.g. Raw Footage"
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
+                className="h-11"
                 data-testid="input-folder-name"
               />
             </div>
@@ -352,18 +354,18 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
 
       {previewFile && (
         <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-[95vw] sm:max-w-3xl p-3 sm:p-6">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
                 {getFileIcon(previewFile.type)}
-                {previewFile.name}
+                <span className="truncate">{previewFile.name}</span>
               </DialogTitle>
             </DialogHeader>
-            <div className="rounded-lg overflow-hidden bg-muted flex items-center justify-center min-h-[300px]">
+            <div className="rounded-lg overflow-hidden bg-muted flex items-center justify-center min-h-[200px] sm:min-h-[300px]">
               {isImage(previewFile.type) ? (
-                <img src={previewFile.objectPath} alt={previewFile.name} className="max-w-full max-h-[60vh] object-contain" />
+                <img src={previewFile.objectPath} alt={previewFile.name} className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain" />
               ) : isVideo(previewFile.type) ? (
-                <video src={previewFile.objectPath} controls className="max-w-full max-h-[60vh]" />
+                <video src={previewFile.objectPath} controls className="max-w-full max-h-[50vh] sm:max-h-[60vh]" />
               ) : (
                 <div className="text-center p-8">
                   {getFileIcon(previewFile.type)}

@@ -50,18 +50,18 @@ const sampleResources = [
 export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="h-full overflow-auto">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 sm:mb-6">
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" />
               Resources
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Shared links, references, and assets for the team
             </p>
           </div>
-          <Button size="sm" disabled data-testid="button-add-resource">
+          <Button size="sm" className="h-10 sm:h-9 w-full sm:w-auto" disabled data-testid="button-add-resource">
             <Plus className="w-4 h-4 mr-1.5" />
             Add Resource
           </Button>
@@ -70,7 +70,7 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
         <div className="mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search resources..." className="pl-9" disabled data-testid="input-search-resources" />
+            <Input placeholder="Search resources..." className="pl-9 h-10 sm:h-9" disabled data-testid="input-search-resources" />
           </div>
         </div>
 
@@ -78,16 +78,16 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
           {sampleResources.map(resource => {
             const Icon = resource.icon;
             return (
-              <Card key={resource.id} className="border hover:bg-accent/30 transition-colors cursor-pointer" data-testid={`resource-${resource.id}`}>
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <Icon className={`w-5 h-5 ${resource.iconColor}`} />
+              <Card key={resource.id} className="border hover:bg-accent/30 active:bg-accent/50 transition-colors cursor-pointer" data-testid={`resource-${resource.id}`}>
+                <CardContent className="p-3.5 sm:p-4 flex items-center gap-3 sm:gap-4">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${resource.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{resource.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{resource.description}</p>
                   </div>
-                  <Badge variant="secondary" className="text-xs capitalize shrink-0">
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs capitalize shrink-0 hidden sm:flex">
                     {resource.type}
                   </Badge>
                   {resource.type === "link" && (
@@ -99,7 +99,7 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
           })}
         </div>
 
-        <div className="border-t mt-8 pt-4">
+        <div className="border-t mt-6 sm:mt-8 pt-4">
           <p className="text-xs text-muted-foreground text-center">
             Resources section is a placeholder. Add links, references, and shared assets here.
           </p>
