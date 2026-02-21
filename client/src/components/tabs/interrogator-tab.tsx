@@ -116,6 +116,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const chatMessagesRef = useRef<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [chatMicActive, setChatMicActive] = useState(false);
+  const chatRecognitionRef = useRef<any>(null);
   const [interrogationId, setInterrogationId] = useState<string | null>(null);
   const [briefingAnswers, setBriefingAnswers] = useState<Record<string, any>>({});
   const briefingAnswersRef = useRef<Record<string, any>>({});
@@ -128,6 +130,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
+      if (chatRecognitionRef.current) { try { chatRecognitionRef.current.stop(); } catch {} }
     };
   }, []);
 
@@ -359,6 +362,10 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
   const handleSendChat = () => {
     if (!chatInput.trim() || aiLoading) return;
+    if (chatMicActive) {
+      if (chatRecognitionRef.current) { try { chatRecognitionRef.current.stop(); } catch {} chatRecognitionRef.current = null; }
+      setChatMicActive(false);
+    }
     const userMsg = chatInput.trim();
     setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
     setChatInput("");
@@ -404,6 +411,70 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setChatMessages(prev => [...prev, { role: "user", text: label }]);
     const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: label }];
     callGeminiChat(updatedHistory, getSummaryText());
+  };
+
+  const toggleChatMic = async () => {
+    if (chatMicActive) {
+      if (chatRecognitionRef.current) {
+        try { chatRecognitionRef.current.stop(); } catch {}
+        chatRecognitionRef.current = null;
+      }
+      setChatMicActive(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Speech recognition not supported", description: "Please use Chrome or Edge for voice input.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      toast({ title: "Microphone access denied", description: "Please allow microphone access in your browser.", variant: "destructive" });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      let finalText = "";
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalText += text;
+        } else {
+          interim = text;
+        }
+      }
+      if (finalText) {
+        setChatInput(prev => (prev ? prev + " " : "") + finalText.trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "aborted") {
+        toast({ title: "Speech recognition error", description: `Error: ${event.error}`, variant: "destructive" });
+      }
+      setChatMicActive(false);
+      chatRecognitionRef.current = null;
+    };
+
+    recognition.onend = () => {
+      if (chatRecognitionRef.current) {
+        try { recognition.start(); } catch {}
+      }
+    };
+
+    chatRecognitionRef.current = recognition;
+    recognition.start();
+    setChatMicActive(true);
   };
 
   const handleGenerateFinalDoc = () => {
@@ -662,7 +733,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder={briefingComplete ? "Briefing complete! Generate your final document below." : "Type a custom answer or additional details..."}
+                    placeholder={chatMicActive ? "Listening... speak now" : briefingComplete ? "Briefing complete! Generate your final document below." : "Type a custom answer or additional details..."}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     rows={1}
@@ -671,6 +742,16 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                     data-testid="input-chat"
                   />
+                  <Button
+                    size="icon"
+                    variant={chatMicActive ? "destructive" : "outline"}
+                    onClick={toggleChatMic}
+                    disabled={aiLoading}
+                    className={`shrink-0 h-10 w-10 ${chatMicActive ? "animate-pulse" : ""}`}
+                    data-testid="button-chat-mic"
+                  >
+                    {chatMicActive ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
                   <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || aiLoading} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
                     <Send className="w-4 h-4" />
                   </Button>
