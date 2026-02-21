@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import {
-  Layers, Plus, Users, FolderOpen, MessageSquare, LayoutGrid,
+  Layers, Plus, Users, FolderOpen, MessageSquare, FileCheck, LayoutGrid,
   FileText, LogOut, ChevronDown, Settings, ChevronsUpDown
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -25,6 +25,7 @@ import { isUnauthorizedError } from "@/lib/auth-utils";
 import UsersTab from "@/components/tabs/users-tab";
 import FoldersTab from "@/components/tabs/folders-tab";
 import InterrogatorTab from "@/components/tabs/interrogator-tab";
+import FinalAgendaTab from "@/components/tabs/final-agenda-tab";
 import TasksTab from "@/components/tabs/tasks-tab";
 import ResourcesTab from "@/components/tabs/resources-tab";
 
@@ -32,6 +33,7 @@ const tabs = [
   { id: "users", label: "Users", icon: Users },
   { id: "folders", label: "Folders", icon: FolderOpen },
   { id: "interrogator", label: "Interrogator", icon: MessageSquare },
+  { id: "final-agenda", label: "Final Agenda", icon: FileCheck },
   { id: "tasks", label: "Tasks", icon: LayoutGrid },
   { id: "resources", label: "Resources", icon: FileText },
 ] as const;
@@ -314,6 +316,7 @@ export default function WorkspaceLayout() {
         {activeTab === "users" && <UsersTab workspaceId={workspaceId} />}
         {activeTab === "folders" && <FoldersTab workspaceId={workspaceId} />}
         {activeTab === "interrogator" && <InterrogatorTab workspaceId={workspaceId} />}
+        {activeTab === "final-agenda" && <FinalAgendaTab workspaceId={workspaceId} />}
         {activeTab === "tasks" && <TasksTab workspaceId={workspaceId} />}
         {activeTab === "resources" && <ResourcesTab workspaceId={workspaceId} />}
       </main>

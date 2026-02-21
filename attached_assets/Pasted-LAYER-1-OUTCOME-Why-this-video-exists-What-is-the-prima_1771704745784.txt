@@ -1,0 +1,386 @@
+LAYER 1 — OUTCOME (Why this video exists)
+What is the primary goal of this video?
+
+
+Grow followers
+
+
+Sell something
+
+
+Build authority
+
+
+Go viral
+
+
+Educate
+
+
+Entertain
+
+
+Who is this video for?
+
+
+Age range
+
+
+Niche
+
+
+Beginner / intermediate / advanced
+
+
+What should the viewer feel at the end?
+
+
+Motivated
+
+
+Shocked
+
+
+Inspired
+
+
+Curious
+
+
+Urgent
+
+
+What action should they take?
+
+
+Follow
+
+
+Comment
+
+
+Buy
+
+
+DM
+
+
+Click link
+
+
+
+LAYER 2 — STYLE REFERENCE EXTRACTION
+Instead of asking:
+ “What style?”
+Ask like this:
+Which creator best matches the vibe you want?
+ (Multiple selection allowed)
+
+
+Iman Gadzhi (bold captions, punchy cuts, dark tone)
+
+
+Ali Abdaal (clean, educational, calm)
+
+
+MrBeast (fast-paced, high-energy, jump cuts)
+
+
+Ryan Trahan (storytelling + humor)
+
+
+IShowSpeed (chaotic, expressive, loud)
+
+
+Custom (paste link)
+
+
+Paste a reference Reel or YouTube link.
+
+
+Then AI should internally analyze:
+Avg shot length
+
+
+Caption frequency
+
+
+Zoom intensity
+
+
+Background music type
+
+
+Color tone
+
+
+Hook format
+
+
+
+LAYER 3 — HOOK STRATEGY
+How should the video start?
+
+
+Direct bold statement
+
+
+Question
+
+
+Controversial take
+
+
+Emotional story
+
+
+Statistic
+
+
+Fast montage
+
+
+Do you want text in the first 2 seconds?
+
+
+Yes / No
+
+
+Should the hook feel:
+
+
+Calm
+
+
+Aggressive
+
+
+Curious
+
+
+Dramatic
+
+
+Funny
+
+
+
+LAYER 4 — EDITING STYLE TECHNICALS
+Caption style preference?
+
+
+Big bold center captions
+
+
+Minimal lower-third
+
+
+Word-by-word animation
+
+
+No captions
+
+
+Highlight keywords
+
+
+Editing pace?
+
+
+Fast (cut every 1–2 sec)
+
+
+Medium
+
+
+Slow cinematic
+
+
+Camera movement?
+
+
+Static
+
+
+Punch-in zooms
+
+
+Dynamic motion
+
+
+Handheld feel
+
+
+Transitions?
+
+
+Hard cuts
+
+
+Motion blur
+
+
+Whip transitions
+
+
+Minimal
+
+
+B-roll usage?
+
+
+Heavy
+
+
+Minimal
+
+
+Only when necessary
+
+
+
+LAYER 5 — AUDIO & MUSIC
+Background music vibe?
+
+
+Energetic
+
+
+Emotional
+
+
+Corporate clean
+
+
+Trap
+
+
+Chill lofi
+
+
+No music
+
+
+Should music drop at hook?
+
+
+Yes / No
+
+
+Sound effects?
+
+
+Subtle
+
+
+Punchy
+
+
+Meme-style
+
+
+None
+
+
+
+LAYER 6 — STRUCTURE & LENGTH
+Target duration?
+
+
+Under 20 sec
+
+
+20–30 sec
+
+
+30–45 sec
+
+
+60 sec
+
+
+Platform?
+
+
+Instagram Reels
+
+
+YouTube Shorts
+
+
+TikTok
+
+
+Multi-platform
+
+
+Do you want platform-safe zone optimization?
+
+
+Yes / No
+
+
+
+ADVANCED MEMORY QUESTIONS (For Learning System)
+Is this similar to a previous project?
+
+
+Yes → Select project
+
+
+No
+
+
+Should we reuse your previous caption style?
+
+
+Yes / Modify
+
+
+
+Now Important:
+Don’t show 22 questions at once.
+Structure it like:
+Step 1: Goal
+ Step 2: Style
+ Step 3: Hook
+ Step 4: Edit vibe
+ Step 5: Audio
+ Step 6: Structure
+With quick selectable chips.
+
+Even Smarter Approach
+Instead of asking everything manually:
+Let AI first analyze:
+Uploaded raw video
+
+
+Reference link
+
+
+Then ask:
+ “I’ve detected this is a talking-head productivity video. Do you want it edited in Ali Abdaal style or something more aggressive like Iman Gadzhi?”
+Now AI feels intelligent.
+
+Critical Insight
+Style is not just “Iman Gadzhi style”.
+AI must convert style into:
+Average shot duration
+
+
+Caption density
+
+
+Zoom frequency
+
+
+Music BPM range
+
+
+Color grading tone
+
+
+Hook intensity level
+
+
+That’s how your blueprint becomes powerful.

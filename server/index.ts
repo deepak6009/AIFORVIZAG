@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { setupAWSInfrastructure } from "./aws/setup";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +61,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  setupAWSInfrastructure().catch((err) => {
+    console.error("[AWS] Infrastructure setup failed:", err.message);
+  });
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
