@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
   Upload, FileText, Mic, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle,
-  Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User
+  Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User,
+  Paperclip, Folder, FolderOpen, Image, Video, File
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
@@ -121,6 +122,15 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [interrogationId, setInterrogationId] = useState<string | null>(null);
   const [briefingAnswers, setBriefingAnswers] = useState<Record<string, any>>({});
   const briefingAnswersRef = useRef<Record<string, any>>({});
+  const [attachedFiles, setAttachedFiles] = useState<{ name: string; url: string; folderId?: string; folderName?: string }[]>([]);
+  const [fileAttachments, setFileAttachments] = useState<Record<string, { name: string; url: string; folderName?: string }[]>>({});
+  const fileAttachmentsRef = useRef<Record<string, { name: string; url: string; folderName?: string }[]>>({});
+  const [showFilePicker, setShowFilePicker] = useState(false);
+  const [wsFolders, setWsFolders] = useState<any[]>([]);
+  const [wsFolderFiles, setWsFolderFiles] = useState<Record<string, any[]>>({});
+  const [expandedFolder, setExpandedFolder] = useState<string | null>(null);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const filePickerRef = useRef<HTMLDivElement>(null);
   const [currentAiResponse, setCurrentAiResponse] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [currentLayer, setCurrentLayer] = useState(1);
@@ -142,6 +152,78 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   useEffect(() => {
     briefingAnswersRef.current = briefingAnswers;
   }, [briefingAnswers]);
+
+  useEffect(() => {
+    fileAttachmentsRef.current = fileAttachments;
+  }, [fileAttachments]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (filePickerRef.current && !filePickerRef.current.contains(e.target as Node)) {
+        setShowFilePicker(false);
+      }
+    };
+    if (showFilePicker) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showFilePicker]);
+
+  const fetchWorkspaceFolders = async () => {
+    if (wsFolders.length > 0) return;
+    setLoadingFolders(true);
+    try {
+      const res = await apiRequest("GET", `/api/workspaces/${workspaceId}/folders`);
+      const data = await res.json();
+      setWsFolders(Array.isArray(data) ? data : []);
+    } catch {
+      toast({ title: "Could not load folders", variant: "destructive" });
+    } finally {
+      setLoadingFolders(false);
+    }
+  };
+
+  const fetchFolderFiles = async (folderId: string) => {
+    if (wsFolderFiles[folderId]) return;
+    try {
+      const res = await apiRequest("GET", `/api/workspaces/${workspaceId}/folders/${folderId}/files`);
+      const data = await res.json();
+      setWsFolderFiles(prev => ({ ...prev, [folderId]: Array.isArray(data) ? data : [] }));
+    } catch {
+      toast({ title: "Could not load files", variant: "destructive" });
+    }
+  };
+
+  const toggleFolderExpand = async (folderId: string) => {
+    if (expandedFolder === folderId) {
+      setExpandedFolder(null);
+    } else {
+      setExpandedFolder(folderId);
+      await fetchFolderFiles(folderId);
+    }
+  };
+
+  const attachFile = (file: { name: string; url: string; folderName?: string }) => {
+    if (!file.url) {
+      toast({ title: "Cannot attach", description: "This file has no URL", variant: "destructive" });
+      return;
+    }
+    setAttachedFiles(prev => {
+      if (prev.some(f => f.url === file.url)) return prev;
+      return [...prev, file];
+    });
+    setShowFilePicker(false);
+  };
+
+  const removeAttachment = (url: string) => {
+    setAttachedFiles(prev => prev.filter(f => f.url !== url));
+  };
+
+  const getFileIcon = (name: string) => {
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    if (["jpg","jpeg","png","gif","webp","svg"].includes(ext)) return <Image className="w-3.5 h-3.5 text-blue-500" />;
+    if (["mp4","mov","avi","webm","mkv"].includes(ext)) return <Video className="w-3.5 h-3.5 text-purple-500" />;
+    if (["pdf"].includes(ext)) return <FileText className="w-3.5 h-3.5 text-red-500" />;
+    return <File className="w-3.5 h-3.5 text-muted-foreground" />;
+  };
 
   const formatRecordingTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -357,6 +439,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setCurrentAiResponse(null);
     setBriefingComplete(false);
     setCurrentLayer(1);
+    setFileAttachments({});
+    fileAttachmentsRef.current = {};
+    setAttachedFiles([]);
 
     let summaryText = "";
     if (summaryData?.body) {
@@ -371,13 +456,31 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     callGeminiChat([{ role: "user", text: "Start the briefing" }], summaryText);
   };
 
+  const saveCurrentAttachments = () => {
+    if (attachedFiles.length === 0) return "";
+    const fieldKey = currentAiResponse?.fieldKey || "general";
+    const newAttachments = { ...fileAttachmentsRef.current };
+    const existing = newAttachments[fieldKey] || [];
+    const merged = [...existing];
+    for (const f of attachedFiles) {
+      if (!merged.some(e => e.url === f.url)) merged.push({ name: f.name, url: f.url, folderName: f.folderName });
+    }
+    newAttachments[fieldKey] = merged;
+    setFileAttachments(newAttachments);
+    fileAttachmentsRef.current = newAttachments;
+    const attachText = attachedFiles.map(f => `[Attached: ${f.folderName ? f.folderName + "/" : ""}${f.name}]`).join(" ");
+    setAttachedFiles([]);
+    return attachText;
+  };
+
   const handleSendChat = () => {
-    if (!chatInput.trim() || aiLoading) return;
+    if ((!chatInput.trim() && attachedFiles.length === 0) || aiLoading) return;
     if (chatMicActive) {
       if (chatRecognitionRef.current) { try { chatRecognitionRef.current.stop(); } catch {} chatRecognitionRef.current = null; }
       setChatMicActive(false);
     }
-    const userMsg = chatInput.trim();
+    const attachText = saveCurrentAttachments();
+    const userMsg = [chatInput.trim(), attachText].filter(Boolean).join(" ");
     setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
     setChatInput("");
 
@@ -406,7 +509,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     briefingAnswersRef.current = newAnswers;
 
     if (!isMulti) {
-      const userMsg = option.label;
+      const attachText = saveCurrentAttachments();
+      const userMsg = [option.label, attachText].filter(Boolean).join(" ");
       setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
       const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: userMsg }];
       callGeminiChat(updatedHistory, getSummaryText());
@@ -418,9 +522,11 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     const fieldKey = currentAiResponse?.fieldKey || "unknown";
     const selected = briefingAnswersRef.current[fieldKey];
     if (!selected || (Array.isArray(selected) && selected.length === 0)) return;
+    const attachText = saveCurrentAttachments();
     const label = Array.isArray(selected) ? selected.join(", ") : String(selected);
-    setChatMessages(prev => [...prev, { role: "user", text: label }]);
-    const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: label }];
+    const userMsg = [label, attachText].filter(Boolean).join(" ");
+    setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
+    const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: userMsg }];
     callGeminiChat(updatedHistory, getSummaryText());
   };
 
@@ -648,7 +754,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <h3 className="text-sm font-semibold">AI Briefing Assistant</h3>
               </div>
               <div className="flex items-center gap-2">
-                {[1,2,3,4,5,6].map(layer => (
+                {[1,2,3,4].map(layer => (
                   <div
                     key={layer}
                     className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
@@ -656,7 +762,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                       layer === currentLayer ? "bg-primary text-primary-foreground" :
                       "bg-muted text-muted-foreground"
                     }`}
-                    title={["Outcome","Style","Hook","Editing","Audio","Structure"][layer-1]}
+                    title={["Goal & Audience","Style & Hook","Editing & Visuals","Audio & Format"][layer-1]}
                     data-testid={`layer-indicator-${layer}`}
                   >
                     {layer < currentLayer ? <CheckCircle2 className="w-3.5 h-3.5" /> : layer}
@@ -741,6 +847,20 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   </div>
                 )}
 
+                {attachedFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2" data-testid="attached-files-list">
+                    {attachedFiles.map((f) => (
+                      <div key={f.url} className="flex items-center gap-1.5 bg-primary/10 text-primary rounded-md px-2 py-1 text-xs">
+                        {getFileIcon(f.name)}
+                        <span className="max-w-[120px] truncate">{f.folderName ? `${f.folderName}/` : ""}{f.name}</span>
+                        <button onClick={() => removeAttachment(f.url)} className="hover:text-destructive ml-0.5">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Textarea
                     placeholder={chatMicActive ? "Listening... speak now" : briefingComplete ? "Briefing complete! Generate your final document below." : "Type a custom answer or additional details..."}
@@ -752,6 +872,69 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                     data-testid="input-chat"
                   />
+                  <div className="relative" ref={filePickerRef}>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => { setShowFilePicker(!showFilePicker); if (!showFilePicker) fetchWorkspaceFolders(); }}
+                      disabled={aiLoading}
+                      className="shrink-0 h-10 w-10"
+                      data-testid="button-attach-file"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </Button>
+                    {showFilePicker && (
+                      <div className="absolute bottom-12 right-0 w-64 bg-popover border rounded-lg shadow-lg z-50 max-h-[280px] overflow-auto" data-testid="file-picker-dropdown">
+                        <div className="p-2 border-b">
+                          <p className="text-xs font-semibold text-muted-foreground">Attach from workspace</p>
+                        </div>
+                        {loadingFolders ? (
+                          <div className="p-4 flex items-center justify-center">
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : wsFolders.length === 0 ? (
+                          <div className="p-3 text-xs text-muted-foreground text-center">No folders in this workspace</div>
+                        ) : (
+                          <div className="py-1">
+                            {wsFolders.map((folder: any) => (
+                              <div key={folder.id}>
+                                <button
+                                  onClick={() => toggleFolderExpand(folder.id)}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted/50 transition-colors"
+                                  data-testid={`folder-pick-${folder.id}`}
+                                >
+                                  {expandedFolder === folder.id ? <FolderOpen className="w-3.5 h-3.5 text-amber-500" /> : <Folder className="w-3.5 h-3.5 text-amber-500" />}
+                                  <span className="font-medium truncate flex-1 text-left">{folder.name}</span>
+                                  <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${expandedFolder === folder.id ? "rotate-90" : ""}`} />
+                                </button>
+                                {expandedFolder === folder.id && (
+                                  <div className="pl-4">
+                                    {!wsFolderFiles[folder.id] ? (
+                                      <div className="px-3 py-2"><Loader2 className="w-3 h-3 animate-spin text-muted-foreground" /></div>
+                                    ) : wsFolderFiles[folder.id].length === 0 ? (
+                                      <div className="px-3 py-1.5 text-[10px] text-muted-foreground">Empty folder</div>
+                                    ) : (
+                                      wsFolderFiles[folder.id].map((file: any) => (
+                                        <button
+                                          key={file.id}
+                                          onClick={() => attachFile({ name: file.name, url: file.cloudfrontUrl || file.url || "", folderName: folder.name })}
+                                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-primary/5 transition-colors"
+                                          data-testid={`file-pick-${file.id}`}
+                                        >
+                                          {getFileIcon(file.name)}
+                                          <span className="truncate flex-1 text-left">{file.name}</span>
+                                        </button>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <Button
                     size="icon"
                     variant={chatMicActive ? "destructive" : "outline"}
@@ -762,7 +945,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   >
                     {chatMicActive ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                   </Button>
-                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || aiLoading} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
+                  <Button size="icon" onClick={handleSendChat} disabled={(!chatInput.trim() && attachedFiles.length === 0) || aiLoading} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
@@ -815,7 +998,31 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                             <div key={key} className="rounded-lg border bg-muted/30 p-2.5">
                               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{key.replace(/([A-Z])/g, " $1").trim()}</p>
                               <p className="text-sm font-medium mt-0.5">{Array.isArray(val) ? val.join(", ") : String(val)}</p>
+                              {fileAttachments[key] && fileAttachments[key].length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {fileAttachments[key].map((f, fi) => (
+                                    <a key={fi} href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] hover:bg-primary/20 transition-colors">
+                                      <Paperclip className="w-2.5 h-2.5" />
+                                      <span className="truncate max-w-[100px]">{f.folderName ? `${f.folderName}/` : ""}{f.name}</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
                             </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {Object.keys(fileAttachments).some(k => !briefingAnswers[k]) && Object.entries(fileAttachments).filter(([k]) => !briefingAnswers[k]).length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Referenced Files</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(fileAttachments).filter(([k]) => !briefingAnswers[k]).flatMap(([, files]) => files).map((f, i) => (
+                            <a key={i} href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1 text-xs hover:bg-muted/80 transition-colors">
+                              <Paperclip className="w-3 h-3 text-muted-foreground" />
+                              <span>{f.folderName ? `${f.folderName}/` : ""}{f.name}</span>
+                            </a>
                           ))}
                         </div>
                       </div>
@@ -847,6 +1054,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   setCurrentAiResponse(null);
                   setBriefingComplete(false);
                   setCurrentLayer(1);
+                  setFileAttachments({});
+                  fileAttachmentsRef.current = {};
+                  setAttachedFiles([]);
                 }}
                 className="flex-1"
                 data-testid="button-start-new"
