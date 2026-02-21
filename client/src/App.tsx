@@ -5,20 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth";
-import Dashboard from "@/pages/dashboard";
-import WorkspacePage from "@/pages/workspace";
+import WorkspaceLayout from "@/pages/workspace-layout";
 import NotFound from "@/pages/not-found";
 import { Skeleton } from "@/components/ui/skeleton";
-
-function AuthenticatedRouter() {
-  return (
-    <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/workspace/:id" component={WorkspacePage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
 
 function AppContent() {
   const { user, isLoading } = useAuth();
@@ -39,7 +28,14 @@ function AppContent() {
     return <AuthPage />;
   }
 
-  return <AuthenticatedRouter />;
+  return (
+    <Switch>
+      <Route path="/" component={WorkspaceLayout} />
+      <Route path="/workspace/:id" component={WorkspaceLayout} />
+      <Route path="/workspace/:id/:tab" component={WorkspaceLayout} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
 function App() {

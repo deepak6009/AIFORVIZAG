@@ -11,11 +11,19 @@ A workspace application where admins can create workspaces, add team members, cr
 - **File Storage**: Replit Object Storage (Google Cloud Storage presigned URLs)
 
 ## Key Features
-- Workspace creation and management
+- Workspace creation and management with workspace switcher
 - Team member management with role-based access (admin, member, viewer)
 - Nested folder structure within workspaces
 - Image and video file uploads with previews
-- File preview modal
+- AI Interrogator chat interface (placeholder - will create structured briefs)
+- Kanban task board (placeholder - will auto-generate from AI brief)
+- Resources section (placeholder - shared links and references)
+
+## UI Layout
+- ClickUp-style workspace layout with top bar and horizontal nav tabs
+- Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
+- Nav tabs: Users, Folders, Interrogator, Tasks, Resources
+- Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
 - `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models
@@ -25,9 +33,13 @@ A workspace application where admins can create workspaces, add team members, cr
 - `server/db.ts` - Database connection
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration
-- `client/src/pages/auth.tsx` - Sign in / Sign up page for unauthenticated users
-- `client/src/pages/dashboard.tsx` - Workspace listing for authenticated users
-- `client/src/pages/workspace.tsx` - Workspace detail with folders, files, members
+- `client/src/pages/auth.tsx` - Sign in / Sign up page
+- `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
+- `client/src/components/tabs/users-tab.tsx` - Member management (functional)
+- `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
+- `client/src/components/tabs/interrogator-tab.tsx` - AI chat interface (placeholder)
+- `client/src/components/tabs/tasks-tab.tsx` - Kanban board (placeholder)
+- `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
 
 ## API Routes
 - `POST /api/auth/register` - Register with email/password

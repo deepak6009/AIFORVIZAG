@@ -1,0 +1,90 @@
+AI-Powered Workflow for Short-Form Video Creators & Editors
+
+The Problem
+Short-form video (Reels, Shorts, TikTok) has exploded — but the behind-the-scenes workflow between creators and their video editors is stuck in 2015.
+Here's what actually happens today:
+A creator records a talking-head video on their phone. They dump the raw footage into a Google Drive folder. Then they send their editor a WhatsApp voice note: "Bro, edit this — make the hook punchy, use big yellow captions, keep it under 30 seconds, add some trending audio."
+The editor downloads the file, guesses what the creator means, spends 2 hours editing, and uploads V1 back to Drive. The creator watches it (on WhatsApp, in compressed quality), and sends back feedback like: "0:14 pe zoom weird lag raha hai, 0:22 pe text change kar, ending me CTA daal."
+The editor can't figure out which version the creator is watching. The timestamp references don't match. Three revision rounds later, both are frustrated, and the video goes out 3 days late.
+This is the reality for millions of creator-editor pairs worldwide.
+The tools they use — WhatsApp, Google Drive, Telegram, email — were never designed for creative collaboration. And the pro tools that exist (Frame.io, Wipster) are built for film studios and ad agencies, not for a creator paying their editor ₹5,000-15,000 a month.
+
+The Challenge
+Build an AI-powered platform that transforms how short-form video creators and editors work together.
+Your solution must use AI meaningfully to solve real problems in the creator-editor workflow. This is not about adding a ChatGPT chatbot to a file-sharing app — it's about using AI to fundamentally reduce friction, eliminate miscommunication, and speed up the journey from raw footage to published content.
+
+Core Problem Areas to Solve (with AI)
+Your solution should address at least two of the following:
+1. The Brief Problem — "My editor never understands what I want"
+Creators give unstructured, vague instructions — voice notes, scattered texts, visual references in their head that they can't articulate. Editors are left guessing, which leads to wasted work and revision loops.
+AI Opportunity: Build an intelligent briefing system that takes unstructured creator input (voice, text, reference links) and converts it into a clear, structured, actionable editing brief that an editor can execute on the first try.
+Think about:
+Voice-to-structured-brief (creator speaks naturally, AI extracts: hook style, tone, caption preferences, duration, music vibe, CTA type)
+Reference analysis (creator shares a link to a viral Reel they like — AI breaks down what makes it work: pacing, transitions, text style, audio choice)
+Brief templates that learn from past projects
+2. The Feedback Problem — "Revision rounds are killing us"
+When a creator reviews an edited draft, their feedback is scattered across WhatsApp messages, voice notes, and DMs. Editors waste time piecing together what needs to change, and often miss things, leading to more rounds.
+AI Opportunity: Build an intelligent review and feedback system where creators can give feedback on video drafts and AI helps make that feedback actionable.
+Think about:
+Timestamped commenting on video (creator taps at a specific moment to leave feedback)
+AI that takes scattered feedback (voice notes, text comments across timestamps) and generates a single, prioritized, actionable revision checklist for the editor
+AI that auto-detects potential issues in drafts (e.g., silent gaps, caption-audio mismatches, abrupt cuts, videos exceeding platform duration limits)
+Smart version comparison — AI highlights what changed between V1 and V2
+3. The Discovery & Asset Problem — "I need the right visual but can't find it"
+Editors constantly need supporting visuals — B-roll footage, background clips, overlay graphics — to make talking-head videos engaging. Currently they waste time digging through stock libraries or asking creators for assets that don't exist.
+AI Opportunity: Build intelligent asset suggestions or generation based on the video's context.
+Think about:
+AI that reads the script/brief and suggests relevant stock footage, images, or visual styles
+AI-generated visual assets (animated text, simple overlays, background visuals) from text prompts
+Context-aware suggestions: "Your video talks about AI replacing jobs — here are 5 relevant visual concepts"
+
+What We're Looking For
+We want to see a working prototype that a real creator-editor pair could use during the demo. This means:
+The AI must be central, not cosmetic. If you remove the AI from your solution and it still works roughly the same, you haven't integrated AI deeply enough.
+
+
+Mobile-first thinking. Creators live on their phones. Even if you build a web app for the hackathon, design it as if it's a mobile experience.
+
+
+Show the workflow, not just a feature. We don't want to see an isolated AI tool. We want to see how a creator and editor would actually use this together — from uploading footage to getting a final approved video.
+
+
+Real AI, not mocked. Your AI features should work with real inputs during the demo. Use any LLM APIs (OpenAI, Anthropic Claude, Gemini, open-source models) — we don't care which, we care that it works.
+
+
+
+User Personas for Context
+The Creator (Riya)
+24 years old, 45K Instagram followers
+Posts 4-5 Reels per week
+Records on her phone, outsources editing
+Communicates via WhatsApp voice notes
+Frustrated by: revision loops, editors misunderstanding her "vibe"
+The Editor (Arjun)
+22 years old, freelance editor with 6 creator clients
+Edits in CapCut / Premiere Pro
+Manages all client communication on WhatsApp
+Frustrated by: vague briefs, scattered feedback, can't find the right stock footage
+Your demo should be relatable to both Riya and Arjun.
+
+Tech Guidelines
+Use any tech stack you're comfortable with
+You may use any AI model/API (OpenAI, Claude, Gemini, Llama, Mistral, etc.)
+Cloud storage / file upload is expected — handle video files properly
+If building a web app, responsive/mobile-first design is strongly preferred
+Focus on a working demo over polished UI — functionality wins over aesthetics
+
+Demo Tips
+Use real video files, not placeholders
+Show real AI outputs, not pre-recorded mockups
+If something breaks, explain what it was supposed to do — we value ambition
+Having two team members roleplay as "creator" and "editor" during the demo is highly effective
+
+❓ FAQs
+Q: Do we need to handle actual video upload and playback? A: Yes — even if it's basic. Uploading a video file and playing it back in-browser is expected. You don't need to build a full video player, but your demo should show real video, not screenshots.
+Q: Can we use existing open-source components or templates? A: Absolutely. Use any libraries, UI kits, or boilerplate that helps you move faster. We're judging the AI integration and product thinking, not whether you wrote your CSS from scratch.
+Q: Is the bonus (AI visual asset generation) worth pursuing? A: Only if you've nailed the core workflow first. A beautiful AI motion graphics generator that doesn't connect to the creator-editor workflow will score lower than a solid workflow with smart AI briefing and review. Prioritize accordingly.
+Q: Should we build a mobile app? A: A responsive web app is perfectly fine for the hackathon. Mobile-first design thinking matters more than a native app.
+Q: Can we focus on only one of the three problem areas? A: You should address at least two meaningfully. A solution that only does AI briefs but has no review/feedback component (or vice versa) is incomplete. The value is in the connected workflow.
+
+Good luck. Build something that you'd use yourself. Build something that makes Riya stop sending WhatsApp voice notes and Arjun stop guessing.
