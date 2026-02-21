@@ -1,33 +1,33 @@
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Users, Shield, Zap } from "lucide-react";
+import { Sparkles, Users, Shield, Zap } from "lucide-react";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const values = [
   {
     icon: Sparkles,
     title: "Simplicity",
-    description: "We believe powerful tools should be effortless to use. No clutter, no confusion — just clean, intuitive design.",
+    description: "Powerful tools should be effortless. No clutter, no confusion — just clean, intuitive design built for creators who move fast.",
     color: "text-blue-500",
     bg: "bg-blue-50/80",
   },
   {
     icon: Users,
     title: "Collaboration",
-    description: "Great creative work happens together. We build for teams that move fast and stay aligned.",
+    description: "Great short-form content happens when creators and editors are perfectly in sync. We build for teams that ship daily.",
     color: "text-violet-500",
     bg: "bg-violet-50/80",
   },
   {
     icon: Shield,
     title: "Security",
-    description: "Your media is your livelihood. We protect it with role-based access, encrypted storage, and workspace isolation.",
+    description: "Your content is your livelihood. We protect it with role-based access, encrypted storage, and workspace isolation.",
     color: "text-emerald-500",
     bg: "bg-emerald-50/80",
   },
   {
     icon: Zap,
     title: "Speed",
-    description: "Instant uploads, instant previews, instant access. We obsess over performance so you never wait.",
+    description: "Instant uploads, instant previews, instant handoffs. We obsess over speed because your posting schedule won't wait.",
     color: "text-amber-500",
     bg: "bg-amber-50/80",
   },
@@ -41,27 +41,11 @@ const team = [
 ];
 
 export default function AboutPage() {
-  const [, navigate] = useLocation();
-
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Our Story
@@ -70,23 +54,23 @@ export default function AboutPage() {
             About thecrew
           </h1>
           <p className="mt-5 text-base sm:text-lg text-gray-500 max-w-2xl leading-[1.7]">
-            We're building the simplest way for creative teams to organize, share, and collaborate on their media assets — all in one place.
+            We're building the simplest way for short-form content creators and their editors to organize, share, and collaborate on media — all in one place.
           </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-5 sm:px-8 bg-white border-y border-gray-200/60">
+      <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-4">
             Our Mission
           </h2>
           <p className="text-gray-500 text-[15px] sm:text-base leading-[1.8] max-w-3xl">
-            Creative teams waste hours every week searching for files scattered across Slack threads, Google Drive folders, and email attachments. We started thecrew because we lived this problem ourselves. Our mission is to give every creative team a single, beautiful workspace where their images and videos are always organized, always accessible, and always secure. No more version confusion. No more lost assets. Just your media, finally organized.
+            Short-form creators and their editors juggle raw footage, drafts, and final cuts across DMs, Google Drive, WeTransfer links, and WhatsApp threads. Nobody knows which version is latest. Deadlines get missed. Assets get lost. We started thecrew because we lived this chaos ourselves. Our mission is to give every creator-editor team a single, beautiful workspace where clips, graphics, and final exports are always organized, always accessible, and always secure. No more "can you resend that file?" Just your content, finally organized.
           </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-5 sm:px-8">
+      <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-8">
             Our Values
@@ -109,7 +93,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-5 sm:px-8 bg-white border-y border-gray-200/60">
+      <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-8">
             The Team
@@ -128,9 +112,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

@@ -20,38 +20,38 @@ import {
 
 
 const marqueeItems = [
-  "Media Management",
-  "Cloud Storage",
+  "Short-Form Content",
+  "Creator-Editor Workflow",
+  "Clip Management",
+  "Raw Footage Storage",
   "Team Collaboration",
-  "Nested Folders",
-  "Role-Based Access",
   "Instant Previews",
   "Fast Uploads",
-  "Multi-Workspace",
-  "Secure by Default",
-  "Image & Video",
+  "Multi-Creator Workspace",
+  "Role-Based Access",
+  "Reels & Shorts",
 ];
 
 const testimonials = [
   {
-    quote: "thecrew completely transformed how we manage our creative assets. No more digging through Slack threads for that one file.",
+    quote: "I used to send raw clips over WhatsApp and pray my editor found the right one. thecrew made that chaos disappear overnight.",
     name: "Sarah Chen",
-    role: "Creative Director",
-    company: "Bright Studio",
+    role: "Content Creator",
+    company: "1.2M followers",
     rating: 5,
   },
   {
-    quote: "The folder structure alone saved us hours every week. Our team finally knows exactly where everything lives.",
+    quote: "As an editor working with 4 creators, keeping track of footage was a nightmare. Now every clip, draft, and final cut has a home.",
     name: "Marcus Webb",
-    role: "Marketing Lead",
-    company: "Onset Digital",
+    role: "Video Editor",
+    company: "Freelance",
     rating: 5,
   },
   {
-    quote: "Simple, fast, and exactly what we needed. We ditched three other tools after switching to thecrew.",
+    quote: "We post 30+ short-form videos a week. thecrew is the only reason our creator-editor pipeline doesn't fall apart.",
     name: "Priya Desai",
-    role: "Operations Manager",
-    company: "Mosaic Co",
+    role: "Head of Content",
+    company: "Mosaic Media",
     rating: 5,
   },
 ];
@@ -213,16 +213,16 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <div className="animate-fade-in-up">
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
-                AI-Powered Creative Workspace
+                Built for Short-Form Creators & Editors
               </p>
               <h1 className="text-[2.8rem] leading-[1.02] sm:text-[3.8rem] md:text-[4.5rem] lg:text-[5rem] font-bold tracking-[-0.035em] text-gray-950" data-testid="text-hero-heading">
-                Your media,{" "}
+                Your content,{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
                   finally organized.
                 </span>
               </h1>
               <p className="mt-5 sm:mt-6 text-base sm:text-lg text-gray-500 max-w-md leading-[1.7] font-normal animate-fade-in-up-delay">
-                Upload, organize, and collaborate on images and videos — with folders, roles, and cloud storage built right in.
+                The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts — without the DM chaos.
               </p>
               <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
                 <Button
@@ -280,15 +280,14 @@ export default function LandingPage() {
               className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]"
               data-testid="text-problem-heading"
             >
-              Your media is{" "}
+              Your clips are{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400">
                 scattered
               </span>{" "}
               everywhere.
             </h2>
             <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-              Files live in Slack threads, Google Drive links, local desktops, and
-              email attachments. Nobody knows where the latest version is.
+              Raw footage lives in WhatsApp threads, Google Drive links, WeTransfer emails, and random DMs. Your editor can't find the latest cut. Deadlines slip.
             </p>
           </div>
 
@@ -296,18 +295,18 @@ export default function LandingPage() {
             {[
               {
                 stat: "73%",
-                label: "of teams",
-                desc: "waste time searching for the right file version",
+                label: "of creators",
+                desc: "waste hours every week hunting for the right clip or draft",
               },
               {
                 stat: "5+",
-                label: "tools",
-                desc: "the average team uses to manage their media assets",
+                label: "apps",
+                desc: "the average creator-editor team uses to exchange content files",
               },
               {
                 stat: "40%",
-                label: "of files",
-                desc: "end up duplicated across different platforms",
+                label: "of footage",
+                desc: "gets lost or duplicated across DMs, drives, and email threads",
               },
             ].map((item, i) => (
               <div key={i}>
@@ -338,15 +337,15 @@ export default function LandingPage() {
               className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]"
               data-testid="text-features-heading"
             >
-              One place for{" "}
+              One workspace for{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                everything visual
+                your entire content pipeline
               </span>
               .
             </h2>
             <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-              thecrew brings your team's images and videos into a single,
-              beautifully organized workspace.
+              thecrew gives creators and editors a single space to upload raw clips,
+              organize drafts, and deliver final cuts — all without leaving the platform.
             </p>
           </div>
 
@@ -354,8 +353,8 @@ export default function LandingPage() {
             {[
               {
                 icon: FolderTree,
-                title: "Nested Folders",
-                description: "Build deep folder hierarchies that mirror how your team thinks.",
+                title: "Content Pipeline Folders",
+                description: "Organize by Raw, Drafts, Finals — or build any folder structure that fits your editing workflow.",
                 tag: "Organization",
                 color: "text-blue-500",
                 bg: "bg-blue-50/80",
@@ -363,8 +362,8 @@ export default function LandingPage() {
               },
               {
                 icon: Users,
-                title: "Team Roles",
-                description: "Admins, members, viewers - everyone gets the right level of access.",
+                title: "Creator & Editor Roles",
+                description: "Creators upload, editors access what they need. Viewers can review without touching files.",
                 tag: "Collaboration",
                 color: "text-violet-500",
                 bg: "bg-violet-50/80",
@@ -372,8 +371,8 @@ export default function LandingPage() {
               },
               {
                 icon: Upload,
-                title: "Fast Uploads",
-                description: "Upload images and videos directly to any folder. Cloud-backed storage.",
+                title: "Drop Your Clips",
+                description: "Upload raw footage, B-roll, graphics, and finals directly into any folder. Cloud-backed.",
                 tag: "Performance",
                 color: "text-emerald-500",
                 bg: "bg-emerald-50/80",
@@ -382,7 +381,7 @@ export default function LandingPage() {
               {
                 icon: Shield,
                 title: "Secure by Default",
-                description: "Workspace-level access control ensures your assets stay protected.",
+                description: "Your unreleased content stays protected with workspace-level access control.",
                 tag: "Security",
                 color: "text-amber-500",
                 bg: "bg-amber-50/80",
@@ -390,8 +389,8 @@ export default function LandingPage() {
               },
               {
                 icon: Globe,
-                title: "Multi-Workspace",
-                description: "Run separate workspaces for different clients or projects.",
+                title: "Multi-Creator Workspaces",
+                description: "Run separate workspaces per creator, brand, or project — all from one account.",
                 tag: "Scale",
                 color: "text-cyan-500",
                 bg: "bg-cyan-50/80",
@@ -399,8 +398,8 @@ export default function LandingPage() {
               },
               {
                 icon: Zap,
-                title: "Instant Previews",
-                description: "See your images and videos immediately. No downloads needed.",
+                title: "Instant Clip Previews",
+                description: "Preview your clips, thumbnails, and graphics right in the browser. No downloads.",
                 tag: "Speed",
                 color: "text-rose-500",
                 bg: "bg-rose-50/80",
@@ -447,7 +446,7 @@ export default function LandingPage() {
               Three steps to
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
-                organized bliss.
+                content flow.
               </span>
             </h2>
           </div>
@@ -457,19 +456,19 @@ export default function LandingPage() {
               {
                 step: "01",
                 title: "Create a workspace",
-                desc: "Set up a dedicated workspace for your project or team in seconds.",
+                desc: "Set up a workspace for your channel, brand, or project in seconds.",
                 icon: Layers,
               },
               {
                 step: "02",
-                title: "Invite your team",
-                desc: "Add team members with the right roles - admin, member, or viewer.",
+                title: "Add your editors",
+                desc: "Invite editors with the right access level — they see what you want them to see.",
                 icon: Users,
               },
               {
                 step: "03",
-                title: "Upload & organize",
-                desc: "Create folders, upload your media, and start collaborating immediately.",
+                title: "Upload & ship",
+                desc: "Drop your raw clips, organize by stage, and let your editors get to work.",
                 icon: Upload,
               },
             ].map((item, i) => (
@@ -504,9 +503,9 @@ export default function LandingPage() {
               Kind Words
             </p>
             <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]">
-              Trusted by teams who{" "}
+              Trusted by creators who{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                care about craft
+                ship daily
               </span>
               .
             </h2>
@@ -548,29 +547,29 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
             <div>
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
-                Built for Teams
+                Built for Creators & Editors
               </p>
               <h2
                 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]"
                 data-testid="text-highlights-heading"
               >
-                Everything you need,{" "}
+                Everything your content team needs,{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                  nothing you don't.
+                  nothing it doesn't.
                 </span>
               </h2>
               <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-                We stripped away the complexity of traditional DAMs and built
-                something your team will actually enjoy using.
+                We stripped away the complexity of traditional file sharing and built
+                something creator-editor teams actually enjoy using.
               </p>
               <div className="mt-7 sm:mt-9 space-y-3.5">
                 {[
-                  "Unlimited workspaces",
-                  "Cloud-backed storage",
-                  "Team role management",
-                  "Nested folder trees",
-                  "Image & video support",
-                  "Secure authentication",
+                  "Separate workspaces per creator",
+                  "Cloud-backed clip storage",
+                  "Creator & editor role management",
+                  "Raw → Draft → Final folder trees",
+                  "Video & image preview support",
+                  "Secure access for your whole team",
                 ].map((item, index) => (
                   <div
                     key={item}
@@ -598,18 +597,18 @@ export default function LandingPage() {
                   {[
                     {
                       icon: Shield,
-                      title: "Enterprise-grade security",
-                      desc: "Session-based auth with encrypted passwords",
+                      title: "Your content stays private",
+                      desc: "Role-based access so editors only see what you share",
                     },
                     {
                       icon: FolderTree,
-                      title: "Infinite nesting",
-                      desc: "Create folders within folders, as deep as you need",
+                      title: "Pipeline-ready folders",
+                      desc: "Raw → Edit → Review → Final — nest as deep as you need",
                     },
                     {
                       icon: Image,
-                      title: "Rich media support",
-                      desc: "Upload PNGs, JPGs, SVGs, MP4s, and more",
+                      title: "Every format, instantly",
+                      desc: "Upload MP4s, MOVs, PNGs, JPGs, and preview them all in-browser",
                     },
                   ].map((item) => (
                     <div
@@ -645,15 +644,15 @@ export default function LandingPage() {
         <div className="max-w-3xl mx-auto relative text-center">
           <div>
             <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] leading-[1.12]">
-              Ready to get your media
+              Ready to get your content pipeline
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
                 under control?
               </span>
             </h2>
             <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg text-gray-500 max-w-lg mx-auto leading-[1.7]">
-              Join teams that already use thecrew to keep their visual assets
-              organized, accessible, and secure.
+              Join creators and editors who already use thecrew to keep their
+              clips organized, accessible, and ready to post.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5">
               <Button

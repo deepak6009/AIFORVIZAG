@@ -1,50 +1,51 @@
-import { useLocation } from "wouter";
-import { ArrowLeft, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const posts = [
   {
-    title: "5 Ways to Organize Your Creative Assets Like a Pro",
-    excerpt: "Tired of searching for files across five different apps? Here's how top creative teams keep their media organized and accessible.",
+    title: "How Top Creators Organize Their Short-Form Content Pipeline",
+    excerpt: "From raw clips to final exports — here's how creators posting daily keep their media organized without losing their minds.",
     date: "Feb 18, 2026",
-    category: "Productivity",
+    category: "Workflow",
     readTime: "5 min read",
     categoryColor: "bg-blue-50 text-blue-600",
   },
   {
-    title: "Why Your Team Needs a Dedicated Media Workspace",
-    excerpt: "Google Drive and Dropbox weren't built for creative teams. Learn why purpose-built tools make all the difference.",
+    title: "Why Your Editor Needs a Dedicated Media Workspace",
+    excerpt: "Sending files over DMs and WeTransfer links slows everyone down. Learn why purpose-built tools make the creator-editor relationship seamless.",
     date: "Feb 12, 2026",
     category: "Collaboration",
     readTime: "4 min read",
     categoryColor: "bg-violet-50 text-violet-600",
   },
   {
-    title: "The Hidden Cost of Disorganized Media Files",
-    excerpt: "Duplicated files, lost assets, and version confusion cost teams more than they think. We break down the real numbers.",
+    title: "The Hidden Cost of Disorganized Content Files",
+    excerpt: "Missed deadlines, duplicated edits, and lost B-roll cost creators more than they think. We break down the real numbers.",
     date: "Feb 5, 2026",
     category: "Insights",
     readTime: "6 min read",
     categoryColor: "bg-emerald-50 text-emerald-600",
   },
   {
-    title: "Role-Based Access: Keeping Your Assets Secure",
-    excerpt: "Not everyone needs edit access. Learn how role-based permissions protect your workspace without slowing your team down.",
+    title: "Role-Based Access: Giving Editors What They Need",
+    excerpt: "Not every collaborator needs full access. Learn how role-based permissions protect your raw footage without slowing your editor down.",
     date: "Jan 28, 2026",
     category: "Security",
     readTime: "3 min read",
     categoryColor: "bg-amber-50 text-amber-600",
   },
   {
-    title: "From Chaos to Clarity: A Media Migration Guide",
-    excerpt: "Moving your team's media to a new platform doesn't have to be painful. Follow our step-by-step migration checklist.",
+    title: "From Chaos to Clarity: Migrating Your Content Library",
+    excerpt: "Moving your team's footage and graphics to a new platform doesn't have to be painful. Follow our step-by-step migration checklist.",
     date: "Jan 20, 2026",
     category: "Guides",
     readTime: "7 min read",
     categoryColor: "bg-cyan-50 text-cyan-600",
   },
   {
-    title: "How Small Studios Scale Their Creative Workflows",
-    excerpt: "Three growing studios share how they streamlined their media management as their teams doubled in size.",
+    title: "How Growing Creator Teams Scale Their Editing Workflow",
+    excerpt: "Three creators share how they went from doing everything solo to running a team of editors — and how they keep content flowing.",
     date: "Jan 14, 2026",
     category: "Case Study",
     readTime: "5 min read",
@@ -53,27 +54,11 @@ const posts = [
 ];
 
 export default function BlogPage() {
-  const [, navigate] = useLocation();
-
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Blog
@@ -82,12 +67,12 @@ export default function BlogPage() {
             Blog
           </h1>
           <p className="mt-4 text-base sm:text-lg text-gray-500 max-w-lg leading-[1.7]">
-            Insights, guides, and stories about creative media management and team collaboration.
+            Insights, guides, and stories about short-form content workflows and creator-editor collaboration.
           </p>
         </div>
       </section>
 
-      <section className="pb-16 sm:pb-20 px-5 sm:px-8">
+      <section className="pb-16 sm:pb-20 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {posts.map((post, i) => (
             <div
@@ -114,9 +99,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center border-t border-gray-200/60">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

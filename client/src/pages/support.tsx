@@ -1,9 +1,10 @@
-import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, MessageCircle, BookOpen } from "lucide-react";
+import { Mail, MessageCircle, BookOpen } from "lucide-react";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const channels = [
   {
@@ -33,27 +34,11 @@ const channels = [
 ];
 
 export default function SupportPage() {
-  const [, navigate] = useLocation();
-
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Support
@@ -67,7 +52,7 @@ export default function SupportPage() {
         </div>
       </section>
 
-      <section className="pb-12 sm:pb-16 px-5 sm:px-8">
+      <section className="pb-12 sm:pb-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
           {channels.map((ch) => (
             <div
@@ -86,7 +71,7 @@ export default function SupportPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-5 sm:px-8 bg-white border-y border-gray-200/60">
+      <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-lg mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-6">
             Send us a message
@@ -115,9 +100,7 @@ export default function SupportPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

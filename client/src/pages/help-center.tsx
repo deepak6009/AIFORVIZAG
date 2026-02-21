@@ -1,34 +1,34 @@
-import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search, Rocket, LayoutGrid, FolderOpen, Users, Settings, CreditCard } from "lucide-react";
+import { Search, Rocket, LayoutGrid, FolderOpen, Users, Settings, CreditCard } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const categories = [
   {
     icon: Rocket,
     title: "Getting Started",
-    description: "Learn the basics of setting up your account and creating your first workspace.",
+    description: "Learn the basics of setting up your account and creating your first workspace for your content team.",
     color: "text-blue-500",
     bg: "bg-blue-50/80",
   },
   {
     icon: LayoutGrid,
     title: "Workspaces",
-    description: "Manage multiple workspaces, switch between projects, and organize your teams.",
+    description: "Manage multiple workspaces for different creators or projects, and organize your editing teams.",
     color: "text-violet-500",
     bg: "bg-violet-50/80",
   },
   {
     icon: FolderOpen,
     title: "File Management",
-    description: "Upload, organize, and preview your images and videos with nested folders.",
+    description: "Upload, organize, and preview your clips, graphics, and exports with nested folders.",
     color: "text-emerald-500",
     bg: "bg-emerald-50/80",
   },
   {
     icon: Users,
     title: "Team & Roles",
-    description: "Invite team members, assign roles, and control access to your workspace.",
+    description: "Invite editors and collaborators, assign roles, and control who can access what in your workspace.",
     color: "text-amber-500",
     bg: "bg-amber-50/80",
   },
@@ -49,27 +49,11 @@ const categories = [
 ];
 
 export default function HelpCenterPage() {
-  const [, navigate] = useLocation();
-
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8 text-center">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10 text-center">
         <div className="max-w-5xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Help Center
@@ -88,7 +72,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      <section className="pb-16 sm:pb-20 px-5 sm:px-8">
+      <section className="pb-16 sm:pb-20 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {categories.map((cat) => (
             <div
@@ -106,9 +90,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center border-t border-gray-200/60">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

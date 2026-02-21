@@ -1,14 +1,16 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const tiers = [
   {
     name: "Free",
     price: "$0",
     period: "/mo",
-    description: "For individuals getting started",
+    description: "For solo creators getting started",
     features: ["1 workspace", "100MB storage", "3 team members", "Basic folder structure", "Community support"],
     cta: "Get Started",
     highlight: false,
@@ -17,7 +19,7 @@ const tiers = [
     name: "Pro",
     price: "$12",
     period: "/mo",
-    description: "For growing creative teams",
+    description: "For creators scaling with editors",
     features: ["Unlimited workspaces", "50GB storage", "25 team members", "Nested folders", "Priority email support", "Advanced roles"],
     cta: "Start Pro Trial",
     highlight: true,
@@ -26,7 +28,7 @@ const tiers = [
     name: "Team",
     price: "$29",
     period: "/mo",
-    description: "For studios and agencies",
+    description: "For agencies and multi-creator teams",
     features: ["Everything in Pro", "500GB storage", "Unlimited members", "Priority support", "Custom branding", "API access", "SSO integration"],
     cta: "Contact Sales",
     highlight: false,
@@ -47,8 +49,8 @@ const faqs = [
     a: "We'll notify you when you're approaching your limit. You can upgrade your plan or remove unused files to free up space.",
   },
   {
-    q: "Do you offer discounts for nonprofits or education?",
-    a: "Yes! We offer 50% off for verified nonprofit organizations and educational institutions. Contact us to learn more.",
+    q: "Do you offer discounts for creators?",
+    a: "Yes! We offer special pricing for verified content creators and educational creators. Contact us to learn more.",
   },
 ];
 
@@ -57,23 +59,9 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8 text-center">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10 text-center">
         <div className="max-w-5xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Pricing
@@ -87,7 +75,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="pb-16 sm:pb-20 px-5 sm:px-8">
+      <section className="pb-16 sm:pb-20 px-5 sm:px-8 lg:px-10">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
           {tiers.map((tier) => (
             <Card
@@ -129,7 +117,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-5 sm:px-8 bg-white border-y border-gray-200/60">
+      <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-8">
             Frequently Asked Questions
@@ -145,9 +133,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }

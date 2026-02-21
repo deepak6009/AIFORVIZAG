@@ -1,7 +1,7 @@
 # The CREW - AI-Powered Creative Workspace
 
 ## Overview
-CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where admins can create workspaces, add team members, create folder structures, and upload/organize images and videos. Features CRED-style bold typographic branding with the "CREW" wordmark as a visual centerpiece.
+CREW = Creator Resource Editor Workspace. An AI-powered creative workspace built specifically for short-form content creators and their editors. Enables workspace creation, team member management with role-based access, nested folder structures for content pipelines (Raw → Draft → Final), and media file uploads/organization. Features CRED-style bold typographic branding with the "CREW" wordmark as a visual centerpiece.
 
 ## Architecture
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
@@ -15,9 +15,11 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 - Acronym: Creator Editor Workspace (Cr-E-W)
 - Logo: Typography-only wordmark — "the" (font-light) + "crew" (font-extrabold), no separate SVG icon
 - Style: Lowercase wordmark "thecrew" with weight contrast is the logo itself, tracking-[0.02em]
-- Hero section: Centered tagline-focused hero ("Your media, finally organized.") with video below, no redundant brand repetition
+- Hero section: Split layout — tagline-focused text left ("Your content, finally organized.") + video right, framed for short-form creators & editors
+- Navbar: glossy frosted glass scroll effect (transparent at top, nav-glass-scrolled class on scroll with backdrop-blur + saturate)
 - Navbar, footer, auth page, dashboard all use pure typographic wordmark as logo
 - Favicon: "cw" initials on dark rounded square
+- Shared components: PageNavbar (client/src/components/page-navbar.tsx) and PageFooter (client/src/components/page-footer.tsx) used across all static pages
 
 ## Key Features
 - Workspace creation and management with workspace switcher
@@ -39,8 +41,8 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 - Typography: SF Pro for Apple devices, Inter for all other platforms; semibold/medium weights, negative letter-spacing
 - Animations: fade-in and fade-in-up on hero elements with staggered delays, cubic-bezier(0.22, 1, 0.36, 1) easing, card hover lift effects
 - Light theme: #fafafa warm background, softer borders (border-gray-200/60), subtle gradients
-- Navbar: animated gradient (linear-gradient with 8s animation shift)
-- Hero: centered layout with tagline heading, description, CTAs, and video below
+- Navbar: glossy frosted glass effect on scroll (nav-glass-scrolled CSS class)
+- Hero: split layout with tagline heading left, video right
 
 ## Project Structure
 - `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models
@@ -50,8 +52,19 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 - `server/db.ts` - Database connection
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration
+- `client/src/components/page-navbar.tsx` - Shared glossy scroll-aware navbar for static pages
+- `client/src/components/page-footer.tsx` - Shared full footer with navigation links for static pages
 - `client/src/pages/landing.tsx` - Landing page for unauthenticated visitors
 - `client/src/pages/auth.tsx` - Sign in / Sign up page (supports ?mode=register)
+- `client/src/pages/about.tsx` - About page
+- `client/src/pages/pricing.tsx` - Pricing page with tiers
+- `client/src/pages/blog.tsx` - Blog page with article cards
+- `client/src/pages/changelog.tsx` - Changelog with version timeline
+- `client/src/pages/help-center.tsx` - Help center with category cards
+- `client/src/pages/privacy-policy.tsx` - Privacy policy
+- `client/src/pages/support.tsx` - Support page with contact form
+- `client/src/pages/request-feature.tsx` - Feature request form
+- `client/src/pages/contact.tsx` - Contact page with form
 - `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)

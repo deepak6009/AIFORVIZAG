@@ -1,5 +1,5 @@
-import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import PageNavbar from "@/components/page-navbar";
+import PageFooter from "@/components/page-footer";
 
 const badgeStyles: Record<string, string> = {
   New: "bg-emerald-50 text-emerald-600",
@@ -12,7 +12,7 @@ const entries = [
     version: "v1.4.0",
     date: "February 15, 2026",
     changes: [
-      { badge: "New", text: "AI-powered image tagging for instant search and discovery" },
+      { badge: "New", text: "AI-powered clip tagging for instant search and discovery" },
       { badge: "New", text: "Bulk upload support — drag and drop up to 50 files at once" },
       { badge: "Improved", text: "Workspace loading speed improved by 40%" },
       { badge: "Fixed", text: "Resolved an issue where folder thumbnails would not refresh after upload" },
@@ -31,8 +31,8 @@ const entries = [
     version: "v1.3.0",
     date: "January 12, 2026",
     changes: [
-      { badge: "New", text: "Nested folder support — organize your media with unlimited depth" },
-      { badge: "New", text: "Viewer role added for read-only team access" },
+      { badge: "New", text: "Nested folder support — organize raw footage, drafts, and finals with unlimited depth" },
+      { badge: "New", text: "Viewer role added for read-only client access" },
       { badge: "Improved", text: "File preview modal redesigned with a cleaner layout" },
     ],
   },
@@ -40,7 +40,7 @@ const entries = [
     version: "v1.2.0",
     date: "December 18, 2025",
     changes: [
-      { badge: "New", text: "Multi-workspace support — run separate workspaces per project" },
+      { badge: "New", text: "Multi-workspace support — run separate workspaces per creator or project" },
       { badge: "Improved", text: "Dashboard now shows recent activity and storage usage" },
       { badge: "Fixed", text: "Resolved a bug where renaming folders would reset sort order" },
     ],
@@ -50,34 +50,18 @@ const entries = [
     date: "November 25, 2025",
     changes: [
       { badge: "New", text: "Initial public launch with core upload, folder, and team features" },
-      { badge: "New", text: "Role-based access control for admins, members, and viewers" },
+      { badge: "New", text: "Role-based access control for creators, editors, and viewers" },
       { badge: "Improved", text: "Onboarding flow streamlined to three simple steps" },
     ],
   },
 ];
 
 export default function ChangelogPage() {
-  const [, navigate] = useLocation();
-
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <nav className="border-b border-gray-200/60 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-5 sm:px-8 h-14">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-            data-testid="link-back-home"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Home
-          </button>
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
-            <span className="font-light">the</span><span className="font-extrabold">crew</span>
-          </span>
-        </div>
-      </nav>
+      <PageNavbar />
 
-      <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 px-5 sm:px-8">
+      <section className="pt-24 pb-12 sm:pt-28 sm:pb-16 px-5 sm:px-8 lg:px-10">
         <div className="max-w-4xl mx-auto">
           <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4">
             Updates
@@ -91,7 +75,7 @@ export default function ChangelogPage() {
         </div>
       </section>
 
-      <section className="pb-16 sm:pb-20 px-5 sm:px-8">
+      <section className="pb-16 sm:pb-20 px-5 sm:px-8 lg:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="relative border-l-2 border-gray-200/80 ml-3 sm:ml-4 space-y-10">
             {entries.map((entry, i) => (
@@ -117,9 +101,7 @@ export default function ChangelogPage() {
         </div>
       </section>
 
-      <footer className="py-8 px-5 sm:px-8 text-center border-t border-gray-200/60">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} thecrew. All rights reserved.</p>
-      </footer>
+      <PageFooter />
     </div>
   );
 }
