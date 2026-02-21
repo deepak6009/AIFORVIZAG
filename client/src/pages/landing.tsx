@@ -147,10 +147,10 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <CrewLogo size={30} color="#1e293b" />
             <span
-              className="text-base sm:text-lg font-bold tracking-[0.02em] lowercase text-gray-900"
+              className="text-base sm:text-lg tracking-[0.02em] lowercase text-gray-900"
               data-testid="text-app-name"
             >
-              thecrew
+              <span className="font-light">the</span><span className="font-bold">crew</span>
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
@@ -207,8 +207,8 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div>
               <div className="mb-5 sm:mb-6" data-testid="text-hero-heading">
-                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-extrabold tracking-[0.04em] lowercase text-gray-900">
-                  thecrew
+                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] tracking-[0.04em] lowercase text-gray-900">
+                  <span className="font-light">the</span><span className="font-extrabold">crew</span>
                 </h1>
                 <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
                   {[
@@ -701,7 +701,7 @@ export default function LandingPage() {
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2 mb-1">
                 <CrewLogo size={24} color="#1e293b" />
-                <span className="font-bold text-gray-900 text-[15px] tracking-[0.02em] lowercase">thecrew</span>
+                <span className="text-gray-900 text-[15px] tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></span>
               </div>
             </div>
 

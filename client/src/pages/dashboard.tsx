@@ -86,7 +86,7 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-6 py-3">
           <div className="flex items-center gap-2">
             <CrewLogo size={32} />
-            <span className="font-bold text-lg tracking-[0.02em] lowercase" data-testid="text-app-name">thecrew</span>
+            <span className="text-lg tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-bold">crew</span></span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">

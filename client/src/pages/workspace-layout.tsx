@@ -116,7 +116,7 @@ export default function WorkspaceLayout() {
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <CrewLogo size={28} />
-            <span className="font-bold text-sm tracking-[0.02em] lowercase" data-testid="text-app-name">thecrew</span>
+            <span className="text-sm tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-bold">crew</span></span>
           </div>
           <div className="flex items-center gap-2">
             <Avatar className="w-7 h-7">
@@ -131,7 +131,7 @@ export default function WorkspaceLayout() {
 
         <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
           <div className="text-center mb-8 sm:mb-10">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to thecrew</h1>
+            <h1 className="text-2xl sm:text-3xl mb-2">Welcome to <span className="font-light">the</span><span className="font-bold">crew</span></h1>
             <p className="text-muted-foreground text-sm sm:text-base">Select a workspace or create a new one to get started</p>
           </div>
 
@@ -225,7 +225,7 @@ export default function WorkspaceLayout() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <CrewLogo size={28} />
-            <span className="font-bold text-sm tracking-[0.02em] lowercase hidden md:inline" data-testid="text-app-name">thecrew</span>
+            <span className="text-sm tracking-[0.02em] lowercase hidden md:inline" data-testid="text-app-name"><span className="font-light">the</span><span className="font-bold">crew</span></span>
           </div>
 
           <div className="h-5 w-px bg-border mx-0.5 sm:mx-1" />

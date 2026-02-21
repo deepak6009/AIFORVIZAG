@@ -53,7 +53,7 @@ export default function AuthPage() {
 
         <div className="flex flex-col items-center gap-3">
           <CrewLogo size={44} color="#1e293b" />
-          <h1 className="text-2xl font-bold tracking-[0.02em] lowercase">thecrew</h1>
+          <h1 className="text-2xl tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></h1>
           <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-muted-foreground -mt-1">
             Creator Editor Workspace
           </p>
