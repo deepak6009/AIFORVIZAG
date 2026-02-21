@@ -133,12 +133,12 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return `${m}:${s}`;
   };
 
-  const convertToWav = async (webmBlob: Blob): Promise<Blob> => {
+  const convertToMp3 = async (webmBlob: Blob): Promise<Blob> => {
+    const { Mp3Encoder } = await import("@breezystack/lamejs");
     const audioContext = new AudioContext();
     const arrayBuffer = await webmBlob.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-    const numChannels = 1;
     const sampleRate = audioBuffer.sampleRate;
     const samples = audioBuffer.getChannelData(0);
     const int16 = new Int16Array(samples.length);
@@ -147,27 +147,19 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
 
-    const wavBuffer = new ArrayBuffer(44 + int16.length * 2);
-    const view = new DataView(wavBuffer);
-    const writeStr = (off: number, str: string) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
-    writeStr(0, "RIFF");
-    view.setUint32(4, 36 + int16.length * 2, true);
-    writeStr(8, "WAVE");
-    writeStr(12, "fmt ");
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * numChannels * 2, true);
-    view.setUint16(32, numChannels * 2, true);
-    view.setUint16(34, 16, true);
-    writeStr(36, "data");
-    view.setUint32(40, int16.length * 2, true);
-    const output = new Int16Array(wavBuffer, 44);
-    output.set(int16);
+    const encoder = new Mp3Encoder(1, sampleRate, 128);
+    const mp3Parts: Int8Array[] = [];
+    const blockSize = 1152;
+    for (let i = 0; i < int16.length; i += blockSize) {
+      const chunk = int16.subarray(i, i + blockSize);
+      const encoded = encoder.encodeBuffer(chunk);
+      if (encoded.length > 0) mp3Parts.push(encoded);
+    }
+    const final = encoder.flush();
+    if (final.length > 0) mp3Parts.push(final);
 
     await audioContext.close();
-    return new Blob([wavBuffer], { type: "audio/wav" });
+    return new Blob(mp3Parts, { type: "audio/mpeg" });
   };
 
   const startRecording = async () => {
@@ -203,9 +195,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
 
         try {
-          const wavBlob = await convertToWav(webmBlob);
-          const localUrl = URL.createObjectURL(wavBlob);
-          const file = new File([wavBlob], `voice-note-${timestamp}.wav`, { type: "audio/wav" });
+          const mp3Blob = await convertToMp3(webmBlob);
+          const localUrl = URL.createObjectURL(mp3Blob);
+          const file = new File([mp3Blob], `voice-note-${timestamp}.mp3`, { type: "audio/mpeg" });
           handleFilesSelected([file], localUrl);
         } catch {
           const localUrl = URL.createObjectURL(webmBlob);
