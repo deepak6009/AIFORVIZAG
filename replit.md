@@ -13,10 +13,11 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 ## Branding
 - Project name: "thecrew" (lowercase, one word)
 - Acronym: Creator Editor Workspace (Cr-E-W)
-- Logo: SVG component (CrewLogo) - two flowing organic shapes with center dot, Higgsfield-inspired abstract mark suggesting creative collaboration
-- Style: Bold lowercase wordmark "thecrew" paired with SVG logo mark, tracking-[0.02em]
-- Hero section: massive lowercase "thecrew" text with acronym breakdown below
-- Navbar, footer, auth page, dashboard all use logo + wordmark lockup
+- Logo: Typography-only wordmark — "the" (font-light) + "crew" (font-extrabold), no separate SVG icon
+- Style: Lowercase wordmark "thecrew" with weight contrast is the logo itself, tracking-[0.02em]
+- Hero section: Centered tagline-focused hero ("Your media, finally organized.") with video below, no redundant brand repetition
+- Navbar, footer, auth page, dashboard all use pure typographic wordmark as logo
+- Favicon: "cw" initials on dark rounded square
 
 ## Key Features
 - Workspace creation and management with workspace switcher
@@ -36,10 +37,10 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 
 ## Design System
 - Typography: SF Pro for Apple devices, Inter for all other platforms; semibold/medium weights, negative letter-spacing
-- Animations: blur-up reveals with filter: blur() in keyframes, cubic-bezier(0.22, 1, 0.36, 1) easing
+- Animations: fade-in and fade-in-up on hero elements with staggered delays, cubic-bezier(0.22, 1, 0.36, 1) easing, card hover lift effects
 - Light theme: #fafafa warm background, softer borders (border-gray-200/60), subtle gradients
 - Navbar: animated gradient (linear-gradient with 8s animation shift)
-- Hero: split layout - typographic CREW name left, app preview mockup right
+- Hero: centered layout with tagline heading, description, CTAs, and video below
 
 ## Project Structure
 - `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models

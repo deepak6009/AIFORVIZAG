@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { CrewLogo } from "@/components/crew-logo";
 import {
   Layers,
   Users,
@@ -144,10 +143,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
-          <div className="flex items-center gap-2">
-            <CrewLogo size={30} color="#1e293b" />
+          <div className="flex items-center">
             <span
-              className="text-base sm:text-lg tracking-[0.02em] lowercase text-gray-900"
+              className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900"
               data-testid="text-app-name"
             >
               <span className="font-light">the</span><span className="font-bold">crew</span>
@@ -204,75 +202,42 @@ export default function LandingPage() {
       <section className="pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-40 lg:pb-24 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div>
-              <div className="mb-5 sm:mb-6" data-testid="text-hero-heading">
-                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] tracking-[0.04em] lowercase text-gray-900">
-                  <span className="font-light">the</span><span className="font-extrabold">crew</span>
-                </h1>
-                <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
-                  {[
-                    { letter: "Cr", word: "eator" },
-                    { letter: "E", word: "ditor" },
-                    { letter: "W", word: "orkspace" },
-                  ].map((item, i) => (
-                    <span key={item.letter} className="flex items-center gap-1.5 sm:gap-2">
-                      {i > 0 && <span className="w-1 h-1 rounded-full bg-gray-300" />}
-                      <span className="text-[10px] sm:text-xs font-medium tracking-[0.1em] uppercase text-gray-400">
-                        <span className="text-gray-900 font-bold">{item.letter}</span>{item.word}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <h2
-                className="text-lg leading-[1.3] sm:text-xl md:text-2xl font-medium tracking-[-0.01em] text-gray-500"
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-14">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-5 sm:mb-6 animate-fade-in">
+              AI-Powered Creative Workspace
+            </p>
+            <h1 className="text-[2.5rem] leading-[1.05] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-semibold tracking-[-0.03em] text-gray-900 animate-fade-in-up" data-testid="text-hero-heading">
+              Your media,{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
+                finally organized.
+              </span>
+            </h1>
+            <p className="mt-5 sm:mt-7 text-base sm:text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-[1.7] font-normal animate-fade-in-up-delay">
+              Upload, organize, and collaborate on images and videos — with folders, roles, and cloud storage built right in.
+            </p>
+            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
+              <Button
+                size="lg"
+                onClick={() => navigate("/auth?mode=register")}
+                className="bg-gray-900 text-white font-medium rounded-full"
+                data-testid="button-get-started"
               >
-                AI-Powered{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 font-semibold">
-                  Creative Workspace
-                </span>
-              </h2>
-              <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal">
-                Upload, organize, and collaborate on images and videos - with folders, roles, and cloud storage built right in.
-              </p>
-              <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5">
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/auth?mode=register")}
-                  className="bg-gray-900 text-white font-medium rounded-full"
-                  data-testid="button-get-started"
-                >
-                  Start for free
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate("/auth")}
-                  className="rounded-full font-medium text-gray-600"
-                  data-testid="button-hero-signin"
-                >
-                  Sign in
-                </Button>
-              </div>
-              <div className="mt-8 sm:mt-10 flex items-center gap-6">
-                {[
-                  { icon: FolderTree, label: "Folders", color: "text-blue-500", bg: "bg-blue-50" },
-                  { icon: Users, label: "Teams", color: "text-violet-500", bg: "bg-violet-50" },
-                  { icon: Upload, label: "Uploads", color: "text-emerald-500", bg: "bg-emerald-50" },
-                  { icon: Shield, label: "Secure", color: "text-amber-500", bg: "bg-amber-50" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center`}>
-                      <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-                    </div>
-                    <span className="text-xs font-medium text-gray-500 hidden sm:inline">{item.label}</span>
-                  </div>
-                ))}
-              </div>
+                Start for free
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => navigate("/auth")}
+                className="rounded-full font-medium text-gray-600"
+                data-testid="button-hero-signin"
+              >
+                Sign in
+              </Button>
             </div>
+          </div>
 
+          <div className="animate-fade-in-up-delay-2">
             <HeroVideo />
           </div>
         </div>
@@ -298,7 +263,7 @@ export default function LandingPage() {
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-2xl mb-12 sm:mb-16">
-            <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               The Problem
             </p>
             <h2
@@ -356,7 +321,7 @@ export default function LandingPage() {
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
-            <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               The Solution
             </p>
             <h2
@@ -465,7 +430,7 @@ export default function LandingPage() {
         }} />
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
-            <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-400 mb-4 sm:mb-5">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-400 mb-4 sm:mb-5">
               How It Works
             </p>
             <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] leading-[1.12]">
@@ -525,7 +490,7 @@ export default function LandingPage() {
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-            <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               Kind Words
             </p>
             <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]">
@@ -572,7 +537,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
             <div>
-              <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
+              <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 Built for Teams
               </p>
               <h2
@@ -699,8 +664,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
-              <div className="flex items-center gap-2 mb-1">
-                <CrewLogo size={24} color="#1e293b" />
+              <div className="flex items-center mb-1">
                 <span className="text-gray-900 text-[15px] tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></span>
               </div>
             </div>

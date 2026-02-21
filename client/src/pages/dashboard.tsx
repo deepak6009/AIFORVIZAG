@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { CrewLogo } from "@/components/crew-logo";
+
 import type { Workspace } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,10 +84,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-6 py-3">
-          <div className="flex items-center gap-2">
-            <CrewLogo size={32} />
-            <span className="text-lg tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-bold">crew</span></span>
-          </div>
+          <span className="text-xl tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></span>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Avatar className="w-8 h-8">

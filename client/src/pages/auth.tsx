@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { CrewLogo } from "@/components/crew-logo";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
@@ -51,10 +51,9 @@ export default function AuthPage() {
           Back to home
         </button>
 
-        <div className="flex flex-col items-center gap-3">
-          <CrewLogo size={44} color="#1e293b" />
-          <h1 className="text-2xl tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></h1>
-          <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-muted-foreground -mt-1">
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-3xl tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-extrabold">crew</span></h1>
+          <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground">
             Creator Editor Workspace
           </p>
         </div>
