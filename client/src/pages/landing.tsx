@@ -1,6 +1,5 @@
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { useInView } from "@/hooks/use-in-view";
 import { Button } from "@/components/ui/button";
 import { CrewLogo } from "@/components/crew-logo";
 import {
@@ -20,27 +19,6 @@ import {
   Quote,
 } from "lucide-react";
 
-function AnimatedSection({
-  children,
-  className = "",
-  animation = "landing-fade-up",
-  delay = "",
-}: {
-  children: ReactNode;
-  className?: string;
-  animation?: string;
-  delay?: string;
-}) {
-  const { ref, isInView } = useInView();
-  return (
-    <div
-      ref={ref}
-      className={`${isInView ? `${animation} ${delay}` : "landing-animate-hidden"} ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
 
 const marqueeItems = [
   "Media Management",
@@ -148,8 +126,8 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            <div className="landing-fade-up">
-              <div className="mb-5 sm:mb-6 landing-fade-up" data-testid="text-hero-heading">
+            <div>
+              <div className="mb-5 sm:mb-6" data-testid="text-hero-heading">
                 <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-extrabold tracking-[0.04em] lowercase text-gray-900">
                   thecrew
                 </h1>
@@ -176,10 +154,10 @@ export default function LandingPage() {
                   Creative Workspace
                 </span>
               </h2>
-              <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal landing-fade-up landing-stagger-2">
+              <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal">
                 Upload, organize, and collaborate on images and videos - with folders, roles, and cloud storage built right in.
               </p>
-              <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-3">
+              <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5">
                 <Button
                   size="lg"
                   onClick={() => navigate("/auth?mode=register")}
@@ -199,7 +177,7 @@ export default function LandingPage() {
                   Sign in
                 </Button>
               </div>
-              <div className="mt-8 sm:mt-10 flex items-center gap-6 landing-fade-up landing-stagger-4">
+              <div className="mt-8 sm:mt-10 flex items-center gap-6">
                 {[
                   { icon: FolderTree, label: "Folders", color: "text-blue-500", bg: "bg-blue-50" },
                   { icon: Users, label: "Teams", color: "text-violet-500", bg: "bg-violet-50" },
@@ -216,7 +194,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative landing-scale-in landing-stagger-3">
+            <div className="relative">
               <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
                 <div className="aspect-[4/3] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
                   <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
@@ -284,7 +262,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100 landing-fade-up landing-stagger-6">
+              <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                     <Upload className="w-4 h-4 text-emerald-500" />
@@ -295,7 +273,7 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-              <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 landing-fade-up landing-stagger-7 hidden sm:block">
+              <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 hidden sm:block">
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-1.5">
                     <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white" />
@@ -329,7 +307,7 @@ export default function LandingPage() {
 
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
-          <AnimatedSection className="max-w-2xl mb-12 sm:mb-16">
+          <div className="max-w-2xl mb-12 sm:mb-16">
             <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               The Problem
             </p>
@@ -347,7 +325,7 @@ export default function LandingPage() {
               Files live in Slack threads, Google Drive links, local desktops, and
               email attachments. Nobody knows where the latest version is.
             </p>
-          </AnimatedSection>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
             {[
@@ -367,10 +345,7 @@ export default function LandingPage() {
                 desc: "end up duplicated across different platforms",
               },
             ].map((item, i) => (
-              <AnimatedSection
-                key={i}
-                delay={`landing-stagger-${i + 2}`}
-              >
+              <div key={i}>
                 <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/60 landing-card-hover" data-testid={`card-stat-${i}`}>
                   <p className="text-4xl sm:text-5xl font-semibold text-gray-900 tracking-[-0.04em]">
                     {item.stat}
@@ -382,7 +357,7 @@ export default function LandingPage() {
                     {item.desc}
                   </p>
                 </div>
-              </AnimatedSection>
+              </div>
             ))}
           </div>
         </div>
@@ -390,7 +365,7 @@ export default function LandingPage() {
 
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-6xl mx-auto">
-          <AnimatedSection className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
+          <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
             <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               The Solution
             </p>
@@ -408,7 +383,7 @@ export default function LandingPage() {
               thecrew brings your team's images and videos into a single,
               beautifully organized workspace.
             </p>
-          </AnimatedSection>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {[
@@ -467,10 +442,7 @@ export default function LandingPage() {
                 tagBg: "bg-rose-50 text-rose-600",
               },
             ].map((feature, i) => (
-              <AnimatedSection
-                key={feature.title}
-                delay={`landing-stagger-${(i % 3) + 1}`}
-              >
+              <div key={feature.title}>
                 <div
                   className="group h-full bg-[#fafafa] rounded-2xl p-6 sm:p-7 border border-gray-200/60 landing-card-hover"
                   data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
@@ -490,7 +462,7 @@ export default function LandingPage() {
                     {feature.description}
                   </p>
                 </div>
-              </AnimatedSection>
+              </div>
             ))}
           </div>
         </div>
@@ -502,7 +474,7 @@ export default function LandingPage() {
           backgroundSize: "40px 40px",
         }} />
         <div className="max-w-6xl mx-auto relative">
-          <AnimatedSection className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
+          <div className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
             <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-400 mb-4 sm:mb-5">
               How It Works
             </p>
@@ -513,7 +485,7 @@ export default function LandingPage() {
                 organized bliss.
               </span>
             </h2>
-          </AnimatedSection>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-8 lg:gap-14">
             {[
@@ -536,10 +508,7 @@ export default function LandingPage() {
                 icon: Upload,
               },
             ].map((item, i) => (
-              <AnimatedSection
-                key={i}
-                delay={`landing-stagger-${i + 2}`}
-              >
+              <div key={i}>
                 <div className="relative" data-testid={`card-step-${item.step}`}>
                   <div className="text-[5rem] sm:text-[7rem] font-bold text-white/[0.025] leading-none absolute -top-4 sm:-top-6 -left-1 tracking-[-0.05em]">
                     {item.step}
@@ -557,7 +526,7 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </div>
-              </AnimatedSection>
+              </div>
             ))}
           </div>
         </div>
@@ -565,7 +534,7 @@ export default function LandingPage() {
 
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto">
-          <AnimatedSection className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
             <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
               Kind Words
             </p>
@@ -576,14 +545,11 @@ export default function LandingPage() {
               </span>
               .
             </h2>
-          </AnimatedSection>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
             {testimonials.map((t, i) => (
-              <AnimatedSection
-                key={i}
-                delay={`landing-stagger-${i + 1}`}
-              >
+              <div key={i}>
                 <div className="bg-[#fafafa] rounded-2xl p-6 sm:p-7 border border-gray-200/60 h-full flex flex-col landing-card-hover" data-testid={`card-testimonial-${i}`}>
                   <div className="flex gap-0.5 mb-4">
                     {Array.from({ length: t.rating }).map((_, j) => (
@@ -606,7 +572,7 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-              </AnimatedSection>
+              </div>
             ))}
           </div>
         </div>
@@ -615,7 +581,7 @@ export default function LandingPage() {
       <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
-            <AnimatedSection animation="landing-slide-right">
+            <div>
               <p className="text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 Built for Teams
               </p>
@@ -655,9 +621,9 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-            </AnimatedSection>
+            </div>
 
-            <AnimatedSection animation="landing-slide-left">
+            <div>
               <div className="bg-gray-950 rounded-2xl sm:rounded-[20px] p-6 sm:p-8 lg:p-9 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.03]" style={{
                   backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
@@ -700,7 +666,7 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
-            </AnimatedSection>
+            </div>
           </div>
         </div>
       </section>
@@ -712,7 +678,7 @@ export default function LandingPage() {
         }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/[0.07] rounded-full blur-[100px]" />
         <div className="max-w-3xl mx-auto relative text-center">
-          <AnimatedSection>
+          <div>
             <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] leading-[1.12]">
               Ready to get your media
               <br />
@@ -735,7 +701,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
-          </AnimatedSection>
+          </div>
         </div>
       </section>
 

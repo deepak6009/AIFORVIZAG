@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { CrewLogo } from "@/components/crew-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Mail, Lock, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 
 export default function AuthPage() {
@@ -42,113 +41,110 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-8">
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           data-testid="link-back-to-landing"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to home
         </button>
-        <div className="flex flex-col items-center gap-2">
-          <CrewLogo size={48} color="#1e293b" />
+
+        <div className="flex flex-col items-center gap-3">
+          <CrewLogo size={44} color="#1e293b" />
           <h1 className="text-2xl font-bold tracking-[0.02em] lowercase">thecrew</h1>
-          <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
+          <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-muted-foreground -mt-1">
             Creator Editor Workspace
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {mode === "login" ? "Welcome back" : "Create your account"}
           </p>
         </div>
 
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">
-              {mode === "login" ? "Sign In" : "Sign Up"}
-            </CardTitle>
-            <CardDescription>
-              {mode === "login"
-                ? "Enter your email and password to continue"
-                : "Enter your email and password to get started"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9"
-                    required
-                    data-testid="input-email"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="At least 6 characters"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9"
-                    required
-                    minLength={6}
-                    data-testid="input-password"
-                  />
-                </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isPending}
-                data-testid="button-submit-auth"
-              >
-                {isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                )}
-                {mode === "login" ? "Sign In" : "Sign Up"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 bg-muted/60 rounded-full p-1 relative" data-testid="auth-mode-toggle">
+          <div
+            className="absolute top-1 bottom-1 rounded-full bg-background shadow-sm transition-transform duration-300 ease-out"
+            style={{
+              width: "calc(50% - 4px)",
+              left: "4px",
+              transform: mode === "register" ? "translateX(calc(100% + 4px))" : "translateX(0)",
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setMode("login")}
+            className={`relative z-10 py-2 text-sm font-medium rounded-full text-center transition-colors duration-200 ${
+              mode === "login" ? "text-foreground" : "text-muted-foreground"
+            }`}
+            data-testid="toggle-sign-in"
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("register")}
+            className={`relative z-10 py-2 text-sm font-medium rounded-full text-center transition-colors duration-200 ${
+              mode === "register" ? "text-foreground" : "text-muted-foreground"
+            }`}
+            data-testid="toggle-sign-up"
+          >
+            Sign Up
+          </button>
+        </div>
 
-        <p className="text-center text-sm text-muted-foreground">
-          {mode === "login" ? (
-            <>
-              Don't have an account?{" "}
-              <button
-                onClick={() => setMode("register")}
-                className="text-primary font-medium hover:underline"
-                data-testid="link-switch-to-register"
-              >
-                Sign Up
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button
-                onClick={() => setMode("login")}
-                className="text-primary font-medium hover:underline"
-                data-testid="link-switch-to-login"
-              >
-                Sign In
-              </button>
-            </>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-9 h-11"
+                required
+                autoComplete="email"
+                data-testid="input-email"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                placeholder={mode === "register" ? "At least 6 characters" : "Enter your password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-9 h-11"
+                required
+                minLength={6}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                data-testid="input-password"
+              />
+            </div>
+          </div>
+          <Button
+            type="submit"
+            className="w-full h-11 rounded-lg font-medium"
+            disabled={isPending}
+            data-testid="button-submit-auth"
+          >
+            {isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <ArrowRight className="w-4 h-4 mr-2" />
+            )}
+            {mode === "login" ? "Sign In" : "Create Account"}
+          </Button>
+        </form>
+
+        <p className="text-center text-xs text-muted-foreground">
+          {mode === "login"
+            ? "New here? Switch to Sign Up above to create an account."
+            : "Already have an account? Switch to Sign In above."}
         </p>
       </div>
     </div>
