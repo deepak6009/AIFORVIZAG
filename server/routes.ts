@@ -367,16 +367,18 @@ export async function registerRoutes(
       }
 
       const summaryApiUrl = "https://uhqp6goc12.execute-api.ap-south-1.amazonaws.com/summary";
+      const payload = { files };
+      console.log("Sending to summary API:", JSON.stringify(payload));
       const response = await fetch(summaryApiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ files }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Summary API error:", response.status, errorText);
-        return res.status(response.status).json({ error: `Summary API error: ${errorText}` });
+        return res.status(502).json({ error: `The summary service is temporarily unavailable. Please try again.` });
       }
 
       const data = await response.json();

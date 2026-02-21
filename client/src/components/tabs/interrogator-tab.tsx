@@ -4,7 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  Upload, FileText, Mic, MicOff, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle, Square
+  Upload, FileText, Mic, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle,
+  Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 
@@ -16,20 +17,6 @@ interface UploadedFile {
   cloudfrontUrl: string;
   status: "uploading" | "done" | "error";
 }
-
-const ACCEPTED_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "audio/mpeg",
-  "audio/mp3",
-  "audio/wav",
-  "audio/ogg",
-  "audio/webm",
-  "audio/mp4",
-  "text/plain",
-  "application/rtf",
-];
 
 const ACCEPTED_EXTENSIONS = ".pdf,.doc,.docx,.txt,.rtf,.mp3,.wav,.ogg,.webm,.m4a";
 
@@ -57,6 +44,54 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const STEPS = [
+  { id: 1, label: "Base", icon: Upload, description: "Upload & Analyse" },
+  { id: 2, label: "AI Chat", icon: MessageSquare, description: "Refine with AI" },
+  { id: 3, label: "Final Document", icon: FileCheck, description: "Final Agenda" },
+];
+
+function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onStepClick: (step: number) => void }) {
+  return (
+    <div className="flex items-center justify-center gap-0 mb-6" data-testid="step-indicator">
+      {STEPS.map((step, idx) => {
+        const isActive = currentStep === step.id;
+        const isCompleted = currentStep > step.id;
+        const isClickable = step.id <= currentStep;
+        const Icon = step.icon;
+        return (
+          <div key={step.id} className="flex items-center">
+            <button
+              onClick={() => isClickable && onStepClick(step.id)}
+              disabled={!isClickable}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : isCompleted
+                    ? "bg-primary/10 text-primary cursor-pointer hover:bg-primary/20"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+              }`}
+              data-testid={`step-${step.id}`}
+            >
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                isActive ? "bg-primary-foreground text-primary" : isCompleted ? "bg-primary text-primary-foreground" : "bg-muted-foreground/30 text-muted-foreground"
+              }`}>
+                {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.id}
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="text-xs font-semibold leading-tight">{step.label}</p>
+                <p className={`text-[10px] leading-tight ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{step.description}</p>
+              </div>
+            </button>
+            {idx < STEPS.length - 1 && (
+              <ChevronRight className={`w-4 h-4 mx-1 shrink-0 ${currentStep > step.id ? "text-primary" : "text-muted-foreground/40"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function InterrogatorTab({ workspaceId }: { workspaceId: string }) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +99,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [currentStep, setCurrentStep] = useState(1);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [textBrief, setTextBrief] = useState("");
   const [summarizing, setSummarizing] = useState(false);
@@ -73,12 +110,20 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
 
+  const [chatMessages, setChatMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
 
   const formatRecordingTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -91,45 +136,31 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       audioChunksRef.current = [];
-
       const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       mediaRecorderRef.current = mediaRecorder;
-
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
-
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         stream.getTracks().forEach(t => t.stop());
         streamRef.current = null;
-
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
         const file = new File([audioBlob], `voice-note-${timestamp}.webm`, { type: "audio/webm" });
         handleFilesSelected([file]);
       };
-
       mediaRecorder.start(250);
       setIsRecording(true);
       setRecordingTime(0);
       timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
-    } catch (err: any) {
-      toast({
-        title: "Microphone access denied",
-        description: "Please allow microphone access in your browser to record voice notes.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Microphone access denied", description: "Please allow microphone access in your browser.", variant: "destructive" });
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     setIsRecording(false);
     setRecordingTime(0);
   };
@@ -143,40 +174,19 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     });
     if (!urlRes.ok) throw new Error("Failed to get upload URL");
     const { uploadURL, objectPath } = await urlRes.json();
-
-    await fetch(uploadURL, {
-      method: "PUT",
-      body: file,
-      headers: { "Content-Type": file.type },
-    });
-
+    await fetch(uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
     return objectPath;
   }, []);
 
   const handleFilesSelected = useCallback(async (files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-
-    for (const file of fileArray) {
+    for (const file of Array.from(files)) {
       const fileId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const entry: UploadedFile = {
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        cloudfrontUrl: "",
-        status: "uploading",
-      };
-      setUploadedFiles(prev => [...prev, entry]);
-
+      setUploadedFiles(prev => [...prev, { id: fileId, name: file.name, size: file.size, type: file.type, cloudfrontUrl: "", status: "uploading" }]);
       try {
         const cloudfrontUrl = await uploadFileToS3(file);
-        setUploadedFiles(prev =>
-          prev.map(f => f.id === fileId ? { ...f, cloudfrontUrl, status: "done" as const } : f)
-        );
+        setUploadedFiles(prev => prev.map(f => f.id === fileId ? { ...f, cloudfrontUrl, status: "done" as const } : f));
       } catch (err: any) {
-        setUploadedFiles(prev =>
-          prev.map(f => f.id === fileId ? { ...f, status: "error" as const } : f)
-        );
+        setUploadedFiles(prev => prev.map(f => f.id === fileId ? { ...f, status: "error" as const } : f));
         toast({ title: "Upload failed", description: `${file.name}: ${err.message}`, variant: "destructive" });
       }
     }
@@ -185,36 +195,28 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    if (e.dataTransfer.files.length > 0) {
-      handleFilesSelected(e.dataTransfer.files);
-    }
+    if (e.dataTransfer.files.length > 0) handleFilesSelected(e.dataTransfer.files);
   }, [handleFilesSelected]);
 
-  const removeFile = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
-  };
+  const removeFile = (fileId: string) => setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
 
-  const handleSubmit = async () => {
+  const handleAnalyse = async () => {
     const fileUrls: { url: string }[] = [];
-
-    const successFiles = uploadedFiles.filter(f => f.status === "done");
-    for (const f of successFiles) {
+    for (const f of uploadedFiles.filter(f => f.status === "done")) {
       fileUrls.push({ url: f.cloudfrontUrl });
     }
-
     if (textBrief.trim()) {
       try {
         const res = await apiRequest("POST", "/api/interrogator/upload-text", { text: textBrief.trim() });
         const data = await res.json();
         fileUrls.push({ url: data.cloudfrontUrl });
-      } catch (err: any) {
+      } catch {
         toast({ title: "Error", description: "Failed to upload text brief", variant: "destructive" });
         return;
       }
     }
-
     if (fileUrls.length === 0) {
-      toast({ title: "Nothing to submit", description: "Please upload files or enter text first", variant: "destructive" });
+      toast({ title: "Nothing to analyse", description: "Please upload files or enter text first", variant: "destructive" });
       return;
     }
 
@@ -226,73 +228,84 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       const res = await apiRequest("POST", "/api/interrogator/summarize", { files: fileUrls });
       const data = await res.json();
       setSummaryResult(data);
+      setCurrentStep(2);
     } catch (err: any) {
       setSummaryError(err.message || "Failed to get summary");
-      toast({ title: "Summary failed", description: err.message, variant: "destructive" });
+      toast({ title: "Analysis failed", description: err.message, variant: "destructive" });
     } finally {
       setSummarizing(false);
     }
   };
 
+  const getSummaryText = () => {
+    if (!summaryResult) return "";
+    if (typeof summaryResult === "string") return summaryResult;
+    return summaryResult.summary || summaryResult.result || summaryResult.message || JSON.stringify(summaryResult, null, 2);
+  };
+
+  const handleSendChat = () => {
+    if (!chatInput.trim()) return;
+    setChatMessages(prev => [
+      ...prev,
+      { role: "user", text: chatInput.trim() },
+      { role: "ai", text: "AI Chat integration coming soon. This step will allow you to refine the summary through conversation before generating the final agenda." },
+    ]);
+    setChatInput("");
+  };
+
+  const handleGenerateFinalDoc = () => {
+    setCurrentStep(3);
+  };
+
   const hasContent = uploadedFiles.some(f => f.status === "done") || textBrief.trim().length > 0;
   const isUploading = uploadedFiles.some(f => f.status === "uploading");
-  const isRecordingOrUploading = isRecording || isUploading;
 
   return (
     <div className="h-full overflow-auto">
-      <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <div className="text-center py-4">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-7 h-7 text-primary" />
-          </div>
-          <h2 className="text-lg font-semibold mb-1" data-testid="text-interrogator-title">AI Interrogator</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Upload your briefing materials — documents, voice notes, or typed notes — and I'll create a structured summary for your editing team.
-          </p>
-        </div>
+      <div className="max-w-3xl mx-auto p-6 space-y-4">
+        <StepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
 
-        {!summaryResult && (
-          <>
-            <div>
-              <h3 className="text-sm font-medium mb-2">Upload Briefing Files</h3>
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-                  dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"
-                }`}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                data-testid="dropzone-briefing"
-              >
-                <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm font-medium mb-1">Drag & drop files here, or click to browse</p>
-                <p className="text-xs text-muted-foreground">
-                  Supports PDF, Word (.doc, .docx), Text (.txt), Audio (.mp3, .wav, .ogg, .webm, .m4a)
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept={ACCEPTED_EXTENSIONS}
-                  className="hidden"
-                  onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
-                  data-testid="input-briefing-files"
-                />
+        {currentStep === 1 && (
+          <div className="space-y-5" data-testid="step-1-content">
+            <div className="text-center pb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <Upload className="w-6 h-6 text-primary" />
               </div>
+              <h2 className="text-lg font-semibold" data-testid="text-interrogator-title">Upload Briefing Materials</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Drop your documents, voice notes, or type your brief below.
+              </p>
+            </div>
+
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50"
+              }`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              data-testid="dropzone-briefing"
+            >
+              <Upload className="w-7 h-7 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-medium mb-1">Drag & drop files here, or click to browse</p>
+              <p className="text-xs text-muted-foreground">PDF, Word, Text, Audio (.mp3, .wav, .ogg, .webm, .m4a)</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ACCEPTED_EXTENSIONS}
+                className="hidden"
+                onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
+                data-testid="input-briefing-files"
+              />
             </div>
 
             <div>
-              <h3 className="text-sm font-medium mb-2">Or Record a Voice Note</h3>
               {!isRecording ? (
-                <Button
-                  variant="outline"
-                  className="w-full h-14 gap-3"
-                  onClick={startRecording}
-                  data-testid="button-start-recording"
-                >
+                <Button variant="outline" className="w-full h-12 gap-3" onClick={startRecording} data-testid="button-start-recording">
                   <Mic className="w-5 h-5 text-purple-500" />
-                  <span>Tap to Record Voice Note</span>
+                  <span>Record Voice Note</span>
                 </Button>
               ) : (
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
@@ -301,13 +314,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     Recording {formatRecordingTime(recordingTime)}
                   </span>
                   <div className="flex-1" />
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="gap-2"
-                    onClick={stopRecording}
-                    data-testid="button-stop-recording"
-                  >
+                  <Button variant="destructive" size="sm" className="gap-2" onClick={stopRecording} data-testid="button-stop-recording">
                     <Square className="w-3.5 h-3.5" />
                     Stop
                   </Button>
@@ -317,30 +324,20 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
             {uploadedFiles.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-medium">Uploaded Files ({uploadedFiles.filter(f => f.status === "done").length}/{uploadedFiles.length})</h3>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Uploaded ({uploadedFiles.filter(f => f.status === "done").length}/{uploadedFiles.length})
+                </h3>
                 {uploadedFiles.map(file => (
-                  <div
-                    key={file.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card"
-                    data-testid={`briefing-file-${file.id}`}
-                  >
+                  <div key={file.id} className="flex items-center gap-3 p-2.5 rounded-lg border bg-card" data-testid={`briefing-file-${file.id}`}>
                     {getFileIcon(file.type, file.name)}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getFileTypeLabel(file.type, file.name)} · {formatSize(file.size)}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{getFileTypeLabel(file.type, file.name)} · {formatSize(file.size)}</p>
                     </div>
                     {file.status === "uploading" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
                     {file.status === "done" && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                     {file.status === "error" && <AlertCircle className="w-4 h-4 text-destructive" />}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0"
-                      onClick={() => removeFile(file.id)}
-                      data-testid={`remove-file-${file.id}`}
-                    >
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeFile(file.id)} data-testid={`remove-file-${file.id}`}>
                       <X className="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -348,117 +345,194 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
               </div>
             )}
 
-            <div>
-              <h3 className="text-sm font-medium mb-2">Or Type Your Brief</h3>
-              <Textarea
-                placeholder="Type your briefing notes here... This will be converted to a text file and included with your other materials."
-                value={textBrief}
-                onChange={(e) => setTextBrief(e.target.value)}
-                rows={5}
-                className="resize-none"
-                data-testid="input-text-brief"
-              />
-              {textBrief.trim() && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  This text will be saved as a .txt file and included in the summary
-                </p>
-              )}
-            </div>
+            <Textarea
+              placeholder="Type your briefing notes here..."
+              value={textBrief}
+              onChange={(e) => setTextBrief(e.target.value)}
+              rows={4}
+              className="resize-none"
+              data-testid="input-text-brief"
+            />
+
+            {summaryError && (
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-destructive/50 bg-destructive/5 text-sm">
+                <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                <span className="text-destructive">{summaryError}</span>
+              </div>
+            )}
 
             <Button
-              onClick={handleSubmit}
-              disabled={!hasContent || isRecordingOrUploading || summarizing}
+              onClick={handleAnalyse}
+              disabled={!hasContent || isUploading || isRecording || summarizing}
               className="w-full"
               size="lg"
-              data-testid="button-submit-interrogator"
+              data-testid="button-analyse"
             >
               {summarizing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Summary...
-                </>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analysing...</>
               ) : isRecording ? (
-                <>
-                  <Mic className="w-4 h-4 mr-2 animate-pulse text-red-500" />
-                  Recording in progress...
-                </>
+                <><Mic className="w-4 h-4 mr-2 animate-pulse text-red-500" />Recording...</>
               ) : isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading files...
-                </>
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading...</>
               ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Summary
-                </>
+                <><Sparkles className="w-4 h-4 mr-2" />Analyse</>
               )}
             </Button>
-          </>
+          </div>
         )}
 
-        {summaryError && (
-          <Card className="border-destructive">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-destructive">Summary Failed</p>
-                  <p className="text-sm text-muted-foreground mt-1">{summaryError}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => { setSummaryError(null); handleSubmit(); }}
-                    data-testid="button-retry-summary"
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {currentStep === 2 && (
+          <div className="space-y-4" data-testid="step-2-content">
+            {summaryResult && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-semibold">Analysis Summary</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed max-h-40 overflow-auto" data-testid="text-summary">
+                    {getSummaryText()}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
-        {summaryResult && (
-          <div className="space-y-4" data-testid="summary-result">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold">AI Summary</h3>
+            <Card className="flex-1">
+              <CardContent className="p-4 flex flex-col" style={{ height: "360px" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">AI Chat</h3>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">Coming Soon</span>
                 </div>
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  {typeof summaryResult === "string" ? (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{summaryResult}</p>
-                  ) : summaryResult.summary ? (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{summaryResult.summary}</p>
-                  ) : summaryResult.result ? (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{summaryResult.result}</p>
-                  ) : summaryResult.message ? (
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{summaryResult.message}</p>
-                  ) : (
-                    <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto whitespace-pre-wrap">
-                      {JSON.stringify(summaryResult, null, 2)}
-                    </pre>
+
+                <div className="flex-1 overflow-auto space-y-3 mb-3 pr-1">
+                  {chatMessages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                      <Bot className="w-10 h-10 mb-2 opacity-30" />
+                      <p className="text-sm">Chat with AI to refine your brief</p>
+                      <p className="text-xs mt-1">Ask questions, clarify details, or request changes to the summary.</p>
+                    </div>
                   )}
+                  {chatMessages.map((msg, i) => (
+                    <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      {msg.role === "ai" && (
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Bot className="w-4 h-4 text-primary" />
+                        </div>
+                      )}
+                      <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                        msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`} data-testid={`chat-message-${i}`}>
+                        {msg.text}
+                      </div>
+                      {msg.role === "user" && (
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <div className="flex gap-2">
+                  <Textarea
+                    placeholder="Type a message..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    rows={1}
+                    className="resize-none flex-1 min-h-[40px]"
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
+                    data-testid="input-chat"
+                  />
+                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim()} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
+                    <Send className="w-4 h-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSummaryResult(null);
-                setSummaryError(null);
-                setUploadedFiles([]);
-                setTextBrief("");
-              }}
-              className="w-full"
-              data-testid="button-new-interrogation"
-            >
-              Start New Interrogation
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep(1)} className="flex-1" data-testid="button-back-to-base">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Base
+              </Button>
+              <Button onClick={handleGenerateFinalDoc} className="flex-1" data-testid="button-generate-final">
+                Generate Final Document
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-4" data-testid="step-3-content">
+            <div className="text-center pb-2">
+              <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-3">
+                <FileCheck className="w-6 h-6 text-green-600" />
+              </div>
+              <h2 className="text-lg font-semibold">Final Agenda</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your structured brief based on the analysis and AI conversation.
+              </p>
+            </div>
+
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <FileCheck className="w-5 h-5 text-green-600" />
+                  <h3 className="font-semibold">Structured Brief</h3>
+                </div>
+
+                {summaryResult ? (
+                  <div className="space-y-4">
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-final-document">
+                        {getSummaryText()}
+                      </p>
+                    </div>
+                    {chatMessages.filter(m => m.role === "user").length > 0 && (
+                      <div className="border-t pt-4">
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Additional Notes from Chat</h4>
+                        <ul className="space-y-1">
+                          {chatMessages.filter(m => m.role === "user").map((msg, i) => (
+                            <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                              <span className="text-primary mt-1">•</span>
+                              {msg.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No analysis data available. Please complete Step 1 first.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to AI Chat
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCurrentStep(1);
+                  setSummaryResult(null);
+                  setSummaryError(null);
+                  setUploadedFiles([]);
+                  setTextBrief("");
+                  setChatMessages([]);
+                  setChatInput("");
+                }}
+                className="flex-1"
+                data-testid="button-start-new"
+              >
+                Start New Interrogation
+              </Button>
+            </div>
           </div>
         )}
       </div>
