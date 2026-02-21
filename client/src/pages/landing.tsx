@@ -147,7 +147,7 @@ export default function LandingPage() {
 
       <section className="pt-28 pb-6 sm:pt-36 sm:pb-10 lg:pt-44 lg:pb-14 px-5 sm:px-8 lg:px-10 relative">
         <div className="max-w-6xl mx-auto relative">
-          <div className="max-w-4xl">
+          <div className="text-center max-w-3xl mx-auto">
             <div className="landing-fade-up landing-stagger-1">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-gray-200/80 mb-7 sm:mb-9">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-glow" />
@@ -166,12 +166,12 @@ export default function LandingPage() {
                 finally organized.
               </span>
             </h1>
-            <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg md:text-xl text-gray-400 max-w-xl leading-[1.7] font-normal landing-fade-up landing-stagger-3">
+            <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-[1.7] font-normal landing-fade-up landing-stagger-3">
               The workspace where teams upload, organize, and collaborate on
               images and videos — with folders, roles, and cloud storage
               built right in.
             </p>
-            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
+            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
               <Button
                 size="lg"
                 onClick={() => navigate("/auth?mode=register")}
@@ -195,7 +195,7 @@ export default function LandingPage() {
 
           <div className="mt-12 sm:mt-16 lg:mt-20 landing-scale-in landing-stagger-5">
             <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_80px_-20px_rgba(0,0,0,0.15)]">
-              <div className="aspect-video flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
+              <div className="aspect-[16/9] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
                 <div className="absolute inset-0 opacity-[0.03]" style={{
                   backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
