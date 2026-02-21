@@ -148,15 +148,15 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     }
 
     const encoder = new Mp3Encoder(1, sampleRate, 128);
-    const mp3Parts: Int8Array[] = [];
+    const mp3Parts: Uint8Array[] = [];
     const blockSize = 1152;
     for (let i = 0; i < int16.length; i += blockSize) {
       const chunk = int16.subarray(i, i + blockSize);
-      const encoded = encoder.encodeBuffer(chunk);
-      if (encoded.length > 0) mp3Parts.push(encoded);
+      const encoded = encoder.encodeBuffer(chunk) as unknown as Uint8Array;
+      if (encoded.length > 0) mp3Parts.push(new Uint8Array(encoded));
     }
-    const final = encoder.flush();
-    if (final.length > 0) mp3Parts.push(final);
+    const final = encoder.flush() as unknown as Uint8Array;
+    if (final.length > 0) mp3Parts.push(new Uint8Array(final));
 
     await audioContext.close();
     return new Blob(mp3Parts, { type: "audio/mpeg" });
