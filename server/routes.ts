@@ -15,7 +15,7 @@ export async function registerRoutes(
 
   app.get("/api/workspaces", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const workspaces = await storage.getWorkspacesByUser(userId);
       res.json(workspaces);
     } catch (error) {
@@ -28,7 +28,7 @@ export async function registerRoutes(
     try {
       const workspace = await storage.getWorkspace(req.params.id);
       if (!workspace) return res.status(404).json({ message: "Workspace not found" });
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, workspace.id);
       if (!member) return res.status(403).json({ message: "Access denied" });
       res.json(workspace);
@@ -40,7 +40,7 @@ export async function registerRoutes(
 
   app.post("/api/workspaces", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const parsed = insertWorkspaceSchema.parse(req.body);
       const workspace = await storage.createWorkspace({ ...parsed, createdBy: userId });
       res.status(201).json(workspace);
@@ -52,7 +52,7 @@ export async function registerRoutes(
 
   app.delete("/api/workspaces/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!member || member.role !== "admin") return res.status(403).json({ message: "Only admins can delete workspaces" });
       await storage.deleteWorkspace(req.params.id);
@@ -65,7 +65,7 @@ export async function registerRoutes(
 
   app.get("/api/workspaces/:id/members", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const members = await storage.getMembers(req.params.id);
@@ -78,7 +78,7 @@ export async function registerRoutes(
 
   app.post("/api/workspaces/:id/members", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const adminMember = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!adminMember || adminMember.role !== "admin") return res.status(403).json({ message: "Only admins can add members" });
 
@@ -105,7 +105,7 @@ export async function registerRoutes(
 
   app.delete("/api/workspaces/:workspaceId/members/:memberId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const adminMember = await storage.getMemberByUserAndWorkspace(userId, req.params.workspaceId);
       if (!adminMember || adminMember.role !== "admin") return res.status(403).json({ message: "Only admins can remove members" });
       await storage.removeMember(req.params.memberId);
@@ -118,7 +118,7 @@ export async function registerRoutes(
 
   app.get("/api/workspaces/:id/folders", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const foldersData = await storage.getFolders(req.params.id);
@@ -131,7 +131,7 @@ export async function registerRoutes(
 
   app.post("/api/workspaces/:id/folders", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot create folders" });
 
@@ -160,7 +160,7 @@ export async function registerRoutes(
 
   app.delete("/api/workspaces/:workspaceId/folders/:folderId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.workspaceId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot delete folders" });
       await storage.deleteFolder(req.params.folderId);
@@ -173,7 +173,7 @@ export async function registerRoutes(
 
   app.get("/api/workspaces/:workspaceId/folders/:folderId/files", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.workspaceId);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const filesData = await storage.getFilesByFolder(req.params.folderId);
@@ -186,7 +186,7 @@ export async function registerRoutes(
 
   app.post("/api/workspaces/:id/files", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.id);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot upload files" });
 
@@ -213,7 +213,7 @@ export async function registerRoutes(
 
   app.delete("/api/workspaces/:workspaceId/files/:fileId", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.userId;
       const member = await storage.getMemberByUserAndWorkspace(userId, req.params.workspaceId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot delete files" });
       await storage.deleteFile(req.params.fileId);

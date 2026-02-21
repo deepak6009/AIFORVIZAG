@@ -7,7 +7,7 @@ A workspace application where admins can create workspaces, add team members, cr
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
 - **Backend**: Express.js with TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
-- **Auth**: Replit Auth (OpenID Connect)
+- **Auth**: Email/password with bcrypt + express-session (stored in PostgreSQL)
 - **File Storage**: Replit Object Storage (Google Cloud Storage presigned URLs)
 
 ## Key Features
@@ -23,13 +23,17 @@ A workspace application where admins can create workspaces, add team members, cr
 - `server/routes.ts` - All API endpoints with auth middleware
 - `server/storage.ts` - DatabaseStorage class implementing IStorage interface
 - `server/db.ts` - Database connection
-- `server/replit_integrations/auth/` - Replit Auth integration
+- `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration
-- `client/src/pages/landing.tsx` - Landing page for unauthenticated users
+- `client/src/pages/auth.tsx` - Sign in / Sign up page for unauthenticated users
 - `client/src/pages/dashboard.tsx` - Workspace listing for authenticated users
 - `client/src/pages/workspace.tsx` - Workspace detail with folders, files, members
 
 ## API Routes
+- `POST /api/auth/register` - Register with email/password
+- `POST /api/auth/login` - Sign in with email/password
+- `POST /api/auth/logout` - Sign out (destroy session)
+- `GET /api/auth/user` - Get current authenticated user
 - `GET/POST /api/workspaces` - List/create workspaces
 - `GET/DELETE /api/workspaces/:id` - Get/delete workspace
 - `GET/POST /api/workspaces/:id/members` - List/add members

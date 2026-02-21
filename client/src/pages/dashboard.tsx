@@ -43,8 +43,8 @@ export default function Dashboard() {
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
-        toast({ title: "Unauthorized", description: "Logging in again...", variant: "destructive" });
-        setTimeout(() => { window.location.href = "/api/login"; }, 500);
+        toast({ title: "Session expired", description: "Please sign in again.", variant: "destructive" });
+        window.location.reload();
         return;
       }
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -61,8 +61,8 @@ export default function Dashboard() {
     },
     onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
-        toast({ title: "Unauthorized", description: "Logging in again...", variant: "destructive" });
-        setTimeout(() => { window.location.href = "/api/login"; }, 500);
+        toast({ title: "Session expired", description: "Please sign in again.", variant: "destructive" });
+        window.location.reload();
         return;
       }
       toast({ title: "Error", description: error.message, variant: "destructive" });
