@@ -401,10 +401,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
           <RevealSection>
-            <motion.div variants={fadeUp} className="max-w-2xl mb-12 sm:mb-16">
+            <motion.div variants={fadeUp} className="max-w-2xl mb-10 sm:mb-12">
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 The Problem
               </p>
@@ -450,10 +450,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-6xl mx-auto">
           <RevealSection>
-            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
+            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 The Solution
               </p>
@@ -505,7 +505,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-gray-950 text-white relative overflow-hidden">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10 bg-gray-950 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.025]" style={{
           backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
           backgroundSize: "40px 40px",
@@ -522,7 +522,7 @@ export default function LandingPage() {
         />
         <div className="max-w-6xl mx-auto relative">
           <RevealSection>
-            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-14 sm:mb-20">
+            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-400 mb-4 sm:mb-5">
                 How It Works
               </p>
@@ -582,10 +582,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-white border-b border-gray-200/60">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10 bg-white border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto">
           <RevealSection>
-            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+            <motion.div variants={fadeUp} className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
               <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 Kind Words
               </p>
@@ -646,7 +646,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
             <RevealSection>
@@ -745,7 +745,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 sm:py-28 lg:py-36 px-5 sm:px-8 lg:px-10 bg-gray-950 text-white relative overflow-hidden">
+      <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10 bg-gray-950 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.06]" style={{
           backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)",
           backgroundSize: "32px 32px",
