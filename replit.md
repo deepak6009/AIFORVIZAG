@@ -19,6 +19,8 @@ Table: `AIFORVIZAG_file_structure`
 - **Folder**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>`
 - **File**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>`
 - **Interrogation**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#INTERROGATION#<id>` (stores summary, fileUrls, briefingAnswers, status)
+- **Task**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>` (title, description, status, priority, sourceInterrogationId)
+- **TaskComment**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` (text, timestampSec, authorId)
 - GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
 - Each user gets a default org auto-created on first workspace creation
 
@@ -31,7 +33,7 @@ Table: `AIFORVIZAG_file_structure`
   - Step 1: Upload files (PDF, Word, audio, text), voice-to-text recording (browser STT), text input
   - Step 2: Gemini AI chat agent with 4-layer briefing framework (Goal & Audience, Style & Hook, Editing & Visuals, Audio & Format) with selectable chip options and file attachments
   - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
-- Kanban task board (placeholder - will auto-generate from AI brief)
+- Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
 - Resources section (placeholder - shared links and references)
 
 ## UI Layout
@@ -57,7 +59,7 @@ Table: `AIFORVIZAG_file_structure`
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
 - `client/src/components/tabs/interrogator-tab.tsx` - 3-step Interrogator wizard with Gemini AI briefing chat
 - `client/src/components/tabs/final-agenda-tab.tsx` - Final Agenda listing (saved production briefs from Interrogator)
-- `client/src/components/tabs/tasks-tab.tsx` - Kanban board (placeholder)
+- `client/src/components/tabs/tasks-tab.tsx` - Kanban board with drag-and-drop, task detail drawer, comments, AI generation
 - `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
 
 ## API Routes
@@ -83,6 +85,12 @@ Table: `AIFORVIZAG_file_structure`
 - `GET /api/workspaces/:id/interrogations` - List interrogations for a workspace (DynamoDB)
 - `POST /api/interrogator/chat` - Gemini AI briefing chat with 4-layer framework
 - `POST /api/interrogator/generate-final` - Gemini-powered final document generation (combines lambda summary + briefing answers + file attachments)
+- `GET/POST /api/workspaces/:id/tasks` - List/create tasks (DynamoDB)
+- `PATCH /api/workspaces/:wsId/tasks/:taskId` - Update task (DynamoDB)
+- `DELETE /api/workspaces/:wsId/tasks/:taskId` - Delete task (DynamoDB)
+- `POST /api/workspaces/:id/tasks/generate` - Auto-generate tasks from Final Agenda via Gemini AI
+- `GET/POST /api/workspaces/:wsId/tasks/:taskId/comments` - List/add timestamped comments (DynamoDB)
+- `POST /api/workspaces/:wsId/tasks/revision-checklist` - Gemini AI revision checklist from all task comments
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000

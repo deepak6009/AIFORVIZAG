@@ -482,3 +482,129 @@ export async function getInterrogationsByWorkspace(orgId: string, workspaceId: s
   }));
   return (result.Items || []) as any[];
 }
+
+// === Tasks ===
+
+export async function createTask(params: {
+  orgId: string;
+  workspaceId: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+  sourceInterrogationId?: string;
+  createdBy: string;
+}) {
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#TASK#${id}`,
+    id,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    title: params.title,
+    description: params.description,
+    status: params.status || "todo",
+    priority: params.priority || "medium",
+    sourceInterrogationId: params.sourceInterrogationId || null,
+    createdBy: params.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    itemType: "task",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getTasksByWorkspace(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":skPrefix": `WS#${workspaceId}#TASK#`,
+    },
+  }));
+  const items = (result.Items || []) as any[];
+  return items.filter(i => i.itemType === "task");
+}
+
+export async function updateTask(orgId: string, workspaceId: string, taskId: string, updates: {
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  assignee?: string;
+}) {
+  const expressions: string[] = [];
+  const names: Record<string, string> = {};
+  const values: Record<string, any> = {};
+
+  if (updates.title !== undefined) { expressions.push("#t = :t"); names["#t"] = "title"; values[":t"] = updates.title; }
+  if (updates.description !== undefined) { expressions.push("#d = :d"); names["#d"] = "description"; values[":d"] = updates.description; }
+  if (updates.status !== undefined) { expressions.push("#s = :s"); names["#s"] = "status"; values[":s"] = updates.status; }
+  if (updates.priority !== undefined) { expressions.push("#p = :p"); names["#p"] = "priority"; values[":p"] = updates.priority; }
+  if (updates.assignee !== undefined) { expressions.push("#a = :a"); names["#a"] = "assignee"; values[":a"] = updates.assignee; }
+  expressions.push("#ua = :ua"); names["#ua"] = "updatedAt"; values[":ua"] = new Date().toISOString();
+
+  if (expressions.length === 1) return;
+
+  await docClient.send(new UpdateCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#TASK#${taskId}` },
+    UpdateExpression: `SET ${expressions.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  }));
+}
+
+export async function deleteTask(orgId: string, workspaceId: string, taskId: string) {
+  await docClient.send(new DeleteCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#TASK#${taskId}` },
+  }));
+}
+
+// === Task Comments ===
+
+export async function createTaskComment(params: {
+  orgId: string;
+  workspaceId: string;
+  taskId: string;
+  authorId: string;
+  authorEmail?: string;
+  text: string;
+  timestampSec?: number;
+}) {
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#TASK#${params.taskId}#COMMENT#${id}`,
+    id,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    taskId: params.taskId,
+    authorId: params.authorId,
+    authorEmail: params.authorEmail || null,
+    text: params.text,
+    timestampSec: params.timestampSec ?? null,
+    createdAt: now,
+    itemType: "comment",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getTaskComments(orgId: string, workspaceId: string, taskId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":skPrefix": `WS#${workspaceId}#TASK#${taskId}#COMMENT#`,
+    },
+  }));
+  return (result.Items || []) as any[];
+}

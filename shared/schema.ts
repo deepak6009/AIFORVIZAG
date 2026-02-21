@@ -51,6 +51,36 @@ export interface Organisation {
   updatedAt: string;
 }
 
+export type TaskStatus = "todo" | "in_progress" | "review" | "done";
+export type TaskPriority = "high" | "medium" | "low";
+
+export interface Task {
+  id: string;
+  orgId: string;
+  workspaceId: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  sourceInterrogationId?: string;
+  assignee?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskComment {
+  id: string;
+  orgId: string;
+  workspaceId: string;
+  taskId: string;
+  authorId: string;
+  authorEmail?: string;
+  text: string;
+  timestampSec?: number;
+  createdAt: string;
+}
+
 export interface Interrogation {
   id: string;
   orgId: string;

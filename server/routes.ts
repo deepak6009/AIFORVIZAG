@@ -28,6 +28,12 @@ import {
   getInterrogation,
   updateInterrogation,
   getInterrogationsByWorkspace,
+  createTask,
+  getTasksByWorkspace,
+  updateTask,
+  deleteTask,
+  createTaskComment,
+  getTaskComments,
 } from "./aws/fileService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -719,6 +725,269 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
     } catch (error: any) {
       console.error("Error saving final document:", error);
       res.status(500).json({ error: error.message || "Failed to save final document" });
+    }
+  });
+
+  // === Task Routes ===
+
+  app.get("/api/workspaces/:id/tasks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const wsId = req.params.id;
+      const tasks = await getTasksByWorkspace(orgId, wsId);
+      const sorted = tasks.sort((a: any, b: any) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateA - dateB;
+      });
+      res.json(sorted);
+    } catch (error: any) {
+      console.error("Error listing tasks:", error);
+      res.status(500).json({ error: error.message || "Failed to list tasks" });
+    }
+  });
+
+  app.post("/api/workspaces/:id/tasks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const wsId = req.params.id;
+      const { title, description, status, priority, sourceInterrogationId } = req.body;
+      if (!title) return res.status(400).json({ error: "Title is required" });
+      const task = await createTask({
+        orgId, workspaceId: wsId, title,
+        description: description || "",
+        status: status || "todo",
+        priority: priority || "medium",
+        sourceInterrogationId,
+        createdBy: userId,
+      });
+      res.json(task);
+    } catch (error: any) {
+      console.error("Error creating task:", error);
+      res.status(500).json({ error: error.message || "Failed to create task" });
+    }
+  });
+
+  app.patch("/api/workspaces/:wsId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+      const { title, description, status, priority, assignee } = req.body;
+      const allowedStatuses = ["todo", "in_progress", "review", "done"];
+      const allowedPriorities = ["high", "medium", "low"];
+      const safeUpdates: Record<string, any> = {};
+      if (title !== undefined) safeUpdates.title = String(title);
+      if (description !== undefined) safeUpdates.description = String(description);
+      if (status !== undefined && allowedStatuses.includes(status)) safeUpdates.status = status;
+      if (priority !== undefined && allowedPriorities.includes(priority)) safeUpdates.priority = priority;
+      if (assignee !== undefined) safeUpdates.assignee = String(assignee);
+      await updateTask(orgId, wsId, taskId, safeUpdates);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error updating task:", error);
+      res.status(500).json({ error: error.message || "Failed to update task" });
+    }
+  });
+
+  app.delete("/api/workspaces/:wsId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+      await deleteTask(orgId, wsId, taskId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting task:", error);
+      res.status(500).json({ error: error.message || "Failed to delete task" });
+    }
+  });
+
+  // === Auto-generate tasks from Final Agenda ===
+
+  app.post("/api/workspaces/:id/tasks/generate", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const wsId = req.params.id;
+      const { interrogationId } = req.body;
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      let finalDocument = "";
+      if (interrogationId) {
+        const interrogation = await getInterrogation(orgId, wsId, interrogationId);
+        if (interrogation?.finalDocument) finalDocument = interrogation.finalDocument;
+      }
+
+      if (!finalDocument) {
+        const interrogations = await getInterrogationsByWorkspace(orgId, wsId);
+        const completed = interrogations
+          .filter((i: any) => i.status === "completed" && i.finalDocument)
+          .sort((a: any, b: any) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+        if (completed.length > 0) finalDocument = completed[0].finalDocument;
+      }
+
+      if (!finalDocument) {
+        return res.status(400).json({ error: "No completed final agenda found. Please complete the Interrogator first." });
+      }
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const prompt = `You are a video production project manager. Based on the following production brief, generate a list of actionable tasks for a video editor.
+
+PRODUCTION BRIEF:
+${finalDocument}
+
+INSTRUCTIONS:
+- Break the brief into specific, actionable editing tasks
+- Each task should be a single, clear action an editor can complete
+- Include tasks for: editing, audio, visuals, captions, review steps
+- Assign priority: "high" for critical/blocking tasks, "medium" for important, "low" for nice-to-have
+- All tasks start with status "todo"
+- Generate 5-15 tasks depending on complexity
+- Task descriptions should be detailed enough for the editor to work independently
+
+Return ONLY valid JSON array, no markdown, no code fences. Each object must have:
+{"title": "string", "description": "string", "priority": "high|medium|low"}
+
+Example:
+[{"title":"Import raw footage","description":"Import all raw footage files into the editing timeline","priority":"high"}]`;
+
+      const result = await model.generateContent(prompt);
+      let responseText = result.response.text().trim();
+      responseText = responseText.replace(/^```json?\s*/i, "").replace(/```\s*$/i, "").trim();
+
+      let tasks: any[];
+      try {
+        tasks = JSON.parse(responseText);
+      } catch {
+        console.error("Failed to parse Gemini tasks response:", responseText);
+        return res.status(500).json({ error: "AI generated invalid task data. Please try again." });
+      }
+
+      if (!Array.isArray(tasks)) {
+        return res.status(500).json({ error: "AI did not return a task array. Please try again." });
+      }
+
+      const createdTasks = [];
+      for (const t of tasks) {
+        const task = await createTask({
+          orgId, workspaceId: wsId,
+          title: t.title || "Untitled Task",
+          description: t.description || "",
+          status: "todo",
+          priority: t.priority || "medium",
+          sourceInterrogationId: interrogationId || undefined,
+          createdBy: userId,
+        });
+        createdTasks.push(task);
+      }
+
+      res.json(createdTasks);
+    } catch (error: any) {
+      console.error("Error generating tasks:", error);
+      res.status(500).json({ error: error.message || "Failed to generate tasks" });
+    }
+  });
+
+  // === Task Comments ===
+
+  app.get("/api/workspaces/:wsId/tasks/:taskId/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+      const comments = await getTaskComments(orgId, wsId, taskId);
+      const sorted = comments.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      res.json(sorted);
+    } catch (error: any) {
+      console.error("Error listing comments:", error);
+      res.status(500).json({ error: error.message || "Failed to list comments" });
+    }
+  });
+
+  app.post("/api/workspaces/:wsId/tasks/:taskId/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+      const { text, timestampSec } = req.body;
+      if (!text?.trim()) return res.status(400).json({ error: "Comment text is required" });
+
+      const user = await storage.getUserById(userId);
+      const comment = await createTaskComment({
+        orgId, workspaceId: wsId, taskId,
+        authorId: userId,
+        authorEmail: user?.email || undefined,
+        text: text.trim(),
+        timestampSec: timestampSec ?? undefined,
+      });
+      res.json(comment);
+    } catch (error: any) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ error: error.message || "Failed to create comment" });
+    }
+  });
+
+  // === AI Revision Checklist ===
+
+  app.post("/api/workspaces/:wsId/tasks/revision-checklist", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const wsId = req.params.wsId;
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      const tasks = await getTasksByWorkspace(orgId, wsId);
+      const allComments: any[] = [];
+      for (const task of tasks) {
+        const comments = await getTaskComments(orgId, wsId, task.id);
+        allComments.push(...comments.map((c: any) => ({
+          taskTitle: task.title,
+          taskId: task.id,
+          comment: c.text,
+          timestamp: c.timestampSec != null ? `${Math.floor(c.timestampSec / 60)}:${String(c.timestampSec % 60).padStart(2, "0")}` : null,
+          author: c.authorEmail || "Unknown",
+        })));
+      }
+
+      if (allComments.length === 0) {
+        return res.status(400).json({ error: "No comments found. Add feedback comments to tasks first." });
+      }
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const prompt = `You are a video editing revision coordinator. Below are feedback comments from various reviewers across different tasks. Your job is to create a SINGLE, PRIORITIZED, ACTIONABLE revision checklist that an editor can follow.
+
+FEEDBACK DATA:
+${allComments.map(c => `- Task: "${c.taskTitle}" | ${c.timestamp ? `At ${c.timestamp}` : "General"} | By ${c.author}: ${c.comment}`).join("\n")}
+
+INSTRUCTIONS:
+- Consolidate overlapping or related feedback into single action items
+- Prioritize: Critical fixes first, then improvements, then nice-to-haves
+- Be specific and actionable — each item should be something the editor can do immediately
+- Include timestamps where referenced
+- Group by area (Audio, Visuals, Pacing, Captions, etc.) if it makes sense
+- Use markdown formatting with headers and numbered lists
+
+Output a clear, structured revision checklist in markdown.`;
+
+      const result = await model.generateContent(prompt);
+      const checklist = result.response.text();
+      res.json({ checklist });
+    } catch (error: any) {
+      console.error("Error generating revision checklist:", error);
+      res.status(500).json({ error: error.message || "Failed to generate revision checklist" });
     }
   });
 
