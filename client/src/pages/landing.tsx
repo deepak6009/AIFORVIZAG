@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { motion, useInView, useSpring, useTransform, useMotionValue } from "framer-motion";
+import { motion, useInView, useSpring, useTransform, useMotionValue, useScroll } from "framer-motion";
 import SlideInButton from "@/components/slide-in-button";
 import {
   Layers,
@@ -17,6 +17,7 @@ import {
   X,
   Star,
   Quote,
+  CheckCircle2,
 } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1];
@@ -68,6 +69,34 @@ function RevealSection({ children, className = "" }: { children: React.ReactNode
     >
       {children}
     </motion.div>
+  );
+}
+
+function ScrollRevealText({ text, className = "", as: Tag = "p", "data-testid": testId }: { text: string; className?: string; as?: "p" | "h1" | "h2" | "h3"; "data-testid"?: string }) {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.95", "start 0.4"],
+  });
+  const words = text.split(" ");
+
+  return (
+    <Tag ref={ref as any} className={`relative flex flex-wrap ${className}`} data-testid={testId}>
+      {words.map((word, i) => {
+        const start = i / words.length;
+        const end = start + 1 / words.length;
+        return <ScrollWord key={i} word={word} range={[start, end]} progress={scrollYProgress} />;
+      })}
+    </Tag>
+  );
+}
+
+function ScrollWord({ word, range, progress }: { word: string; range: [number, number]; progress: any }) {
+  const opacity = useTransform(progress, range, [0.15, 1]);
+  return (
+    <motion.span style={{ opacity }} className="mr-[0.3em] inline-block">
+      {word}
+    </motion.span>
   );
 }
 
@@ -222,7 +251,7 @@ const features = [
     color: "text-blue-500",
     bg: "bg-blue-50/80",
     tagBg: "bg-blue-50 text-blue-600",
-    hoverGlow: "hover:shadow-blue-100/60",
+    gradient: "from-blue-500 to-blue-400",
   },
   {
     icon: Users,
@@ -232,7 +261,7 @@ const features = [
     color: "text-violet-500",
     bg: "bg-violet-50/80",
     tagBg: "bg-violet-50 text-violet-600",
-    hoverGlow: "hover:shadow-violet-100/60",
+    gradient: "from-violet-500 to-purple-400",
   },
   {
     icon: Upload,
@@ -242,7 +271,7 @@ const features = [
     color: "text-emerald-500",
     bg: "bg-emerald-50/80",
     tagBg: "bg-emerald-50 text-emerald-600",
-    hoverGlow: "hover:shadow-emerald-100/60",
+    gradient: "from-emerald-500 to-green-400",
   },
   {
     icon: Shield,
@@ -252,7 +281,7 @@ const features = [
     color: "text-amber-500",
     bg: "bg-amber-50/80",
     tagBg: "bg-amber-50 text-amber-600",
-    hoverGlow: "hover:shadow-amber-100/60",
+    gradient: "from-amber-500 to-yellow-400",
   },
   {
     icon: Globe,
@@ -262,7 +291,7 @@ const features = [
     color: "text-cyan-500",
     bg: "bg-cyan-50/80",
     tagBg: "bg-cyan-50 text-cyan-600",
-    hoverGlow: "hover:shadow-cyan-100/60",
+    gradient: "from-cyan-500 to-teal-400",
   },
   {
     icon: Zap,
@@ -272,7 +301,7 @@ const features = [
     color: "text-rose-500",
     bg: "bg-rose-50/80",
     tagBg: "bg-rose-50 text-rose-600",
-    hoverGlow: "hover:shadow-rose-100/60",
+    gradient: "from-rose-500 to-pink-400",
   },
 ];
 
@@ -403,44 +432,40 @@ export default function LandingPage() {
 
       <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
-          <RevealSection>
-            <motion.div variants={fadeUp} className="max-w-2xl mb-10 sm:mb-12">
-              <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
+          <div className="max-w-3xl mb-10 sm:mb-12">
+            <RevealSection>
+              <motion.p variants={fadeUp} className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 The Problem
-              </p>
-              <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]" data-testid="text-problem-heading">
-                Your clips are{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400">
-                  scattered
-                </span>{" "}
-                everywhere.
-              </h2>
-              <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-                Raw footage lives in WhatsApp threads, Google Drive links, WeTransfer emails, and random DMs. Your editor can't find the latest cut. Deadlines slip.
-              </p>
-            </motion.div>
-          </RevealSection>
+              </motion.p>
+            </RevealSection>
+            <ScrollRevealText
+              as="h2"
+              data-testid="text-problem-heading"
+              text="Your clips are scattered across WhatsApp threads, Google Drive links, WeTransfer emails, and random DMs. Your editor can't find the right cut. Deadlines slip."
+              className="text-2xl sm:text-[2rem] md:text-[2.5rem] font-semibold tracking-[-0.03em] text-gray-900 leading-[1.25]"
+            />
+          </div>
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
             {[
-              { stat: 73, suffix: "%", label: "of creators", desc: "waste hours every week hunting for the right clip or draft" },
-              { stat: 5, suffix: "+", label: "apps", desc: "the average creator-editor team uses to exchange content files" },
-              { stat: 40, suffix: "%", label: "of footage", desc: "gets lost or duplicated across DMs, drives, and email threads" },
+              { stat: 73, suffix: "%", label: "of creators", desc: "waste hours every week hunting for the right clip or draft", gradient: "from-rose-500 to-orange-400" },
+              { stat: 5, suffix: "+", label: "apps used", desc: "the average creator-editor team uses to exchange content files", gradient: "from-violet-500 to-purple-400" },
+              { stat: 40, suffix: "%", label: "of footage", desc: "gets lost or duplicated across DMs, drives, and email threads", gradient: "from-amber-500 to-yellow-400" },
             ].map((item, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
-                  className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/60 cursor-default"
+                  className="bg-white rounded-2xl p-6 sm:p-7 border border-gray-200/60 cursor-default group"
                   data-testid={`card-stat-${i}`}
-                  whileHover={{ boxShadow: "0 16px 48px -12px rgba(0,0,0,0.1), 0 4px 16px -4px rgba(0,0,0,0.05)" }}
+                  whileHover={{ borderColor: "rgba(99, 102, 241, 0.15)", boxShadow: "0 16px 48px -12px rgba(0,0,0,0.08)" }}
                   transition={{ duration: 0.35, ease }}
                 >
-                  <p className="text-4xl sm:text-5xl font-semibold text-gray-900 tracking-[-0.04em]">
+                  <p className={`text-4xl sm:text-5xl font-bold tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-r ${item.gradient}`}>
                     <AnimatedCounter value={item.stat} suffix={item.suffix} />
                   </p>
-                  <p className="text-xs font-medium text-blue-500 mt-2 uppercase tracking-[0.15em]">
+                  <p className="text-[11px] font-semibold text-gray-900 mt-3 uppercase tracking-[0.15em]">
                     {item.label}
                   </p>
-                  <p className="text-gray-400 mt-3 text-sm leading-relaxed">
+                  <p className="text-gray-400 mt-2 text-sm leading-relaxed">
                     {item.desc}
                   </p>
                 </motion.div>
@@ -475,29 +500,28 @@ export default function LandingPage() {
             {features.map((feature) => (
               <motion.div key={feature.title} variants={fadeUpSmall}>
                 <motion.div
-                  className={`group h-full bg-[#fafafa] rounded-2xl p-6 sm:p-7 border border-gray-200/60 cursor-default ${feature.hoverGlow}`}
+                  className="group h-full bg-[#fafafa] rounded-2xl border border-gray-200/60 cursor-default overflow-hidden"
                   data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  whileHover={{ boxShadow: "0 16px 48px -12px rgba(0,0,0,0.08), 0 4px 16px -4px rgba(0,0,0,0.04)" }}
+                  whileHover={{ borderColor: "rgba(99, 102, 241, 0.18)", boxShadow: "0 16px 48px -12px rgba(0,0,0,0.08)" }}
                   transition={{ duration: 0.35, ease }}
                 >
-                  <div className="flex items-center gap-3 mb-5">
-                    <motion.div
-                      className={`w-10 h-10 rounded-xl ${feature.bg} flex items-center justify-center`}
-                      whileHover={{ rotate: 6 }}
-                      transition={{ duration: 0.3, ease }}
-                    >
-                      <feature.icon className={`w-[18px] h-[18px] ${feature.color}`} />
-                    </motion.div>
-                    <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full ${feature.tagBg}`}>
-                      {feature.tag}
-                    </span>
+                  <div className={`h-1 w-full bg-gradient-to-r ${feature.gradient}`} />
+                  <div className="p-6 sm:p-7">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-10 h-10 rounded-xl ${feature.bg} flex items-center justify-center`}>
+                        <feature.icon className={`w-[18px] h-[18px] ${feature.color}`} />
+                      </div>
+                      <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full ${feature.tagBg}`}>
+                        {feature.tag}
+                      </span>
+                    </div>
+                    <h3 className="text-[15px] font-semibold text-gray-900 mb-1.5 tracking-[-0.01em]">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-gray-400 leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1.5 tracking-[-0.01em]">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">
-                    {feature.description}
-                  </p>
                 </motion.div>
               </motion.div>
             ))}
@@ -536,16 +560,7 @@ export default function LandingPage() {
             </motion.div>
           </RevealSection>
 
-          <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-8 lg:gap-14 relative">
-            <div className="hidden sm:block absolute top-[28px] left-[16.66%] right-[16.66%] h-px">
-              <motion.div
-                className="h-full bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, ease, delay: 0.3 }}
-              />
-            </div>
+          <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-5 lg:gap-6 relative">
             {[
               { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers },
               { step: "02", title: "Add your editors", desc: "Invite editors with the right access level — they see what you want them to see.", icon: Users },
@@ -553,28 +568,26 @@ export default function LandingPage() {
             ].map((item, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
-                  className="relative"
+                  className="relative bg-white/[0.04] rounded-2xl p-6 sm:p-7 border border-white/[0.06] backdrop-blur-sm"
                   data-testid={`card-step-${item.step}`}
-                  whileHover={{ boxShadow: "0 0 40px rgba(96,165,250,0.06)" }}
+                  whileHover={{ borderColor: "rgba(96, 165, 250, 0.2)", backgroundColor: "rgba(255,255,255,0.06)" }}
                   transition={{ duration: 0.3, ease }}
                 >
-                  <div className="text-[5rem] sm:text-[7rem] font-bold text-white/[0.025] leading-none absolute -top-4 sm:-top-6 -left-1 tracking-[-0.05em]">
-                    {item.step}
-                  </div>
-                  <div className="relative">
-                    <motion.div
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/[0.05] flex items-center justify-center mb-5 sm:mb-6 border border-white/[0.06]"
-                      whileHover={{ borderColor: "rgba(96, 165, 250, 0.3)", backgroundColor: "rgba(96, 165, 250, 0.08)" }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <item.icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
-                    </motion.div>
-                    <p className="text-[10px] sm:text-[11px] font-medium text-blue-400 tracking-[0.2em] uppercase mb-3">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
+                      <item.icon className="w-[18px] h-[18px] text-blue-400" />
+                    </div>
+                    <span className="text-[10px] font-semibold text-blue-400 tracking-[0.2em] uppercase bg-blue-400/10 px-2.5 py-1 rounded-full">
                       Step {item.step}
-                    </p>
-                    <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 tracking-[-0.02em]">{item.title}</h3>
-                    <p className="text-gray-500 text-sm leading-[1.7]">{item.desc}</p>
+                    </span>
                   </div>
+                  <h3 className="text-lg font-semibold mb-2 tracking-[-0.02em]">{item.title}</h3>
+                  <p className="text-gray-500 text-sm leading-[1.7]">{item.desc}</p>
+                  {i < 2 && (
+                    <div className="hidden sm:flex absolute -right-3 lg:-right-3 top-1/2 -translate-y-1/2 z-10">
+                      <ArrowRight className="w-4 h-4 text-blue-400/40" />
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             ))}
@@ -603,39 +616,36 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
-                  className="bg-[#fafafa] rounded-2xl p-6 sm:p-7 border border-gray-200/60 h-full flex flex-col cursor-default"
+                  className="bg-[#fafafa] rounded-2xl border border-gray-200/60 h-full flex flex-col cursor-default overflow-hidden"
                   data-testid={`card-testimonial-${i}`}
                   whileHover={{
-                    borderColor: "rgba(99, 102, 241, 0.2)",
-                    boxShadow: "0 16px 48px -12px rgba(99, 102, 241, 0.1), 0 4px 16px -4px rgba(0,0,0,0.04)",
+                    borderColor: "rgba(99, 102, 241, 0.18)",
+                    boxShadow: "0 16px 48px -12px rgba(99, 102, 241, 0.08)",
                   }}
                   transition={{ duration: 0.35, ease }}
                 >
-                  <div className="flex gap-0.5 mb-4">
-                    {Array.from({ length: t.rating }).map((_, j) => (
-                      <motion.div
-                        key={j}
-                        initial={{ opacity: 0, scale: 0 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 + j * 0.08, duration: 0.35, ease }}
-                      >
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      </motion.div>
-                    ))}
-                  </div>
-                  <Quote className="w-7 h-7 text-gray-200 mb-3" />
-                  <p className="text-gray-600 text-sm sm:text-[15px] leading-[1.7] flex-1">
-                    "{t.quote}"
-                  </p>
-                  <div className="mt-6 pt-5 border-t border-gray-200/60">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white font-medium text-xs">
-                        {t.name.split(" ").map(n => n[0]).join("")}
+                  <div className={`h-1 w-full bg-gradient-to-r ${["from-blue-500 to-indigo-400", "from-violet-500 to-purple-400", "from-emerald-500 to-teal-400"][i]}`} />
+                  <div className="p-6 sm:p-7 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: t.rating }).map((_, j) => (
+                          <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        ))}
                       </div>
-                      <div>
-                        <p className="font-semibold text-sm text-gray-900 tracking-[-0.01em]">{t.name}</p>
-                        <p className="text-xs text-gray-400">{t.role}, {t.company}</p>
+                      <Quote className="w-6 h-6 text-gray-200" />
+                    </div>
+                    <p className="text-gray-600 text-sm sm:text-[15px] leading-[1.7] flex-1">
+                      "{t.quote}"
+                    </p>
+                    <div className="mt-5 pt-4 border-t border-gray-200/60">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${["from-blue-600 to-indigo-600", "from-violet-600 to-purple-600", "from-emerald-600 to-teal-600"][i]} flex items-center justify-center text-white font-medium text-xs`}>
+                          {t.name.split(" ").map(n => n[0]).join("")}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-gray-900 tracking-[-0.01em]">{t.name}</p>
+                          <p className="text-xs text-gray-400">{t.role}, {t.company}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -663,11 +673,11 @@ export default function LandingPage() {
                   nothing it doesn't.
                 </span>
               </motion.h2>
-              <motion.p variants={fadeUp} className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-                We stripped away the complexity of traditional file sharing and built
-                something creator-editor teams actually enjoy using.
-              </motion.p>
-              <motion.div variants={staggerContainer} className="mt-7 sm:mt-9 space-y-3.5">
+              <ScrollRevealText
+                text="We stripped away the complexity of traditional file sharing and built something creator-editor teams actually enjoy using."
+                className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 leading-[1.7]"
+              />
+              <motion.div variants={staggerContainer} className="mt-7 sm:mt-9 space-y-3">
                 {[
                   "Separate workspaces per creator",
                   "Cloud-backed clip storage",
@@ -682,13 +692,7 @@ export default function LandingPage() {
                     className="flex items-center gap-3"
                     data-testid={`text-highlight-${index}`}
                   >
-                    <motion.div
-                      className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center shrink-0"
-                      whileHover={{ backgroundColor: "rgb(219, 234, 254)" }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    </motion.div>
+                    <CheckCircle2 className="w-[18px] h-[18px] text-blue-500 shrink-0" />
                     <span className="text-gray-600 font-medium text-sm sm:text-[15px]">
                       {item}
                     </span>
@@ -764,10 +768,10 @@ export default function LandingPage() {
                 under control?
               </span>
             </motion.h2>
-            <motion.p variants={fadeUp} className="mt-5 sm:mt-7 text-[15px] sm:text-lg text-gray-500 max-w-lg mx-auto leading-[1.7]">
-              Join creators and editors who already use thecrew to keep their
-              clips organized, accessible, and ready to post.
-            </motion.p>
+            <ScrollRevealText
+              text="Join creators and editors who already use thecrew to keep their clips organized, accessible, and ready to post."
+              className="mt-5 sm:mt-7 text-[15px] sm:text-lg text-gray-400 max-w-lg mx-auto leading-[1.7] justify-center"
+            />
             <motion.div variants={fadeUp} className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5">
               <SlideInButton size="lg" variant="light" onClick={() => navigate("/auth?mode=register")} data-testid="button-cta-get-started">
                 Get started - it's free
