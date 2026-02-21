@@ -16,6 +16,7 @@ interface UploadedFile {
   size: number;
   type: string;
   cloudfrontUrl: string;
+  localUrl?: string;
   status: "uploading" | "done" | "error";
 }
 
@@ -132,6 +133,43 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return `${m}:${s}`;
   };
 
+  const convertToWav = async (webmBlob: Blob): Promise<Blob> => {
+    const audioContext = new AudioContext();
+    const arrayBuffer = await webmBlob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+    const numChannels = 1;
+    const sampleRate = audioBuffer.sampleRate;
+    const samples = audioBuffer.getChannelData(0);
+    const int16 = new Int16Array(samples.length);
+    for (let i = 0; i < samples.length; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+
+    const wavBuffer = new ArrayBuffer(44 + int16.length * 2);
+    const view = new DataView(wavBuffer);
+    const writeStr = (off: number, str: string) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+    writeStr(0, "RIFF");
+    view.setUint32(4, 36 + int16.length * 2, true);
+    writeStr(8, "WAVE");
+    writeStr(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * 2, true);
+    view.setUint16(32, numChannels * 2, true);
+    view.setUint16(34, 16, true);
+    writeStr(36, "data");
+    view.setUint32(40, int16.length * 2, true);
+    const output = new Int16Array(wavBuffer, 44);
+    output.set(int16);
+
+    await audioContext.close();
+    return new Blob([wavBuffer], { type: "audio/wav" });
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -143,12 +181,22 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const webmBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         stream.getTracks().forEach(t => t.stop());
         streamRef.current = null;
+
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-        const file = new File([audioBlob], `voice-note-${timestamp}.webm`, { type: "audio/webm" });
-        handleFilesSelected([file]);
+
+        try {
+          const wavBlob = await convertToWav(webmBlob);
+          const localUrl = URL.createObjectURL(wavBlob);
+          const file = new File([wavBlob], `voice-note-${timestamp}.wav`, { type: "audio/wav" });
+          handleFilesSelected([file], localUrl);
+        } catch {
+          const localUrl = URL.createObjectURL(webmBlob);
+          const file = new File([webmBlob], `voice-note-${timestamp}.webm`, { type: "audio/webm" });
+          handleFilesSelected([file], localUrl);
+        }
       };
       mediaRecorder.start(250);
       setIsRecording(true);
@@ -179,10 +227,10 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return objectPath;
   }, []);
 
-  const handleFilesSelected = useCallback(async (files: FileList | File[]) => {
+  const handleFilesSelected = useCallback(async (files: FileList | File[], localUrl?: string) => {
     for (const file of Array.from(files)) {
       const fileId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      setUploadedFiles(prev => [...prev, { id: fileId, name: file.name, size: file.size, type: file.type, cloudfrontUrl: "", status: "uploading" }]);
+      setUploadedFiles(prev => [...prev, { id: fileId, name: file.name, size: file.size, type: file.type, cloudfrontUrl: "", localUrl, status: "uploading" }]);
       try {
         const cloudfrontUrl = await uploadFileToS3(file);
         setUploadedFiles(prev => prev.map(f => f.id === fileId ? { ...f, cloudfrontUrl, status: "done" as const } : f));
@@ -333,21 +381,32 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Uploaded ({uploadedFiles.filter(f => f.status === "done").length}/{uploadedFiles.length})
                 </h3>
-                {uploadedFiles.map(file => (
-                  <div key={file.id} className="flex items-center gap-3 p-2.5 rounded-lg border bg-card" data-testid={`briefing-file-${file.id}`}>
-                    {getFileIcon(file.type, file.name)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">{getFileTypeLabel(file.type, file.name)} · {formatSize(file.size)}</p>
+                {uploadedFiles.map(file => {
+                  const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|ogg|webm|m4a)$/i);
+                  const audioSrc = file.localUrl || (file.status === "done" ? file.cloudfrontUrl : undefined);
+                  return (
+                    <div key={file.id} className="rounded-lg border bg-card overflow-hidden" data-testid={`briefing-file-${file.id}`}>
+                      <div className="flex items-center gap-3 p-2.5">
+                        {getFileIcon(file.type, file.name)}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{getFileTypeLabel(file.type, file.name)} · {formatSize(file.size)}</p>
+                        </div>
+                        {file.status === "uploading" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                        {file.status === "done" && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                        {file.status === "error" && <AlertCircle className="w-4 h-4 text-destructive" />}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeFile(file.id)} data-testid={`remove-file-${file.id}`}>
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                      {isAudio && audioSrc && (
+                        <div className="px-2.5 pb-2.5">
+                          <audio controls className="w-full h-8" src={audioSrc} preload="metadata" data-testid={`audio-player-${file.id}`} />
+                        </div>
+                      )}
                     </div>
-                    {file.status === "uploading" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                    {file.status === "done" && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                    {file.status === "error" && <AlertCircle className="w-4 h-4 text-destructive" />}
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeFile(file.id)} data-testid={`remove-file-${file.id}`}>
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
