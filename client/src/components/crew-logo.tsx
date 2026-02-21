@@ -15,15 +15,12 @@ export function CrewLogo({ size = 32, className = "", color = "currentColor" }: 
       className={className}
     >
       <path
-        d="M22 68C14 56 14 36 28 24C42 12 56 22 52 38C48 54 26 50 22 68Z"
-        fill={color}
-        opacity="0.85"
+        d="M68 16A42 42 0 1 0 68 84"
+        stroke={color}
+        strokeWidth="13"
+        strokeLinecap="round"
       />
-      <path
-        d="M78 32C86 44 86 64 72 76C58 88 44 78 48 62C52 46 74 50 78 32Z"
-        fill={color}
-      />
-      <circle cx="50" cy="50" r="4.5" fill="white" />
+      <circle cx="80" cy="50" r="6.5" fill={color} />
     </svg>
   );
 }
