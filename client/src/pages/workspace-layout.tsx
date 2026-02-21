@@ -110,7 +110,9 @@ export default function WorkspaceLayout() {
     setLocation(`/workspace/${id}/${activeTab}`);
   };
 
-  const initials = user?.email?.[0]?.toUpperCase() || "U";
+  const initials = user?.firstName
+    ? `${user.firstName[0]}${user.lastName?.[0] || ""}`.toUpperCase()
+    : user?.email?.[0]?.toUpperCase() || "U";
 
   if (!workspaceId) {
     return (
@@ -118,13 +120,33 @@ export default function WorkspaceLayout() {
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
           <span className="text-lg tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></span>
           <div className="flex items-center gap-2">
-            <Avatar className="w-7 h-7">
-              <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => logout()} data-testid="button-logout">
-              <LogOut className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 hover:opacity-80 transition-opacity" data-testid="button-user-menu-home">
+                  <Avatar className="w-7 h-7">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="font-normal">
+                  <p className="text-sm font-medium truncate">{[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setLocation("/profile")} data-testid="menu-item-profile-home">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Profile & Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => logout()} className="text-red-600 focus:text-red-600" data-testid="menu-item-logout-home">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -267,13 +289,33 @@ export default function WorkspaceLayout() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Avatar className="w-7 h-7">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground hidden lg:inline">{user?.email}</span>
-          <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8" onClick={() => logout()} data-testid="button-logout">
-            <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity" data-testid="button-user-menu">
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-muted-foreground hidden lg:inline">{user?.email}</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground hidden lg:inline" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel className="font-normal">
+                <p className="text-sm font-medium truncate">{[user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setLocation("/profile")} data-testid="menu-item-profile">
+                <Settings className="w-4 h-4 mr-2" />
+                Profile & Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => logout()} className="text-red-600 focus:text-red-600" data-testid="menu-item-logout">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

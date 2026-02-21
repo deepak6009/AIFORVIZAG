@@ -65,7 +65,8 @@ Table: `AIFORVIZAG_file_structure`
 - `server/aws/fileService.ts` - All DynamoDB CRUD: organisations, workspaces, members, folders, files + S3 upload
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration (legacy)
-- `client/src/pages/auth.tsx` - Sign in / Sign up page
+- `client/src/pages/auth.tsx` - Sign in / Sign up page with card UI, password visibility toggle, strength indicator
+- `client/src/pages/profile.tsx` - Profile & Settings page (edit name, change password, sign out)
 - `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
@@ -79,6 +80,8 @@ Table: `AIFORVIZAG_file_structure`
 - `POST /api/auth/login` - Sign in with email/password
 - `POST /api/auth/logout` - Sign out (destroy session)
 - `GET /api/auth/user` - Get current authenticated user
+- `PATCH /api/auth/user` - Update profile (firstName, lastName)
+- `POST /api/auth/change-password` - Change password (requires current password)
 - `GET/POST /api/workspaces` - List/create workspaces (DynamoDB)
 - `GET/DELETE /api/workspaces/:id` - Get/delete workspace (DynamoDB)
 - `GET/POST /api/workspaces/:id/members` - List/add members (DynamoDB)

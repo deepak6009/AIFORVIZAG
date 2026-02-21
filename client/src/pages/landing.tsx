@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, useInView, useSpring, useTransform, useMotionValue, useScroll } from "framer-motion";
 import SlideInButton from "@/components/slide-in-button";
-import LottieAnimation from "@/components/lottie-animation";
 import {
   Layers,
   Users,
@@ -20,14 +19,6 @@ import {
   Quote,
   CheckCircle2,
 } from "lucide-react";
-
-import rocketAnim from "@/assets/lottie/rocket.json";
-import teamWorkAnim from "@/assets/lottie/team-work.json";
-import uploadCloudAnim from "@/assets/lottie/upload-cloud.json";
-import gearAnim from "@/assets/lottie/gear.json";
-import successAnim from "@/assets/lottie/success.json";
-import creativeAnim from "@/assets/lottie/creative.json";
-import filesAnim from "@/assets/lottie/files.json";
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -255,70 +246,84 @@ const features = [
   {
     icon: FolderTree,
     title: "Content Pipeline Folders",
-    description: "Organize by Raw, Drafts, Finals — or build any folder structure that fits your editing workflow.",
+    description: "Organize by Raw, Drafts, Finals - or build any folder structure that fits your editing workflow.",
     tag: "Organization",
-    color: "text-blue-500",
-    bg: "bg-blue-50/80",
-    tagBg: "bg-blue-50 text-blue-600",
-    gradient: "from-blue-500 to-blue-400",
-    lottie: filesAnim,
+    iconColor: "text-blue-600",
+    iconBg: "bg-blue-500/10",
+    tagColor: "bg-blue-500/10 text-blue-600",
+    accentColor: "bg-blue-500",
+    hoverBorder: "rgba(59, 130, 246, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(59, 130, 246, 0.12)",
   },
   {
     icon: Users,
     title: "Creator & Editor Roles",
     description: "Creators upload, editors access what they need. Viewers can review without touching files.",
     tag: "Collaboration",
-    color: "text-violet-500",
-    bg: "bg-violet-50/80",
-    tagBg: "bg-violet-50 text-violet-600",
-    gradient: "from-violet-500 to-purple-400",
-    lottie: teamWorkAnim,
+    iconColor: "text-blue-600",
+    iconBg: "bg-blue-500/10",
+    tagColor: "bg-blue-500/10 text-blue-600",
+    accentColor: "bg-blue-500",
+    hoverBorder: "rgba(59, 130, 246, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(59, 130, 246, 0.12)",
   },
   {
     icon: Upload,
     title: "Drop Your Clips",
     description: "Upload raw footage, B-roll, graphics, and finals directly into any folder. Cloud-backed.",
     tag: "Performance",
-    color: "text-emerald-500",
-    bg: "bg-emerald-50/80",
-    tagBg: "bg-emerald-50 text-emerald-600",
-    gradient: "from-emerald-500 to-green-400",
-    lottie: uploadCloudAnim,
+    iconColor: "text-indigo-600",
+    iconBg: "bg-indigo-500/10",
+    tagColor: "bg-indigo-500/10 text-indigo-600",
+    accentColor: "bg-indigo-500",
+    hoverBorder: "rgba(99, 102, 241, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(99, 102, 241, 0.12)",
   },
   {
     icon: Shield,
     title: "Secure by Default",
     description: "Your unreleased content stays protected with workspace-level access control.",
     tag: "Security",
-    color: "text-amber-500",
-    bg: "bg-amber-50/80",
-    tagBg: "bg-amber-50 text-amber-600",
-    gradient: "from-amber-500 to-yellow-400",
-    lottie: gearAnim,
+    iconColor: "text-indigo-600",
+    iconBg: "bg-indigo-500/10",
+    tagColor: "bg-indigo-500/10 text-indigo-600",
+    accentColor: "bg-indigo-500",
+    hoverBorder: "rgba(99, 102, 241, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(99, 102, 241, 0.12)",
   },
   {
     icon: Globe,
     title: "Multi-Creator Workspaces",
-    description: "Run separate workspaces per creator, brand, or project — all from one account.",
+    description: "Run separate workspaces per creator, brand, or project - all from one account.",
     tag: "Scale",
-    color: "text-cyan-500",
-    bg: "bg-cyan-50/80",
-    tagBg: "bg-cyan-50 text-cyan-600",
-    gradient: "from-cyan-500 to-teal-400",
-    lottie: rocketAnim,
+    iconColor: "text-blue-600",
+    iconBg: "bg-blue-500/10",
+    tagColor: "bg-blue-500/10 text-blue-600",
+    accentColor: "bg-blue-500",
+    hoverBorder: "rgba(59, 130, 246, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(59, 130, 246, 0.12)",
   },
   {
     icon: Zap,
     title: "Instant Clip Previews",
     description: "Preview your clips, thumbnails, and graphics right in the browser. No downloads.",
     tag: "Speed",
-    color: "text-rose-500",
-    bg: "bg-rose-50/80",
-    tagBg: "bg-rose-50 text-rose-600",
-    gradient: "from-rose-500 to-pink-400",
-    lottie: successAnim,
+    iconColor: "text-indigo-600",
+    iconBg: "bg-indigo-500/10",
+    tagColor: "bg-indigo-500/10 text-indigo-600",
+    accentColor: "bg-indigo-500",
+    hoverBorder: "rgba(99, 102, 241, 0.25)",
+    hoverShadow: "0 20px 50px -12px rgba(99, 102, 241, 0.12)",
   },
 ];
+
+function BrandWord({ children, color }: { children: React.ReactNode; color: string }) {
+  return (
+    <span className="font-bold" style={{ color }}>
+      {children}
+    </span>
+  );
+}
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
@@ -383,9 +388,6 @@ export default function LandingPage() {
           animate={{ scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 opacity-[0.06] pointer-events-none hidden lg:block">
-          <LottieAnimation animationData={creativeAnim} trigger="scroll" className="w-full h-full" />
-        </div>
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <RevealSection>
@@ -409,7 +411,7 @@ export default function LandingPage() {
                 variants={fadeUp}
                 className="mt-5 sm:mt-6 text-base sm:text-lg text-gray-500 max-w-md leading-[1.7] font-normal"
               >
-                The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts — without the DM chaos.
+                The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts - without the DM chaos.
               </motion.p>
               <motion.div
                 variants={fadeUp}
@@ -450,34 +452,40 @@ export default function LandingPage() {
 
       <section className="py-14 sm:py-20 lg:py-24 px-5 sm:px-8 lg:px-10">
         <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mb-10 sm:mb-12">
+          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-12">
             <RevealSection>
               <motion.p variants={fadeUp} className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 The Problem
               </motion.p>
             </RevealSection>
-            <ScrollRevealText
-              as="h2"
-              data-testid="text-problem-heading"
-              text="Your clips are scattered across WhatsApp threads, Google Drive links, WeTransfer emails, and random DMs. Your editor can't find the right cut. Deadlines slip."
-              className="text-2xl sm:text-[2rem] md:text-[2.5rem] font-semibold tracking-[-0.03em] text-gray-900 leading-[1.25]"
-            />
+            <RevealSection>
+              <motion.h2
+                variants={fadeUp}
+                data-testid="text-problem-heading"
+                className="text-2xl sm:text-[2rem] md:text-[2.5rem] font-semibold tracking-[-0.03em] text-gray-900 leading-[1.35]"
+              >
+                Your clips are scattered across{" "}
+                <BrandWord color="#25D366">WhatsApp</BrandWord> threads,{" "}
+                <BrandWord color="#4285F4">Google Drive</BrandWord> links,{" "}
+                <BrandWord color="#409FFF">WeTransfer</BrandWord> emails, and random DMs. Your editor can't find the right cut. Deadlines slip.
+              </motion.h2>
+            </RevealSection>
           </div>
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
             {[
-              { stat: 73, suffix: "%", label: "of creators", desc: "waste hours every week hunting for the right clip or draft", gradient: "from-rose-500 to-orange-400" },
-              { stat: 5, suffix: "+", label: "apps used", desc: "the average creator-editor team uses to exchange content files", gradient: "from-violet-500 to-purple-400" },
-              { stat: 40, suffix: "%", label: "of footage", desc: "gets lost or duplicated across DMs, drives, and email threads", gradient: "from-amber-500 to-yellow-400" },
+              { stat: 73, suffix: "%", label: "of creators", desc: "waste hours every week hunting for the right clip or draft" },
+              { stat: 5, suffix: "+", label: "apps used", desc: "the average creator-editor team uses to exchange content files" },
+              { stat: 40, suffix: "%", label: "of footage", desc: "gets lost or duplicated across DMs, drives, and email threads" },
             ].map((item, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
                   className="bg-white rounded-2xl p-6 sm:p-7 border border-gray-200/60 cursor-default group"
                   data-testid={`card-stat-${i}`}
-                  whileHover={{ borderColor: "rgba(99, 102, 241, 0.15)", boxShadow: "0 16px 48px -12px rgba(0,0,0,0.08)" }}
-                  transition={{ duration: 0.35, ease }}
+                  whileHover={{ y: -4, borderColor: "rgba(59, 130, 246, 0.2)", boxShadow: "0 20px 50px -12px rgba(59, 130, 246, 0.1)" }}
+                  transition={{ duration: 0.3, ease }}
                 >
-                  <p className={`text-4xl sm:text-5xl font-bold tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-r ${item.gradient}`}>
+                  <p className="text-4xl sm:text-5xl font-bold tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
                     <AnimatedCounter value={item.stat} suffix={item.suffix} />
                   </p>
                   <p className="text-[11px] font-semibold text-gray-900 mt-3 uppercase tracking-[0.15em]">
@@ -509,46 +517,51 @@ export default function LandingPage() {
               </h2>
               <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
                 thecrew gives creators and editors a single space to upload raw clips,
-                organize drafts, and deliver final cuts — all without leaving the platform.
+                organize drafts, and deliver final cuts - all without leaving the platform.
               </p>
             </motion.div>
           </RevealSection>
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {features.map((feature) => (
-              <motion.div key={feature.title} variants={fadeUpSmall}>
-                <motion.div
-                  className="group h-full bg-[#fafafa] rounded-2xl border border-gray-200/60 cursor-default overflow-hidden"
-                  data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  whileHover={{ borderColor: "rgba(99, 102, 241, 0.18)", boxShadow: "0 16px 48px -12px rgba(0,0,0,0.08)" }}
-                  transition={{ duration: 0.35, ease }}
-                >
-                  <div className={`h-1 w-full bg-gradient-to-r ${feature.gradient}`} />
-                  <div className="p-6 sm:p-7">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className={`w-10 h-10 rounded-xl ${feature.bg} flex items-center justify-center overflow-hidden`}>
-                        <LottieAnimation
-                          animationData={feature.lottie}
-                          trigger="appear"
-                          loop={false}
-                          speed={0.7}
-                          className="w-8 h-8"
-                        />
+            {features.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div key={feature.title} variants={fadeUpSmall}>
+                  <motion.div
+                    className="group h-full bg-[#fafafa] rounded-2xl border border-gray-200/60 cursor-default overflow-hidden"
+                    data-testid={`card-feature-${feature.title.toLowerCase().replace(/\s+/g, "-")}`}
+                    whileHover={{
+                      y: -4,
+                      borderColor: feature.hoverBorder,
+                      boxShadow: feature.hoverShadow,
+                    }}
+                    transition={{ duration: 0.3, ease }}
+                  >
+                    <div className={`h-1 w-full ${feature.accentColor} opacity-80 group-hover:opacity-100 transition-opacity`} />
+                    <div className="p-6 sm:p-7">
+                      <div className="flex items-center gap-3 mb-4">
+                        <motion.div
+                          className={`w-10 h-10 rounded-xl ${feature.iconBg} flex items-center justify-center`}
+                          whileHover={{ scale: 1.08, rotate: -4 }}
+                          transition={{ duration: 0.25, ease }}
+                        >
+                          <Icon className={`w-5 h-5 ${feature.iconColor}`} />
+                        </motion.div>
+                        <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full ${feature.tagColor}`}>
+                          {feature.tag}
+                        </span>
                       </div>
-                      <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full ${feature.tagBg}`}>
-                        {feature.tag}
-                      </span>
+                      <h3 className="text-[15px] font-semibold text-gray-900 mb-1.5 tracking-[-0.01em]">
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">
+                        {feature.description}
+                      </p>
                     </div>
-                    <h3 className="text-[15px] font-semibold text-gray-900 mb-1.5 tracking-[-0.01em]">
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </div>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            ))}
+              );
+            })}
           </RevealSection>
         </div>
       </section>
@@ -586,41 +599,42 @@ export default function LandingPage() {
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-5 lg:gap-6 relative">
             {[
-              { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers, lottie: rocketAnim },
-              { step: "02", title: "Add your editors", desc: "Invite editors with the right access level — they see what you want them to see.", icon: Users, lottie: teamWorkAnim },
-              { step: "03", title: "Upload & ship", desc: "Drop your raw clips, organize by stage, and let your editors get to work.", icon: Upload, lottie: uploadCloudAnim },
-            ].map((item, i) => (
-              <motion.div key={i} variants={fadeUpSmall}>
-                <motion.div
-                  className="relative bg-white/[0.04] rounded-2xl p-6 sm:p-7 border border-white/[0.06] backdrop-blur-sm"
-                  data-testid={`card-step-${item.step}`}
-                  whileHover={{ borderColor: "rgba(96, 165, 250, 0.2)", backgroundColor: "rgba(255,255,255,0.06)" }}
-                  transition={{ duration: 0.3, ease }}
-                >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center overflow-hidden">
-                      <LottieAnimation
-                        animationData={item.lottie}
-                        trigger="appear"
-                        loop={false}
-                        speed={0.8}
-                        className="w-8 h-8"
-                      />
+              { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers },
+              { step: "02", title: "Add your editors", desc: "Invite editors with the right access level - they see what you want them to see.", icon: Users },
+              { step: "03", title: "Upload & ship", desc: "Drop your raw clips, organize by stage, and let your editors get to work.", icon: Upload },
+            ].map((item, i) => {
+              const StepIcon = item.icon;
+              return (
+                <motion.div key={i} variants={fadeUpSmall}>
+                  <motion.div
+                    className="relative bg-white/[0.04] rounded-2xl p-6 sm:p-7 border border-white/[0.06] backdrop-blur-sm group"
+                    data-testid={`card-step-${item.step}`}
+                    whileHover={{ y: -4, borderColor: "rgba(96, 165, 250, 0.2)", backgroundColor: "rgba(255,255,255,0.06)" }}
+                    transition={{ duration: 0.3, ease }}
+                  >
+                    <div className="flex items-center gap-3 mb-5">
+                      <motion.div
+                        className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center"
+                        whileHover={{ scale: 1.08, rotate: -4 }}
+                        transition={{ duration: 0.25, ease }}
+                      >
+                        <StepIcon className="w-5 h-5 text-blue-400" />
+                      </motion.div>
+                      <span className="text-[10px] font-semibold text-blue-400 tracking-[0.2em] uppercase bg-blue-400/10 px-2.5 py-1 rounded-full">
+                        Step {item.step}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-semibold text-blue-400 tracking-[0.2em] uppercase bg-blue-400/10 px-2.5 py-1 rounded-full">
-                      Step {item.step}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 tracking-[-0.02em]">{item.title}</h3>
-                  <p className="text-gray-500 text-sm leading-[1.7]">{item.desc}</p>
-                  {i < 2 && (
-                    <div className="hidden sm:flex absolute -right-3 lg:-right-3 top-1/2 -translate-y-1/2 z-10">
-                      <ArrowRight className="w-4 h-4 text-blue-400/40" />
-                    </div>
-                  )}
+                    <h3 className="text-lg font-semibold mb-2 tracking-[-0.02em]">{item.title}</h3>
+                    <p className="text-gray-500 text-sm leading-[1.7]">{item.desc}</p>
+                    {i < 2 && (
+                      <div className="hidden sm:flex absolute -right-3 lg:-right-3 top-1/2 -translate-y-1/2 z-10">
+                        <ArrowRight className="w-4 h-4 text-blue-400/40" />
+                      </div>
+                    )}
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            ))}
+              );
+            })}
           </RevealSection>
         </div>
       </section>
@@ -646,15 +660,16 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
-                  className="bg-[#fafafa] rounded-2xl border border-gray-200/60 h-full flex flex-col cursor-default overflow-hidden"
+                  className="bg-[#fafafa] rounded-2xl border border-gray-200/60 h-full flex flex-col cursor-default overflow-hidden group"
                   data-testid={`card-testimonial-${i}`}
                   whileHover={{
-                    borderColor: "rgba(99, 102, 241, 0.18)",
-                    boxShadow: "0 16px 48px -12px rgba(99, 102, 241, 0.08)",
+                    y: -4,
+                    borderColor: "rgba(59, 130, 246, 0.2)",
+                    boxShadow: "0 20px 50px -12px rgba(59, 130, 246, 0.08)",
                   }}
-                  transition={{ duration: 0.35, ease }}
+                  transition={{ duration: 0.3, ease }}
                 >
-                  <div className={`h-1 w-full bg-gradient-to-r ${["from-blue-500 to-indigo-400", "from-violet-500 to-purple-400", "from-emerald-500 to-teal-400"][i]}`} />
+                  <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-indigo-500 opacity-60 group-hover:opacity-100 transition-opacity" />
                   <div className="p-6 sm:p-7 flex flex-col flex-1">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex gap-0.5">
@@ -669,7 +684,7 @@ export default function LandingPage() {
                     </p>
                     <div className="mt-5 pt-4 border-t border-gray-200/60">
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${["from-blue-600 to-indigo-600", "from-violet-600 to-purple-600", "from-emerald-600 to-teal-600"][i]} flex items-center justify-center text-white font-medium text-xs`}>
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-medium text-xs">
                           {t.name.split(" ").map(n => n[0]).join("")}
                         </div>
                         <div>
@@ -712,17 +727,17 @@ export default function LandingPage() {
                   "Separate workspaces per creator",
                   "Cloud-backed clip storage",
                   "Creator & editor role management",
-                  "Raw → Draft → Final folder trees",
+                  "Raw > Draft > Final folder trees",
                   "Video & image preview support",
                   "Secure access for your whole team",
                 ].map((item, index) => (
                   <motion.div
                     key={item}
                     variants={fadeUpSmall}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-3 group"
                     data-testid={`text-highlight-${index}`}
                   >
-                    <CheckCircle2 className="w-[18px] h-[18px] text-blue-500 shrink-0" />
+                    <CheckCircle2 className="w-[18px] h-[18px] text-blue-500 shrink-0 group-hover:scale-110 transition-transform duration-200" />
                     <span className="text-gray-600 font-medium text-sm sm:text-[15px]">
                       {item}
                     </span>
@@ -740,19 +755,17 @@ export default function LandingPage() {
                   backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
                   backgroundSize: "24px 24px",
                 }} />
-                <div className="absolute -bottom-6 -right-6 w-28 h-28 opacity-[0.06] pointer-events-none">
-                  <LottieAnimation animationData={gearAnim} trigger="scroll" className="w-full h-full" />
-                </div>
                 <div className="relative space-y-4">
                   {[
                     { icon: Shield, title: "Your content stays private", desc: "Role-based access so editors only see what you share" },
-                    { icon: FolderTree, title: "Pipeline-ready folders", desc: "Raw → Edit → Review → Final — nest as deep as you need" },
+                    { icon: FolderTree, title: "Pipeline-ready folders", desc: "Raw > Edit > Review > Final - nest as deep as you need" },
                     { icon: Image, title: "Every format, instantly", desc: "Upload MP4s, MOVs, PNGs, JPGs, and preview them all in-browser" },
-                  ].map((item, index) => (
+                  ].map((item) => (
                     <motion.div
                       key={item.title}
-                      className="flex items-start gap-4 bg-white/[0.03] rounded-xl p-4 sm:p-5 border border-white/[0.05]"
+                      className="flex items-start gap-4 bg-white/[0.03] rounded-xl p-4 sm:p-5 border border-white/[0.05] group"
                       whileHover={{
+                        y: -2,
                         backgroundColor: "rgba(255,255,255,0.06)",
                         borderColor: "rgba(96, 165, 250, 0.15)",
                       }}
@@ -760,7 +773,7 @@ export default function LandingPage() {
                     >
                       <motion.div
                         className="w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0"
-                        whileHover={{ rotate: -6 }}
+                        whileHover={{ scale: 1.08, rotate: -6 }}
                         transition={{ duration: 0.25 }}
                       >
                         <item.icon className="w-4 h-4 text-blue-400" />
@@ -792,9 +805,6 @@ export default function LandingPage() {
           animate={{ scale: [1, 1.2, 1], opacity: [0.07, 0.12, 0.07] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="absolute -top-8 -right-8 w-36 h-36 opacity-[0.05] pointer-events-none hidden lg:block">
-          <LottieAnimation animationData={rocketAnim} trigger="appear" loop className="w-full h-full" />
-        </div>
         <div className="max-w-3xl mx-auto relative text-center">
           <RevealSection>
             <motion.h2 variants={fadeUp} className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] leading-[1.12]">
