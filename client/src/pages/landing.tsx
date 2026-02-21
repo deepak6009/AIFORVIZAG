@@ -84,14 +84,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fafafa]/80 backdrop-blur-xl border-b border-gray-200/60">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
               <Layers className="w-4 h-4 text-white" />
             </div>
             <span
-              className="text-base sm:text-lg font-semibold tracking-tight text-gray-900"
+              className="text-base sm:text-lg font-semibold tracking-tight text-white"
               data-testid="text-app-name"
             >
               WorkVault
@@ -100,7 +100,7 @@ export default function LandingPage() {
           <div className="hidden sm:flex items-center gap-3">
             <Button
               variant="ghost"
-              className="text-gray-500 font-medium text-sm"
+              className="text-white/70 font-medium text-sm"
               onClick={() => navigate("/auth")}
               data-testid="button-login"
             >
@@ -108,7 +108,7 @@ export default function LandingPage() {
             </Button>
             <Button
               onClick={() => navigate("/auth?mode=register")}
-              className="bg-gray-900 text-white font-medium rounded-full text-sm"
+              className="bg-white text-primary font-medium rounded-full text-sm"
               data-testid="button-get-started-nav"
             >
               Get Started
@@ -116,7 +116,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <button
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg"
+            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             data-testid="button-mobile-menu"
           >
@@ -124,17 +124,17 @@ export default function LandingPage() {
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-gray-200/60 bg-[#fafafa] px-5 py-4 space-y-3">
+          <div className="sm:hidden border-t border-white/10 bg-primary px-5 py-4 space-y-3">
             <Button
               variant="outline"
-              className="w-full justify-center"
+              className="w-full justify-center border-white/20 text-white"
               onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}
               data-testid="button-login-mobile"
             >
               Sign In
             </Button>
             <Button
-              className="w-full justify-center bg-gray-900 text-white"
+              className="w-full justify-center bg-white text-primary"
               onClick={() => { navigate("/auth?mode=register"); setMobileMenuOpen(false); }}
               data-testid="button-get-started-mobile"
             >
