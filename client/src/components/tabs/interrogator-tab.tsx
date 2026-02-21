@@ -8,6 +8,7 @@ import {
   Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User
 } from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface UploadedFile {
   id: string;
@@ -237,10 +238,15 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     }
   };
 
-  const getSummaryText = () => {
+  const getSummaryText = (): string => {
     if (!summaryResult) return "";
     if (typeof summaryResult === "string") return summaryResult;
-    return summaryResult.summary || summaryResult.result || summaryResult.message || JSON.stringify(summaryResult, null, 2);
+    const raw = summaryResult.brief || summaryResult.summary || summaryResult.result || summaryResult.message || "";
+    if (!raw && typeof summaryResult === "object") return JSON.stringify(summaryResult, null, 2);
+    return raw
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\"/g, '"');
   };
 
   const handleSendChat = () => {
@@ -390,9 +396,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <Sparkles className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-semibold">Analysis Summary</h3>
                   </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed max-h-40 overflow-auto" data-testid="text-summary">
-                    {getSummaryText()}
-                  </p>
+                  <div className="text-sm max-h-60 overflow-auto prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-4 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-1.5 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1 prose-ol:my-1" data-testid="text-summary">
+                    <ReactMarkdown>{getSummaryText()}</ReactMarkdown>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -486,10 +492,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
                 {summaryResult ? (
                   <div className="space-y-4">
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-final-document">
-                        {getSummaryText()}
-                      </p>
+                    <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
+                      <ReactMarkdown>{getSummaryText()}</ReactMarkdown>
                     </div>
                     {chatMessages.filter(m => m.role === "user").length > 0 && (
                       <div className="border-t pt-4">
