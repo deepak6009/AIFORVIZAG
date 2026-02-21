@@ -58,6 +58,7 @@ export interface Interrogation {
   summary: string;
   fileUrls: string[];
   briefingAnswers: Record<string, any>;
+  finalDocument?: string;
   status: "analysed" | "briefing" | "completed";
   createdBy: string;
   createdAt: string;

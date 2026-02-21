@@ -27,6 +27,7 @@ import {
   createInterrogation,
   getInterrogation,
   updateInterrogation,
+  getInterrogationsByWorkspace,
 } from "./aws/fileService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -554,11 +555,31 @@ RULES:
     }
   });
 
+  // === List Interrogations for a workspace ===
+
+  app.get("/api/workspaces/:id/interrogations", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const wsId = req.params.id;
+      const interrogations = await getInterrogationsByWorkspace(orgId, wsId);
+      const sorted = interrogations.sort((a: any, b: any) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      res.json(sorted);
+    } catch (error: any) {
+      console.error("Error listing interrogations:", error);
+      res.status(500).json({ error: error.message || "Failed to list interrogations" });
+    }
+  });
+
   // === Generate Final Document ===
 
   app.post("/api/interrogator/generate-final", isAuthenticated, async (req: any, res) => {
     try {
-      const { summary, briefingAnswers, fileAttachments, chatHistory } = req.body;
+      const { summary, briefingAnswers, fileAttachments, chatHistory, interrogationId, workspaceId } = req.body;
 
       if (!process.env.GEMINI_API_KEY) {
         return res.status(500).json({ error: "Gemini API key not configured" });
@@ -659,6 +680,19 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
 
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
+
+      if (interrogationId && workspaceId) {
+        try {
+          const userId = req.userId;
+          const orgId = await getOrCreateDefaultOrg(userId);
+          await updateInterrogation(orgId, workspaceId, interrogationId, {
+            finalDocument: responseText,
+            status: "completed",
+          });
+        } catch (e) {
+          console.error("Error saving final document to DynamoDB:", e);
+        }
+      }
 
       res.json({ finalDocument: responseText });
     } catch (error: any) {

@@ -37,7 +37,7 @@ Table: `AIFORVIZAG_file_structure`
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
 - Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
-- Nav tabs: Users, Folders, Interrogator, Tasks, Resources
+- Nav tabs: Users, Folders, Interrogator, Final Agenda, Tasks, Resources
 - Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
@@ -56,6 +56,7 @@ Table: `AIFORVIZAG_file_structure`
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
 - `client/src/components/tabs/interrogator-tab.tsx` - 3-step Interrogator wizard with Gemini AI briefing chat
+- `client/src/components/tabs/final-agenda-tab.tsx` - Final Agenda listing (saved production briefs from Interrogator)
 - `client/src/components/tabs/tasks-tab.tsx` - Kanban board (placeholder)
 - `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
 
@@ -79,6 +80,7 @@ Table: `AIFORVIZAG_file_structure`
 - `POST /api/aws/upload-url` - Get presigned S3 upload URL
 - `POST /api/interrogator/upload-text` - Convert text to .txt on S3
 - `POST /api/interrogator/summarize` - Proxy summary lambda + store in DynamoDB
+- `GET /api/workspaces/:id/interrogations` - List interrogations for a workspace (DynamoDB)
 - `POST /api/interrogator/chat` - Gemini AI briefing chat with 4-layer framework
 - `POST /api/interrogator/generate-final` - Gemini-powered final document generation (combines lambda summary + briefing answers + file attachments)
 

@@ -432,6 +432,7 @@ export async function updateInterrogation(orgId: string, workspaceId: string, in
   briefingAnswers?: Record<string, any>;
   status?: string;
   summary?: string;
+  finalDocument?: string;
 }) {
   const expressions: string[] = [];
   const names: Record<string, string> = {};
@@ -451,6 +452,11 @@ export async function updateInterrogation(orgId: string, workspaceId: string, in
     expressions.push("#sm = :sm");
     names["#sm"] = "summary";
     values[":sm"] = updates.summary;
+  }
+  if (updates.finalDocument !== undefined) {
+    expressions.push("#fd = :fd");
+    names["#fd"] = "finalDocument";
+    values[":fd"] = updates.finalDocument;
   }
   expressions.push("#ua = :ua");
   names["#ua"] = "updatedAt";

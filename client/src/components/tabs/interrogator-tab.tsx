@@ -680,6 +680,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         briefingAnswers,
         fileAttachments: fileAttachmentsRef.current,
         chatHistory: chatMessages,
+        interrogationId,
+        workspaceId,
       });
       const data = await res.json();
       setFinalDocument(data.finalDocument || "No document generated.");
