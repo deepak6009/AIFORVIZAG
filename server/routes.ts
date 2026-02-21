@@ -567,21 +567,36 @@ RULES:
         }
       }
 
+      let chatTranscript = "";
+      if (chatHistory && Array.isArray(chatHistory) && chatHistory.length > 0) {
+        chatTranscript = chatHistory.map((msg: any) => {
+          const role = msg.role === "user" ? "Creator" : "AI";
+          return `${role}: ${msg.text}`;
+        }).join("\n");
+      }
+
       const prompt = `You are a production-ready video editing brief generator. Your job is to produce a clear, concise, actionable final brief that a video editor can follow exactly.
 
 INPUT DATA:
 1. Initial analysis summary from uploaded materials:
 ${summary || "No summary available."}
 
-2. Briefing answers from creator conversation:
+2. Briefing answers (structured selections):
 ${answersBlock || "No briefing answers."}
 ${otherAttachments}
 
+3. Full conversation transcript between the creator and AI assistant:
+${chatTranscript || "No conversation history."}
+
+IMPORTANT: The conversation transcript contains the creator's EXACT words and preferences. Pay close attention to every detail the creator mentioned — especially specific requests about audio, music, visuals, files, or style that may not appear in the structured answers above. The creator's free-text messages carry HIGH WEIGHT and must be reflected in the final document.
+
 INSTRUCTIONS:
-- Combine the initial analysis and the briefing answers into ONE structured final document.
+- Combine ALL three input sources (analysis, structured answers, AND conversation transcript) into ONE structured final document.
+- The conversation transcript is the MOST IMPORTANT source — it contains the creator's exact preferences stated in their own words. If the creator said "I want high pitch BGM" or "fast cuts" or any other preference in the chat, it MUST appear in the final brief.
 - Be EXTREMELY specific and actionable. No vague language. No filler words.
-- When a file was attached as a reference, you MUST explicitly mention it with its file path. For example: "Use the music from this reference video (FolderName/filename.mp4)" or "Match the color grading style shown in (References/sample.png)".
+- When a file was attached as a reference (shown as [Attached: path/filename] in the conversation), you MUST explicitly mention it with its file path. For example: "Use the music from this reference video (FolderName/filename.mp4)" or "Match the color grading style shown in (References/sample.png)".
 - File attachments carry HIGH WEIGHT — they are the creator's explicit references. Always call them out clearly with their paths.
+- If the creator mentioned specific preferences about audio, music, visuals, pacing, or any other aspect in the conversation — include those EXACT preferences in the relevant section.
 - Structure the output with clear sections using markdown headers.
 - Keep it brief but complete. Every line should be an actionable instruction for the editor.
 
