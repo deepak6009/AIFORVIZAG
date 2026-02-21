@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  Upload, FileText, Mic, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle
+  Upload, FileText, Mic, MicOff, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle, Square
 } from "lucide-react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 interface UploadedFile {
   id: string;
@@ -60,12 +60,79 @@ function formatSize(bytes: number): string {
 export default function InterrogatorTab({ workspaceId }: { workspaceId: string }) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [textBrief, setTextBrief] = useState("");
   const [summarizing, setSummarizing] = useState(false);
   const [summaryResult, setSummaryResult] = useState<any>(null);
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  const formatRecordingTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      audioChunksRef.current = [];
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        const file = new File([audioBlob], `voice-note-${timestamp}.webm`, { type: "audio/webm" });
+        handleFilesSelected([file]);
+      };
+
+      mediaRecorder.start(250);
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+    } catch (err: any) {
+      toast({
+        title: "Microphone access denied",
+        description: "Please allow microphone access in your browser to record voice notes.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
 
   const uploadFileToS3 = useCallback(async (file: File): Promise<string> => {
     const urlRes = await fetch("/api/uploads/request-url", {
@@ -169,6 +236,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
   const hasContent = uploadedFiles.some(f => f.status === "done") || textBrief.trim().length > 0;
   const isUploading = uploadedFiles.some(f => f.status === "uploading");
+  const isRecordingOrUploading = isRecording || isUploading;
 
   return (
     <div className="h-full overflow-auto">
@@ -212,6 +280,39 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   data-testid="input-briefing-files"
                 />
               </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">Or Record a Voice Note</h3>
+              {!isRecording ? (
+                <Button
+                  variant="outline"
+                  className="w-full h-14 gap-3"
+                  onClick={startRecording}
+                  data-testid="button-start-recording"
+                >
+                  <Mic className="w-5 h-5 text-purple-500" />
+                  <span>Tap to Record Voice Note</span>
+                </Button>
+              ) : (
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
+                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-sm font-medium text-red-600 dark:text-red-400" data-testid="text-recording-time">
+                    Recording {formatRecordingTime(recordingTime)}
+                  </span>
+                  <div className="flex-1" />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-2"
+                    onClick={stopRecording}
+                    data-testid="button-stop-recording"
+                  >
+                    <Square className="w-3.5 h-3.5" />
+                    Stop
+                  </Button>
+                </div>
+              )}
             </div>
 
             {uploadedFiles.length > 0 && (
@@ -266,7 +367,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
             <Button
               onClick={handleSubmit}
-              disabled={!hasContent || isUploading || summarizing}
+              disabled={!hasContent || isRecordingOrUploading || summarizing}
               className="w-full"
               size="lg"
               data-testid="button-submit-interrogator"
@@ -275,6 +376,11 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Generating Summary...
+                </>
+              ) : isRecording ? (
+                <>
+                  <Mic className="w-4 h-4 mr-2 animate-pulse text-red-500" />
+                  Recording in progress...
                 </>
               ) : isUploading ? (
                 <>
