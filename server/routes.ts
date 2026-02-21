@@ -701,6 +701,27 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
     }
   });
 
+  // === Save Final Document (manual save after editing) ===
+
+  app.post("/api/interrogator/save-final", isAuthenticated, async (req: any, res) => {
+    try {
+      const { interrogationId, workspaceId, finalDocument } = req.body;
+      if (!interrogationId || !workspaceId || !finalDocument) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      await updateInterrogation(orgId, workspaceId, interrogationId, {
+        finalDocument,
+        status: "completed",
+      });
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error saving final document:", error);
+      res.status(500).json({ error: error.message || "Failed to save final document" });
+    }
+  });
+
   // === S3 Upload Route (used by folders-tab file upload) ===
 
   app.post("/api/uploads/request-url", isAuthenticated, async (req: any, res) => {

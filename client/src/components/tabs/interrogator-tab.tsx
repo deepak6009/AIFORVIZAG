@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   Upload, FileText, Mic, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle,
   Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User,
-  Paperclip, Folder, FolderOpen, Image, Video, File, Plus, Monitor, HardDrive
+  Paperclip, Folder, FolderOpen, Image, Video, File, Plus, Monitor, HardDrive,
+  Pencil, Save, Eye
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -145,6 +146,10 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [briefingComplete, setBriefingComplete] = useState(false);
   const [finalDocument, setFinalDocument] = useState<string | null>(null);
   const [generatingFinal, setGeneratingFinal] = useState(false);
+  const [editingFinal, setEditingFinal] = useState(false);
+  const [editableFinalText, setEditableFinalText] = useState("");
+  const [savingFinal, setSavingFinal] = useState(false);
+  const [finalSaved, setFinalSaved] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -673,6 +678,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const handleGenerateFinalDoc = async () => {
     setGeneratingFinal(true);
     setFinalDocument(null);
+    setEditingFinal(false);
+    setFinalSaved(false);
     setCurrentStep(3);
     try {
       const res = await apiRequest("POST", "/api/interrogator/generate-final", {
@@ -684,12 +691,39 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         workspaceId,
       });
       const data = await res.json();
-      setFinalDocument(data.finalDocument || "No document generated.");
+      const doc = data.finalDocument || "No document generated.";
+      setFinalDocument(doc);
+      setEditableFinalText(doc);
     } catch (err: any) {
       toast({ title: "Failed to generate final document", description: err.message, variant: "destructive" });
       setFinalDocument("Error generating final document. Please try again.");
     } finally {
       setGeneratingFinal(false);
+    }
+  };
+
+  const handleSaveFinalDoc = async () => {
+    if (!interrogationId || !workspaceId) {
+      toast({ title: "Cannot save", description: "Missing session data. Please regenerate.", variant: "destructive" });
+      return;
+    }
+    setSavingFinal(true);
+    try {
+      const docToSave = editingFinal ? editableFinalText : finalDocument;
+      await apiRequest("POST", "/api/interrogator/save-final", {
+        interrogationId,
+        workspaceId,
+        finalDocument: docToSave,
+      });
+      setFinalDocument(docToSave);
+      setEditingFinal(false);
+      setFinalSaved(true);
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/interrogations`] });
+      toast({ title: "Saved!", description: "Final agenda saved successfully." });
+    } catch (err: any) {
+      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingFinal(false);
     }
   };
 
@@ -1195,32 +1229,91 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <p className="text-xs text-muted-foreground/60">Combining analysis, briefing answers, and file references</p>
                   </div>
                 ) : finalDocument ? (
-                  <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
-                    <ReactMarkdown>{finalDocument}</ReactMarkdown>
-                  </div>
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {finalSaved && (
+                          <span className="flex items-center gap-1 text-xs text-green-600 font-medium" data-testid="text-saved-badge">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Saved
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs"
+                          onClick={() => {
+                            if (!editingFinal) {
+                              setEditableFinalText(finalDocument);
+                            }
+                            setEditingFinal(!editingFinal);
+                          }}
+                          data-testid="button-toggle-edit"
+                        >
+                          {editingFinal ? (
+                            <><Eye className="w-3.5 h-3.5 mr-1.5" /> Preview</>
+                          ) : (
+                            <><Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit</>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    {editingFinal ? (
+                      <Textarea
+                        value={editableFinalText}
+                        onChange={(e) => { setEditableFinalText(e.target.value); setFinalSaved(false); }}
+                        className="min-h-[400px] font-mono text-sm leading-relaxed resize-y"
+                        data-testid="textarea-edit-final"
+                      />
+                    ) : (
+                      <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
+                        <ReactMarkdown>{finalDocument}</ReactMarkdown>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <p className="text-sm text-muted-foreground">No document generated yet. Please complete the briefing first.</p>
                 )}
               </CardContent>
             </Card>
 
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to AI Chat
-              </Button>
+            {finalDocument && !generatingFinal && (
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Chat
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateFinalDoc}
+                  disabled={generatingFinal}
+                  data-testid="button-regenerate-final"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Regenerate
+                </Button>
+                <Button
+                  onClick={handleSaveFinalDoc}
+                  disabled={savingFinal || finalSaved}
+                  className="flex-1"
+                  data-testid="button-save-final"
+                >
+                  {savingFinal ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : finalSaved ? (
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {finalSaved ? "Saved" : "Save Final Agenda"}
+                </Button>
+              </div>
+            )}
+
+            {finalDocument && !generatingFinal && (
               <Button
-                variant="outline"
-                onClick={handleGenerateFinalDoc}
-                disabled={generatingFinal}
-                className="flex-1"
-                data-testid="button-regenerate-final"
-              >
-                {generatingFinal ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                Regenerate
-              </Button>
-              <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   setCurrentStep(1);
                   setSummaryResult(null);
@@ -1241,13 +1334,15 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   setShowNewFolderInput(false);
                   setNewFolderName("");
                   setFinalDocument(null);
+                  setEditingFinal(false);
+                  setFinalSaved(false);
                 }}
-                className="flex-1"
+                className="w-full text-muted-foreground"
                 data-testid="button-start-new"
               >
-                Start New
+                Start New Interrogation
               </Button>
-            </div>
+            )}
           </div>
         )}
       </div>
