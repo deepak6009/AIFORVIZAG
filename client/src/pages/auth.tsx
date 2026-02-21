@@ -51,7 +51,7 @@ export default function AuthPage() {
           Back to home
         </button>
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-[0.15em] uppercase">CREW</h1>
+          <h1 className="text-2xl font-bold tracking-[0.15em] uppercase"><span className="text-muted-foreground font-medium text-sm tracking-[0.08em] mr-1">The</span>CREW</h1>
           <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
             Creator Resource Editor Workspace
           </p>

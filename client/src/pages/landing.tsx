@@ -149,7 +149,7 @@ export default function LandingPage() {
             <div className="landing-fade-up">
               <div className="mb-3 sm:mb-4 landing-fade-up" data-testid="text-hero-heading">
                 <h1 className="text-[3.5rem] leading-[0.9] sm:text-[5rem] md:text-[6rem] lg:text-[7rem] font-bold tracking-[0.15em] uppercase text-gray-900">
-                  CREW
+                  <span className="text-gray-400 font-medium text-[0.4em] tracking-[0.08em] align-baseline mr-1">The</span>CREW
                 </h1>
                 <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3">
                   {[
