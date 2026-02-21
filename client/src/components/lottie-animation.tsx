@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from "react";
-import Lottie, { LottieRefCurrentProps } from "lottie-react";
-import { useInView, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import lottie, { AnimationItem } from "lottie-web";
+import { useInView, useScroll, useMotionValueEvent } from "framer-motion";
 
 type TriggerMode = "appear" | "scroll" | "hover";
 
@@ -26,7 +26,7 @@ export default function LottieAnimation({
   scrollOffset = ["start 0.95", "end 0.2"],
 }: LottieAnimationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const lottieRef = useRef<LottieRefCurrentProps>(null);
+  const animRef = useRef<AnimationItem | null>(null);
   const hasPlayed = useRef(false);
   const inView = useInView(containerRef, { once: playOnce, margin: "-40px" });
 
@@ -36,38 +36,59 @@ export default function LottieAnimation({
   });
 
   useEffect(() => {
-    if (!lottieRef.current) return;
-    lottieRef.current.setSpeed(speed);
+    if (!containerRef.current) return;
+
+    const anim = lottie.loadAnimation({
+      container: containerRef.current,
+      renderer: "svg",
+      loop: trigger === "appear" ? loop : false,
+      autoplay: false,
+      animationData,
+    });
+
+    anim.setSpeed(speed);
+    animRef.current = anim;
+
+    return () => {
+      anim.destroy();
+      animRef.current = null;
+    };
+  }, [animationData, trigger, loop]);
+
+  useEffect(() => {
+    if (!animRef.current) return;
+    animRef.current.setSpeed(speed);
   }, [speed]);
 
   useEffect(() => {
-    if (trigger !== "appear" || !lottieRef.current) return;
+    if (trigger !== "appear" || !animRef.current) return;
 
     if (inView && !hasPlayed.current) {
-      lottieRef.current.goToAndPlay(0);
+      animRef.current.goToAndPlay(0);
       hasPlayed.current = true;
     } else if (!inView && !playOnce) {
-      lottieRef.current.goToAndStop(0);
+      animRef.current.goToAndStop(0);
       hasPlayed.current = false;
     }
   }, [inView, trigger, playOnce]);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (trigger !== "scroll" || !lottieRef.current) return;
-    const totalFrames = lottieRef.current.getDuration(true) || 60;
-    const frame = Math.round(v * totalFrames);
-    lottieRef.current.goToAndStop(frame, true);
+    if (trigger !== "scroll" || !animRef.current) return;
+    const clamped = Math.max(0, Math.min(1, v));
+    const totalFrames = animRef.current.totalFrames || 60;
+    const frame = Math.round(clamped * (totalFrames - 1));
+    animRef.current.goToAndStop(frame, true);
   });
 
   const handleMouseEnter = useCallback(() => {
-    if (trigger === "hover" && lottieRef.current) {
-      lottieRef.current.goToAndPlay(0);
+    if (trigger === "hover" && animRef.current) {
+      animRef.current.goToAndPlay(0);
     }
   }, [trigger]);
 
   const handleMouseLeave = useCallback(() => {
-    if (trigger === "hover" && lottieRef.current && !loop) {
-      lottieRef.current.goToAndStop(0);
+    if (trigger === "hover" && animRef.current && !loop) {
+      animRef.current.goToAndStop(0);
     }
   }, [trigger, loop]);
 
@@ -75,17 +96,9 @@ export default function LottieAnimation({
     <div
       ref={containerRef}
       className={`relative ${className}`}
-      style={style}
+      style={{ width: "100%", height: "100%", ...style }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-    >
-      <Lottie
-        lottieRef={lottieRef}
-        animationData={animationData}
-        loop={trigger === "appear" ? loop : false}
-        autoplay={false}
-        style={{ width: "100%", height: "100%" }}
-      />
-    </div>
+    />
   );
 }

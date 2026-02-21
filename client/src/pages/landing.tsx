@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, useInView, useSpring, useTransform, useMotionValue, useScroll } from "framer-motion";
 import SlideInButton from "@/components/slide-in-button";
+import LottieAnimation from "@/components/lottie-animation";
 import {
   Layers,
   Users,
@@ -19,6 +20,14 @@ import {
   Quote,
   CheckCircle2,
 } from "lucide-react";
+
+import rocketAnim from "@/assets/lottie/rocket.json";
+import teamWorkAnim from "@/assets/lottie/team-work.json";
+import uploadCloudAnim from "@/assets/lottie/upload-cloud.json";
+import gearAnim from "@/assets/lottie/gear.json";
+import successAnim from "@/assets/lottie/success.json";
+import creativeAnim from "@/assets/lottie/creative.json";
+import filesAnim from "@/assets/lottie/files.json";
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -252,6 +261,7 @@ const features = [
     bg: "bg-blue-50/80",
     tagBg: "bg-blue-50 text-blue-600",
     gradient: "from-blue-500 to-blue-400",
+    lottie: filesAnim,
   },
   {
     icon: Users,
@@ -262,6 +272,7 @@ const features = [
     bg: "bg-violet-50/80",
     tagBg: "bg-violet-50 text-violet-600",
     gradient: "from-violet-500 to-purple-400",
+    lottie: teamWorkAnim,
   },
   {
     icon: Upload,
@@ -272,6 +283,7 @@ const features = [
     bg: "bg-emerald-50/80",
     tagBg: "bg-emerald-50 text-emerald-600",
     gradient: "from-emerald-500 to-green-400",
+    lottie: uploadCloudAnim,
   },
   {
     icon: Shield,
@@ -282,6 +294,7 @@ const features = [
     bg: "bg-amber-50/80",
     tagBg: "bg-amber-50 text-amber-600",
     gradient: "from-amber-500 to-yellow-400",
+    lottie: gearAnim,
   },
   {
     icon: Globe,
@@ -292,6 +305,7 @@ const features = [
     bg: "bg-cyan-50/80",
     tagBg: "bg-cyan-50 text-cyan-600",
     gradient: "from-cyan-500 to-teal-400",
+    lottie: rocketAnim,
   },
   {
     icon: Zap,
@@ -302,6 +316,7 @@ const features = [
     bg: "bg-rose-50/80",
     tagBg: "bg-rose-50 text-rose-600",
     gradient: "from-rose-500 to-pink-400",
+    lottie: successAnim,
   },
 ];
 
@@ -368,6 +383,9 @@ export default function LandingPage() {
           animate={{ scale: [1, 1.15, 1], opacity: [0.04, 0.07, 0.04] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 opacity-[0.06] pointer-events-none hidden lg:block">
+          <LottieAnimation animationData={creativeAnim} trigger="scroll" className="w-full h-full" />
+        </div>
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <RevealSection>
@@ -508,8 +526,14 @@ export default function LandingPage() {
                   <div className={`h-1 w-full bg-gradient-to-r ${feature.gradient}`} />
                   <div className="p-6 sm:p-7">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className={`w-10 h-10 rounded-xl ${feature.bg} flex items-center justify-center`}>
-                        <feature.icon className={`w-[18px] h-[18px] ${feature.color}`} />
+                      <div className={`w-10 h-10 rounded-xl ${feature.bg} flex items-center justify-center overflow-hidden`}>
+                        <LottieAnimation
+                          animationData={feature.lottie}
+                          trigger="appear"
+                          loop={false}
+                          speed={0.7}
+                          className="w-8 h-8"
+                        />
                       </div>
                       <span className={`text-[10px] font-medium uppercase tracking-[0.15em] px-2.5 py-1 rounded-full ${feature.tagBg}`}>
                         {feature.tag}
@@ -562,9 +586,9 @@ export default function LandingPage() {
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-5 lg:gap-6 relative">
             {[
-              { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers },
-              { step: "02", title: "Add your editors", desc: "Invite editors with the right access level — they see what you want them to see.", icon: Users },
-              { step: "03", title: "Upload & ship", desc: "Drop your raw clips, organize by stage, and let your editors get to work.", icon: Upload },
+              { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers, lottie: rocketAnim },
+              { step: "02", title: "Add your editors", desc: "Invite editors with the right access level — they see what you want them to see.", icon: Users, lottie: teamWorkAnim },
+              { step: "03", title: "Upload & ship", desc: "Drop your raw clips, organize by stage, and let your editors get to work.", icon: Upload, lottie: uploadCloudAnim },
             ].map((item, i) => (
               <motion.div key={i} variants={fadeUpSmall}>
                 <motion.div
@@ -574,8 +598,14 @@ export default function LandingPage() {
                   transition={{ duration: 0.3, ease }}
                 >
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
-                      <item.icon className="w-[18px] h-[18px] text-blue-400" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center overflow-hidden">
+                      <LottieAnimation
+                        animationData={item.lottie}
+                        trigger="appear"
+                        loop={false}
+                        speed={0.8}
+                        className="w-8 h-8"
+                      />
                     </div>
                     <span className="text-[10px] font-semibold text-blue-400 tracking-[0.2em] uppercase bg-blue-400/10 px-2.5 py-1 rounded-full">
                       Step {item.step}
@@ -710,6 +740,9 @@ export default function LandingPage() {
                   backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
                   backgroundSize: "24px 24px",
                 }} />
+                <div className="absolute -bottom-6 -right-6 w-28 h-28 opacity-[0.06] pointer-events-none">
+                  <LottieAnimation animationData={gearAnim} trigger="scroll" className="w-full h-full" />
+                </div>
                 <div className="relative space-y-4">
                   {[
                     { icon: Shield, title: "Your content stays private", desc: "Role-based access so editors only see what you share" },
@@ -759,6 +792,9 @@ export default function LandingPage() {
           animate={{ scale: [1, 1.2, 1], opacity: [0.07, 0.12, 0.07] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
+        <div className="absolute -top-8 -right-8 w-36 h-36 opacity-[0.05] pointer-events-none hidden lg:block">
+          <LottieAnimation animationData={rocketAnim} trigger="appear" loop className="w-full h-full" />
+        </div>
         <div className="max-w-3xl mx-auto relative text-center">
           <RevealSection>
             <motion.h2 variants={fadeUp} className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] leading-[1.12]">
