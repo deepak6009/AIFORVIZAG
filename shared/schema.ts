@@ -6,6 +6,24 @@ import { z } from "zod";
 export * from "./models/auth";
 import { users } from "./models/auth";
 
+export const AIFORVIZAG_organisations = pgTable("AIFORVIZAG_organisations", {
+  orgId: varchar("org_id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  logo: text("logo"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOrganisationSchema = createInsertSchema(AIFORVIZAG_organisations).omit({ orgId: true, createdAt: true, updatedAt: true });
+export type InsertOrganisation = z.infer<typeof insertOrganisationSchema>;
+export type Organisation = typeof AIFORVIZAG_organisations.$inferSelect;
+
+export const organisationsRelations = relations(AIFORVIZAG_organisations, ({ one, many }) => ({
+  creator: one(users, { fields: [AIFORVIZAG_organisations.createdBy], references: [users.id] }),
+}));
+
 export const memberRoleEnum = pgEnum("member_role", ["admin", "member", "viewer"]);
 
 export const workspaces = pgTable("workspaces", {
