@@ -3,7 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LayoutGrid, Plus, Search, Filter } from "lucide-react";
+import {
+  LayoutGrid, Plus, Search, Filter, Sparkles, Trash2, GripVertical, MessageSquare, Clock, Send, Bot, Loader2,
+  Upload, Video, FileText, Play
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,10 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  Plus, Search, Sparkles, Trash2, GripVertical, MessageSquare, Clock, Send, Bot, Loader2,
-  Upload, Video, FileText, Play
-} from "lucide-react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { Task, TaskComment, TaskStatus, TaskPriority } from "@shared/schema";
 import ReactMarkdown from "react-markdown";
