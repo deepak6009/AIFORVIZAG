@@ -357,18 +357,32 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
             <div>
               {!isRecording ? (
-                <Button variant="outline" className="w-full h-12 gap-3" onClick={startRecording} data-testid="button-start-recording">
-                  <Mic className="w-5 h-5 text-purple-500" />
-                  <span>Record Voice Note</span>
-                </Button>
+                <button
+                  onClick={startRecording}
+                  className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-950/20 hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-all group cursor-pointer"
+                  data-testid="button-start-recording"
+                >
+                  <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-900/60 transition-colors shrink-0">
+                    <Mic className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">Record Voice Note</p>
+                    <p className="text-xs text-purple-500/70 dark:text-purple-400/60 mt-0.5">Click to start recording from your microphone</p>
+                  </div>
+                </button>
               ) : (
-                <div className="flex items-center gap-3 p-3 rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/20 dark:border-red-800">
-                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-sm font-medium text-red-600 dark:text-red-400" data-testid="text-recording-time">
-                    Recording {formatRecordingTime(recordingTime)}
-                  </span>
-                  <div className="flex-1" />
-                  <Button variant="destructive" size="sm" className="gap-2" onClick={stopRecording} data-testid="button-stop-recording">
+                <div className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/30 animate-in">
+                  <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0 relative">
+                    <Mic className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-300" data-testid="text-recording-time">
+                      Recording... {formatRecordingTime(recordingTime)}
+                    </p>
+                    <p className="text-xs text-red-500/70 dark:text-red-400/60 mt-0.5">Click stop when you're finished speaking</p>
+                  </div>
+                  <Button variant="destructive" size="sm" className="gap-2 shrink-0" onClick={stopRecording} data-testid="button-stop-recording">
                     <Square className="w-3.5 h-3.5" />
                     Stop
                   </Button>
