@@ -24,7 +24,11 @@ import {
   getPresignedUploadUrl,
   getCloudfrontUrl,
   uploadTextToS3,
+  createInterrogation,
+  getInterrogation,
+  updateInterrogation,
 } from "./aws/fileService";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -361,7 +365,9 @@ export async function registerRoutes(
 
   app.post("/api/interrogator/summarize", isAuthenticated, async (req: any, res) => {
     try {
-      const { files } = req.body;
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { files, workspaceId } = req.body;
       if (!files || !Array.isArray(files) || files.length === 0) {
         return res.status(400).json({ error: "At least one file URL is required" });
       }
@@ -382,10 +388,158 @@ export async function registerRoutes(
       }
 
       const data = await response.json();
-      res.json(data);
+
+      let summaryText = "";
+      if (data?.body) {
+        try {
+          const parsed = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+          summaryText = parsed?.summary || JSON.stringify(parsed);
+        } catch {
+          summaryText = String(data.body);
+        }
+      }
+
+      const wsId = workspaceId || "default";
+      const interrogation = await createInterrogation({
+        orgId,
+        workspaceId: wsId,
+        summary: summaryText,
+        fileUrls: files.map((f: any) => f.url),
+        createdBy: userId,
+      });
+
+      res.json({ ...data, interrogationId: interrogation.id });
     } catch (error: any) {
       console.error("Error calling summary API:", error);
       res.status(500).json({ error: error.message || "Failed to get summary" });
+    }
+  });
+
+  // === Gemini Briefing Chat ===
+
+  const BRIEFING_SYSTEM_PROMPT = `You are an expert video editing briefing assistant for WorkVault. Your job is to interview the creator step-by-step to fill in all missing details needed for a complete video editing brief.
+
+You have received a summary of uploaded materials. Based on what's already covered, you must identify what's MISSING and ask about it. 
+
+The complete brief has 6 layers. You must work through them ONE AT A TIME in order. For each layer, ask ONLY what's missing — skip questions already answered in the summary.
+
+LAYER 1 — OUTCOME (Why this video exists)
+- Primary goal: Grow followers / Sell something / Build authority / Go viral / Educate / Entertain
+- Target audience: Age range, niche, skill level (beginner/intermediate/advanced)
+- Desired viewer emotion: Motivated / Shocked / Inspired / Curious / Urgent
+- Call to action: Follow / Comment / Buy / DM / Click link
+
+LAYER 2 — STYLE REFERENCE
+- Creator vibe match: Iman Gadzhi (bold, punchy, dark) / Ali Abdaal (clean, educational, calm) / MrBeast (fast, high-energy) / Ryan Trahan (storytelling + humor) / IShowSpeed (chaotic, expressive) / Custom
+- Reference link (optional)
+
+LAYER 3 — HOOK STRATEGY
+- Hook type: Direct bold statement / Question / Controversial take / Emotional story / Statistic / Fast montage
+- Text in first 2 seconds: Yes / No
+- Hook feel: Calm / Aggressive / Curious / Dramatic / Funny
+
+LAYER 4 — EDITING STYLE
+- Caption style: Big bold center / Minimal lower-third / Word-by-word animation / No captions / Highlight keywords
+- Editing pace: Fast (cut every 1-2 sec) / Medium / Slow cinematic
+- Camera movement: Static / Punch-in zooms / Dynamic motion / Handheld feel
+- Transitions: Hard cuts / Motion blur / Whip transitions / Minimal
+- B-roll usage: Heavy / Minimal / Only when necessary
+
+LAYER 5 — AUDIO & MUSIC
+- Background music vibe: Energetic / Emotional / Corporate clean / Trap / Chill lofi / No music
+- Music drop at hook: Yes / No
+- Sound effects: Subtle / Punchy / Meme-style / None
+
+LAYER 6 — STRUCTURE & LENGTH
+- Target duration: Under 20 sec / 20-30 sec / 30-45 sec / 60 sec
+- Platform: Instagram Reels / YouTube Shorts / TikTok / Multi-platform
+- Platform safe-zone optimization: Yes / No
+
+CRITICAL RULES:
+1. Ask ONE layer at a time. Start with the first layer that has missing info.
+2. Present options as selectable choices where possible.
+3. Be conversational and brief — don't overwhelm the creator.
+4. When a layer is complete, confirm it and move to the next.
+5. After all 6 layers are covered, say "BRIEFING_COMPLETE" and provide a final structured summary.
+6. Your responses MUST be in this JSON format:
+{
+  "message": "Your conversational message to the creator",
+  "currentLayer": 1,
+  "options": [
+    {"id": "opt1", "label": "Option text", "value": "option_value"}
+  ],
+  "multiSelect": false,
+  "fieldKey": "primaryGoal",
+  "isComplete": false
+}
+
+The "options" array should contain clickable chip options when applicable. Set "multiSelect" to true if multiple selections are allowed. Set "fieldKey" to identify what this question is about. Set "isComplete" to true only when ALL 6 layers are fully covered.
+
+When the user selects options or types a response, incorporate that into the brief and move forward.`;
+
+  app.post("/api/interrogator/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const { summary, chatHistory, workspaceId, interrogationId, briefingAnswers } = req.body;
+      
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const history = (chatHistory || []).map((msg: any) => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.text }],
+      }));
+
+      const chat = model.startChat({
+        history: [
+          {
+            role: "user",
+            parts: [{ text: `SYSTEM INSTRUCTIONS:\n${BRIEFING_SYSTEM_PROMPT}\n\nHere is the summary of the uploaded materials:\n\n${summary || "No summary available."}\n\nCurrent briefing answers collected so far: ${JSON.stringify(briefingAnswers || {})}\n\nPlease begin the briefing process. Identify what's missing and ask the first relevant question.` }],
+          },
+          {
+            role: "model",
+            parts: [{ text: '{"message": "Starting briefing analysis...", "currentLayer": 1, "options": [], "multiSelect": false, "fieldKey": "init", "isComplete": false}' }],
+          },
+          ...history,
+        ],
+      });
+
+      const userMessage = chatHistory && chatHistory.length > 0 
+        ? chatHistory[chatHistory.length - 1].text 
+        : "Start the briefing";
+
+      const result = await chat.sendMessage(userMessage);
+      const responseText = result.response.text();
+
+      let parsed;
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: responseText, currentLayer: 1, options: [], isComplete: false };
+      } catch {
+        parsed = { message: responseText, currentLayer: 1, options: [], isComplete: false };
+      }
+
+      if (interrogationId && briefingAnswers) {
+        const userId = req.userId;
+        const orgId = await getOrCreateDefaultOrg(userId);
+        const wsId = workspaceId || "default";
+        try {
+          await updateInterrogation(orgId, wsId, interrogationId, {
+            briefingAnswers,
+            status: parsed.isComplete ? "completed" : "briefing",
+          });
+        } catch (e) {
+          console.error("Error updating interrogation:", e);
+        }
+      }
+
+      res.json(parsed);
+    } catch (error: any) {
+      console.error("Error in Gemini chat:", error);
+      res.status(500).json({ error: error.message || "Failed to get AI response" });
     }
   });
 

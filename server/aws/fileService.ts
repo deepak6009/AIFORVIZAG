@@ -389,3 +389,90 @@ export async function deleteFolderAndFiles(orgId: string, workspaceId: string, f
     Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#FOLDER#${folderId}` },
   }));
 }
+
+// === Interrogation ===
+
+export async function createInterrogation(params: {
+  orgId: string;
+  workspaceId: string;
+  summary: string;
+  fileUrls: string[];
+  createdBy: string;
+}) {
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#INTERROGATION#${id}`,
+    id,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    summary: params.summary,
+    fileUrls: params.fileUrls,
+    briefingAnswers: {},
+    status: "analysed",
+    createdBy: params.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    itemType: "interrogation",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getInterrogation(orgId: string, workspaceId: string, interrogationId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#INTERROGATION#${interrogationId}` },
+  }));
+  return result.Item || null;
+}
+
+export async function updateInterrogation(orgId: string, workspaceId: string, interrogationId: string, updates: {
+  briefingAnswers?: Record<string, any>;
+  status?: string;
+  summary?: string;
+}) {
+  const expressions: string[] = [];
+  const names: Record<string, string> = {};
+  const values: Record<string, any> = {};
+
+  if (updates.briefingAnswers !== undefined) {
+    expressions.push("#ba = :ba");
+    names["#ba"] = "briefingAnswers";
+    values[":ba"] = updates.briefingAnswers;
+  }
+  if (updates.status !== undefined) {
+    expressions.push("#st = :st");
+    names["#st"] = "status";
+    values[":st"] = updates.status;
+  }
+  if (updates.summary !== undefined) {
+    expressions.push("#sm = :sm");
+    names["#sm"] = "summary";
+    values[":sm"] = updates.summary;
+  }
+  expressions.push("#ua = :ua");
+  names["#ua"] = "updatedAt";
+  values[":ua"] = new Date().toISOString();
+
+  await docClient.send(new UpdateCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#INTERROGATION#${interrogationId}` },
+    UpdateExpression: `SET ${expressions.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  }));
+}
+
+export async function getInterrogationsByWorkspace(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":skPrefix": `WS#${workspaceId}#INTERROGATION#`,
+    },
+  }));
+  return (result.Items || []) as any[];
+}

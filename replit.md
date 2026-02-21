@@ -18,6 +18,7 @@ Table: `AIFORVIZAG_file_structure`
 - **Member**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#MEMBER#<userId>`
 - **Folder**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>`
 - **File**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>`
+- **Interrogation**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#INTERROGATION#<id>` (stores summary, fileUrls, briefingAnswers, status)
 - GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
 - Each user gets a default org auto-created on first workspace creation
 
@@ -26,7 +27,10 @@ Table: `AIFORVIZAG_file_structure`
 - Team member management with role-based access (admin, member, viewer)
 - Nested folder structure within workspaces
 - Image and video file uploads with previews
-- AI Interrogator chat interface (placeholder - will create structured briefs)
+- AI Interrogator with 3-step wizard: Upload & Analyse → Gemini AI Briefing Chat → Final Document
+  - Step 1: Upload files (PDF, Word, audio, text), voice-to-text recording (browser STT), text input
+  - Step 2: Gemini AI chat agent with 6-layer briefing framework (Outcome, Style, Hook, Editing, Audio, Structure) with selectable chip options
+  - Step 3: Final structured brief with all briefing answers from DynamoDB
 - Kanban task board (placeholder - will auto-generate from AI brief)
 - Resources section (placeholder - shared links and references)
 
@@ -51,7 +55,7 @@ Table: `AIFORVIZAG_file_structure`
 - `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
-- `client/src/components/tabs/interrogator-tab.tsx` - AI chat interface (placeholder)
+- `client/src/components/tabs/interrogator-tab.tsx` - 3-step Interrogator wizard with Gemini AI briefing chat
 - `client/src/components/tabs/tasks-tab.tsx` - Kanban board (placeholder)
 - `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
 
@@ -73,6 +77,9 @@ Table: `AIFORVIZAG_file_structure`
 - `GET/POST /api/organisations` - List/create organisations (DynamoDB)
 - `GET /api/organisations/:orgId` - Get organisation (DynamoDB)
 - `POST /api/aws/upload-url` - Get presigned S3 upload URL
+- `POST /api/interrogator/upload-text` - Convert text to .txt on S3
+- `POST /api/interrogator/summarize` - Proxy summary lambda + store in DynamoDB
+- `POST /api/interrogator/chat` - Gemini AI briefing chat with 6-layer framework
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000

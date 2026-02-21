@@ -113,8 +113,16 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [liveTranscript, setLiveTranscript] = useState("");
 
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const chatMessagesRef = useRef<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [interrogationId, setInterrogationId] = useState<string | null>(null);
+  const [briefingAnswers, setBriefingAnswers] = useState<Record<string, any>>({});
+  const briefingAnswersRef = useRef<Record<string, any>>({});
+  const [currentAiResponse, setCurrentAiResponse] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [currentLayer, setCurrentLayer] = useState(1);
+  const [briefingComplete, setBriefingComplete] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -124,8 +132,13 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   }, []);
 
   useEffect(() => {
+    chatMessagesRef.current = chatMessages;
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  useEffect(() => {
+    briefingAnswersRef.current = briefingAnswers;
+  }, [briefingAnswers]);
 
   const formatRecordingTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -275,10 +288,12 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setSummaryError(null);
 
     try {
-      const res = await apiRequest("POST", "/api/interrogator/summarize", { files: fileUrls });
+      const res = await apiRequest("POST", "/api/interrogator/summarize", { files: fileUrls, workspaceId });
       const data = await res.json();
       setSummaryResult(data);
+      if (data.interrogationId) setInterrogationId(data.interrogationId);
       setCurrentStep(2);
+      startBriefingChat(data);
     } catch (err: any) {
       setSummaryError(err.message || "Failed to get summary");
       toast({ title: "Analysis failed", description: err.message, variant: "destructive" });
@@ -298,14 +313,97 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       .replace(/\\"/g, '"');
   };
 
+  const callGeminiChat = async (history: { role: "user" | "ai"; text: string }[], summary: string) => {
+    setAiLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/interrogator/chat", {
+        summary,
+        chatHistory: history,
+        workspaceId,
+        interrogationId,
+        briefingAnswers: briefingAnswersRef.current,
+      });
+      const data = await res.json();
+      setCurrentAiResponse(data);
+      setCurrentLayer(data.currentLayer || currentLayer);
+      if (data.isComplete) setBriefingComplete(true);
+      const aiMsg = data.message || "I couldn't process that. Could you try again?";
+      setChatMessages(prev => [...prev, { role: "ai", text: aiMsg }]);
+    } catch {
+      setChatMessages(prev => [...prev, { role: "ai", text: "Sorry, I had trouble processing that. Could you try again?" }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const startBriefingChat = (summaryData: any) => {
+    setChatMessages([]);
+    setBriefingAnswers({});
+    briefingAnswersRef.current = {};
+    setCurrentAiResponse(null);
+    setBriefingComplete(false);
+    setCurrentLayer(1);
+
+    let summaryText = "";
+    if (summaryData?.body) {
+      try {
+        const parsed = typeof summaryData.body === "string" ? JSON.parse(summaryData.body) : summaryData.body;
+        summaryText = parsed?.summary || JSON.stringify(parsed);
+      } catch {
+        summaryText = String(summaryData.body);
+      }
+    }
+
+    callGeminiChat([{ role: "user", text: "Start the briefing" }], summaryText);
+  };
+
   const handleSendChat = () => {
-    if (!chatInput.trim()) return;
-    setChatMessages(prev => [
-      ...prev,
-      { role: "user", text: chatInput.trim() },
-      { role: "ai", text: "AI Chat integration coming soon. This step will allow you to refine the summary through conversation before generating the final agenda." },
-    ]);
+    if (!chatInput.trim() || aiLoading) return;
+    const userMsg = chatInput.trim();
+    setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
     setChatInput("");
+
+    const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: userMsg }];
+    callGeminiChat(updatedHistory, getSummaryText());
+  };
+
+  const handleChipSelect = (option: { id: string; label: string; value: string }) => {
+    if (aiLoading) return;
+    const fieldKey = currentAiResponse?.fieldKey || "unknown";
+    const isMulti = currentAiResponse?.multiSelect;
+
+    const newAnswers = { ...briefingAnswersRef.current };
+    if (isMulti) {
+      const existing = Array.isArray(newAnswers[fieldKey]) ? newAnswers[fieldKey] : [];
+      const idx = existing.indexOf(option.value);
+      if (idx >= 0) {
+        newAnswers[fieldKey] = existing.filter((_: any, i: number) => i !== idx);
+      } else {
+        newAnswers[fieldKey] = [...existing, option.value];
+      }
+    } else {
+      newAnswers[fieldKey] = option.value;
+    }
+    setBriefingAnswers(newAnswers);
+    briefingAnswersRef.current = newAnswers;
+
+    if (!isMulti) {
+      const userMsg = option.label;
+      setChatMessages(prev => [...prev, { role: "user", text: userMsg }]);
+      const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: userMsg }];
+      callGeminiChat(updatedHistory, getSummaryText());
+    }
+  };
+
+  const handleMultiSelectConfirm = () => {
+    if (aiLoading) return;
+    const fieldKey = currentAiResponse?.fieldKey || "unknown";
+    const selected = briefingAnswersRef.current[fieldKey];
+    if (!selected || (Array.isArray(selected) && selected.length === 0)) return;
+    const label = Array.isArray(selected) ? selected.join(", ") : String(selected);
+    setChatMessages(prev => [...prev, { role: "user", text: label }]);
+    const updatedHistory = [...chatMessagesRef.current, { role: "user" as const, text: label }];
+    callGeminiChat(updatedHistory, getSummaryText());
   };
 
   const handleGenerateFinalDoc = () => {
@@ -463,40 +561,42 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
         {currentStep === 2 && (
           <div className="space-y-4" data-testid="step-2-content">
-            {summaryResult && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold">Analysis Summary</h3>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold">AI Briefing Assistant</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {[1,2,3,4,5,6].map(layer => (
+                  <div
+                    key={layer}
+                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
+                      layer < currentLayer ? "bg-green-500 text-white" :
+                      layer === currentLayer ? "bg-primary text-primary-foreground" :
+                      "bg-muted text-muted-foreground"
+                    }`}
+                    title={["Outcome","Style","Hook","Editing","Audio","Structure"][layer-1]}
+                    data-testid={`layer-indicator-${layer}`}
+                  >
+                    {layer < currentLayer ? <CheckCircle2 className="w-3.5 h-3.5" /> : layer}
                   </div>
-                  <div className="text-sm max-h-60 overflow-auto prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-4 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-1.5 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1 prose-ol:my-1" data-testid="text-summary">
-                    <ReactMarkdown>{getSummaryText()}</ReactMarkdown>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                ))}
+              </div>
+            </div>
 
             <Card className="flex-1">
-              <CardContent className="p-4 flex flex-col" style={{ height: "360px" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <MessageSquare className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold">AI Chat</h3>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium">Coming Soon</span>
-                </div>
-
+              <CardContent className="p-4 flex flex-col" style={{ height: "460px" }}>
                 <div className="flex-1 overflow-auto space-y-3 mb-3 pr-1">
-                  {chatMessages.length === 0 && (
+                  {chatMessages.length === 0 && !aiLoading && (
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
                       <Bot className="w-10 h-10 mb-2 opacity-30" />
-                      <p className="text-sm">Chat with AI to refine your brief</p>
-                      <p className="text-xs mt-1">Ask questions, clarify details, or request changes to the summary.</p>
+                      <p className="text-sm">Initializing briefing assistant...</p>
                     </div>
                   )}
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                       {msg.role === "ai" && (
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                           <Bot className="w-4 h-4 text-primary" />
                         </div>
                       )}
@@ -506,26 +606,72 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                         {msg.text}
                       </div>
                       {msg.role === "user" && (
-                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-1">
                           <User className="w-4 h-4" />
                         </div>
                       )}
                     </div>
                   ))}
+                  {aiLoading && (
+                    <div className="flex gap-2 justify-start">
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Bot className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </div>
+                    </div>
+                  )}
                   <div ref={chatEndRef} />
                 </div>
 
+                {currentAiResponse?.options && currentAiResponse.options.length > 0 && !aiLoading && (
+                  <div className="mb-3 space-y-2">
+                    <div className="flex flex-wrap gap-2" data-testid="chip-options">
+                      {currentAiResponse.options.map((opt: any) => {
+                        const fieldKey = currentAiResponse.fieldKey || "unknown";
+                        const isMulti = currentAiResponse.multiSelect;
+                        const isSelected = isMulti
+                          ? Array.isArray(briefingAnswers[fieldKey]) && briefingAnswers[fieldKey].includes(opt.value)
+                          : briefingAnswers[fieldKey] === opt.value;
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => handleChipSelect(opt)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              isSelected
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-background border-border hover:border-primary/50 hover:bg-primary/5"
+                            }`}
+                            data-testid={`chip-${opt.id}`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {currentAiResponse.multiSelect && (
+                      <Button size="sm" onClick={handleMultiSelectConfirm} className="w-full" data-testid="button-confirm-multi">
+                        Confirm Selection
+                      </Button>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder="Type a message..."
+                    placeholder={briefingComplete ? "Briefing complete! Generate your final document below." : "Type a custom answer or additional details..."}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     rows={1}
                     className="resize-none flex-1 min-h-[40px]"
+                    disabled={aiLoading}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                     data-testid="input-chat"
                   />
-                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim()} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
+                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || aiLoading} className="shrink-0 h-10 w-10" data-testid="button-send-chat">
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
@@ -537,7 +683,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Base
               </Button>
-              <Button onClick={handleGenerateFinalDoc} className="flex-1" data-testid="button-generate-final">
+              <Button onClick={handleGenerateFinalDoc} disabled={!briefingComplete} className="flex-1" data-testid="button-generate-final">
                 Generate Final Document
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
@@ -569,17 +715,18 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
                       <ReactMarkdown>{getSummaryText()}</ReactMarkdown>
                     </div>
-                    {chatMessages.filter(m => m.role === "user").length > 0 && (
+
+                    {Object.keys(briefingAnswers).length > 0 && (
                       <div className="border-t pt-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Additional Notes from Chat</h4>
-                        <ul className="space-y-1">
-                          {chatMessages.filter(m => m.role === "user").map((msg, i) => (
-                            <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                              <span className="text-primary mt-1">•</span>
-                              {msg.text}
-                            </li>
+                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Briefing Details</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(briefingAnswers).map(([key, val]) => (
+                            <div key={key} className="rounded-lg border bg-muted/30 p-2.5">
+                              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{key.replace(/([A-Z])/g, " $1").trim()}</p>
+                              <p className="text-sm font-medium mt-0.5">{Array.isArray(val) ? val.join(", ") : String(val)}</p>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -604,6 +751,11 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   setTextBrief("");
                   setChatMessages([]);
                   setChatInput("");
+                  setInterrogationId(null);
+                  setBriefingAnswers({});
+                  setCurrentAiResponse(null);
+                  setBriefingComplete(false);
+                  setCurrentLayer(1);
                 }}
                 className="flex-1"
                 data-testid="button-start-new"
