@@ -6,8 +6,9 @@ import { apiRequest } from "@/lib/queryClient";
 import {
   Upload, FileText, Mic, FileIcon, X, Sparkles, Loader2, CheckCircle2, AlertCircle,
   Square, MessageSquare, FileCheck, ChevronRight, ArrowLeft, Send, Bot, User,
-  Paperclip, Folder, FolderOpen, Image, Video, File
+  Paperclip, Folder, FolderOpen, Image, Video, File, Plus, Monitor, HardDrive
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useState, useRef, useCallback, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
@@ -126,11 +127,18 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [fileAttachments, setFileAttachments] = useState<Record<string, { name: string; url: string; folderName?: string }[]>>({});
   const fileAttachmentsRef = useRef<Record<string, { name: string; url: string; folderName?: string }[]>>({});
   const [showFilePicker, setShowFilePicker] = useState(false);
+  const [pickerTab, setPickerTab] = useState<"workspace" | "upload">("workspace");
   const [wsFolders, setWsFolders] = useState<any[]>([]);
   const [wsFolderFiles, setWsFolderFiles] = useState<Record<string, any[]>>({});
   const [expandedFolder, setExpandedFolder] = useState<string | null>(null);
   const [loadingFolders, setLoadingFolders] = useState(false);
   const filePickerRef = useRef<HTMLDivElement>(null);
+  const deviceFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadTargetFolder, setUploadTargetFolder] = useState<string | null>(null);
+  const [deviceUploading, setDeviceUploading] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const [currentAiResponse, setCurrentAiResponse] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [currentLayer, setCurrentLayer] = useState(1);
@@ -167,8 +175,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showFilePicker]);
 
-  const fetchWorkspaceFolders = async () => {
-    if (wsFolders.length > 0) return;
+  const fetchWorkspaceFolders = async (force?: boolean) => {
+    if (wsFolders.length > 0 && !force) return;
     setLoadingFolders(true);
     try {
       const res = await apiRequest("GET", `/api/workspaces/${workspaceId}/folders`);
@@ -181,8 +189,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     }
   };
 
-  const fetchFolderFiles = async (folderId: string) => {
-    if (wsFolderFiles[folderId]) return;
+  const fetchFolderFiles = async (folderId: string, force?: boolean) => {
+    if (wsFolderFiles[folderId] && !force) return;
     try {
       const res = await apiRequest("GET", `/api/workspaces/${workspaceId}/folders/${folderId}/files`);
       const data = await res.json();
@@ -223,6 +231,69 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     if (["mp4","mov","avi","webm","mkv"].includes(ext)) return <Video className="w-3.5 h-3.5 text-purple-500" />;
     if (["pdf"].includes(ext)) return <FileText className="w-3.5 h-3.5 text-red-500" />;
     return <File className="w-3.5 h-3.5 text-muted-foreground" />;
+  };
+
+  const handleCreateNewFolder = async () => {
+    if (!newFolderName.trim() || creatingFolder) return;
+    setCreatingFolder(true);
+    try {
+      const res = await apiRequest("POST", `/api/workspaces/${workspaceId}/folders`, { name: newFolderName.trim() });
+      const folder = await res.json();
+      setWsFolders(prev => [...prev, folder]);
+      setUploadTargetFolder(folder.id);
+      setNewFolderName("");
+      setShowNewFolderInput(false);
+      toast({ title: "Folder created", description: `"${folder.name}" is ready for uploads` });
+    } catch (err: any) {
+      toast({ title: "Failed to create folder", description: err.message, variant: "destructive" });
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
+  const handleDeviceFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !uploadTargetFolder) return;
+    setDeviceUploading(true);
+    const targetFolder = wsFolders.find(f => f.id === uploadTargetFolder);
+    const folderName = targetFolder?.name || "Uploads";
+
+    try {
+      for (const file of Array.from(files)) {
+        const urlRes = await apiRequest("POST", "/api/uploads/request-url", {
+          name: file.name,
+          size: file.size,
+          contentType: file.type || "application/octet-stream",
+        });
+        const { uploadURL, objectPath, s3Key } = await urlRes.json();
+
+        const putRes = await fetch(uploadURL, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+        });
+        if (!putRes.ok) throw new Error(`Upload failed for ${file.name} (${putRes.status})`);
+
+        await apiRequest("POST", `/api/workspaces/${workspaceId}/files`, {
+          name: file.name,
+          type: file.type || "application/octet-stream",
+          objectPath,
+          size: file.size,
+          folderId: uploadTargetFolder,
+        });
+
+        attachFile({ name: file.name, url: objectPath, folderName });
+
+        if (wsFolderFiles[uploadTargetFolder]) {
+          await fetchFolderFiles(uploadTargetFolder, true);
+        }
+      }
+      toast({ title: "File uploaded", description: `Saved to "${folderName}" and attached` });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setDeviceUploading(false);
+      if (deviceFileInputRef.current) deviceFileInputRef.current.value = "";
+    }
   };
 
   const formatRecordingTime = (seconds: number) => {
@@ -442,6 +513,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setFileAttachments({});
     fileAttachmentsRef.current = {};
     setAttachedFiles([]);
+    setUploadTargetFolder(null);
+    setShowNewFolderInput(false);
+    setNewFolderName("");
 
     let summaryText = "";
     if (summaryData?.body) {
@@ -876,60 +950,173 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => { setShowFilePicker(!showFilePicker); if (!showFilePicker) fetchWorkspaceFolders(); }}
+                      onClick={() => { setShowFilePicker(!showFilePicker); if (!showFilePicker) { fetchWorkspaceFolders(); setPickerTab("workspace"); } }}
                       disabled={aiLoading}
                       className="shrink-0 h-10 w-10"
                       data-testid="button-attach-file"
                     >
                       <Paperclip className="w-4 h-4" />
                     </Button>
+                    <input
+                      ref={deviceFileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleDeviceFileUpload(e.target.files)}
+                      data-testid="input-device-file"
+                    />
                     {showFilePicker && (
-                      <div className="absolute bottom-12 right-0 w-64 bg-popover border rounded-lg shadow-lg z-50 max-h-[280px] overflow-auto" data-testid="file-picker-dropdown">
-                        <div className="p-2 border-b">
-                          <p className="text-xs font-semibold text-muted-foreground">Attach from workspace</p>
+                      <div className="absolute bottom-12 right-0 w-80 bg-popover border rounded-lg shadow-lg z-50" data-testid="file-picker-dropdown">
+                        <div className="flex border-b">
+                          <button
+                            onClick={() => setPickerTab("workspace")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${pickerTab === "workspace" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                            data-testid="tab-workspace-files"
+                          >
+                            <FolderOpen className="w-3.5 h-3.5" />
+                            From Workspace
+                          </button>
+                          <button
+                            onClick={() => { setPickerTab("upload"); fetchWorkspaceFolders(); }}
+                            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${pickerTab === "upload" ? "border-b-2 border-primary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                            data-testid="tab-upload-device"
+                          >
+                            <HardDrive className="w-3.5 h-3.5" />
+                            Upload from Device
+                          </button>
                         </div>
-                        {loadingFolders ? (
-                          <div className="p-4 flex items-center justify-center">
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : wsFolders.length === 0 ? (
-                          <div className="p-3 text-xs text-muted-foreground text-center">No folders in this workspace</div>
-                        ) : (
-                          <div className="py-1">
-                            {wsFolders.map((folder: any) => (
-                              <div key={folder.id}>
-                                <button
-                                  onClick={() => toggleFolderExpand(folder.id)}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted/50 transition-colors"
-                                  data-testid={`folder-pick-${folder.id}`}
-                                >
-                                  {expandedFolder === folder.id ? <FolderOpen className="w-3.5 h-3.5 text-amber-500" /> : <Folder className="w-3.5 h-3.5 text-amber-500" />}
-                                  <span className="font-medium truncate flex-1 text-left">{folder.name}</span>
-                                  <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${expandedFolder === folder.id ? "rotate-90" : ""}`} />
-                                </button>
-                                {expandedFolder === folder.id && (
-                                  <div className="pl-4">
-                                    {!wsFolderFiles[folder.id] ? (
-                                      <div className="px-3 py-2"><Loader2 className="w-3 h-3 animate-spin text-muted-foreground" /></div>
-                                    ) : wsFolderFiles[folder.id].length === 0 ? (
-                                      <div className="px-3 py-1.5 text-[10px] text-muted-foreground">Empty folder</div>
-                                    ) : (
-                                      wsFolderFiles[folder.id].map((file: any) => (
-                                        <button
-                                          key={file.id}
-                                          onClick={() => attachFile({ name: file.name, url: file.cloudfrontUrl || file.url || "", folderName: folder.name })}
-                                          className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-primary/5 transition-colors"
-                                          data-testid={`file-pick-${file.id}`}
-                                        >
-                                          {getFileIcon(file.name)}
-                                          <span className="truncate flex-1 text-left">{file.name}</span>
-                                        </button>
-                                      ))
+
+                        {pickerTab === "workspace" && (
+                          <div className="max-h-[280px] overflow-auto">
+                            {loadingFolders ? (
+                              <div className="p-4 flex items-center justify-center">
+                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                              </div>
+                            ) : wsFolders.length === 0 ? (
+                              <div className="p-4 text-xs text-muted-foreground text-center">
+                                <Folder className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                <p>No folders yet</p>
+                                <p className="mt-1">Switch to "Upload from Device" to create a folder and upload files</p>
+                              </div>
+                            ) : (
+                              <div className="py-1">
+                                {wsFolders.map((folder: any) => (
+                                  <div key={folder.id}>
+                                    <button
+                                      onClick={() => toggleFolderExpand(folder.id)}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-muted/50 transition-colors"
+                                      data-testid={`folder-pick-${folder.id}`}
+                                    >
+                                      {expandedFolder === folder.id ? <FolderOpen className="w-3.5 h-3.5 text-amber-500" /> : <Folder className="w-3.5 h-3.5 text-amber-500" />}
+                                      <span className="font-medium truncate flex-1 text-left">{folder.name}</span>
+                                      <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${expandedFolder === folder.id ? "rotate-90" : ""}`} />
+                                    </button>
+                                    {expandedFolder === folder.id && (
+                                      <div className="pl-4">
+                                        {!wsFolderFiles[folder.id] ? (
+                                          <div className="px-3 py-2"><Loader2 className="w-3 h-3 animate-spin text-muted-foreground" /></div>
+                                        ) : wsFolderFiles[folder.id].length === 0 ? (
+                                          <div className="px-3 py-1.5 text-[10px] text-muted-foreground">Empty folder</div>
+                                        ) : (
+                                          wsFolderFiles[folder.id].map((file: any) => (
+                                            <button
+                                              key={file.id}
+                                              onClick={() => attachFile({ name: file.name, url: file.objectPath || file.cloudfrontUrl || file.url || "", folderName: folder.name })}
+                                              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-primary/5 transition-colors"
+                                              data-testid={`file-pick-${file.id}`}
+                                            >
+                                              {getFileIcon(file.name)}
+                                              <span className="truncate flex-1 text-left">{file.name}</span>
+                                            </button>
+                                          ))
+                                        )}
+                                      </div>
                                     )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {pickerTab === "upload" && (
+                          <div className="p-3 space-y-3">
+                            <div>
+                              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1.5">Save to folder</p>
+                              <div className="space-y-1">
+                                {wsFolders.map((folder: any) => (
+                                  <button
+                                    key={folder.id}
+                                    onClick={() => setUploadTargetFolder(folder.id)}
+                                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs transition-colors ${
+                                      uploadTargetFolder === folder.id ? "bg-primary/10 text-primary border border-primary/30" : "hover:bg-muted/50 border border-transparent"
+                                    }`}
+                                    data-testid={`upload-folder-${folder.id}`}
+                                  >
+                                    <Folder className="w-3.5 h-3.5 text-amber-500" />
+                                    <span className="truncate flex-1 text-left">{folder.name}</span>
+                                    {uploadTargetFolder === folder.id && <CheckCircle2 className="w-3 h-3 text-primary" />}
+                                  </button>
+                                ))}
+
+                                {!showNewFolderInput ? (
+                                  <button
+                                    onClick={() => setShowNewFolderInput(true)}
+                                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                                    data-testid="button-new-folder"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    <span>Create new folder</span>
+                                  </button>
+                                ) : (
+                                  <div className="flex gap-1.5">
+                                    <Input
+                                      placeholder="Folder name..."
+                                      value={newFolderName}
+                                      onChange={(e) => setNewFolderName(e.target.value)}
+                                      className="h-7 text-xs"
+                                      onKeyDown={(e) => { if (e.key === "Enter") handleCreateNewFolder(); }}
+                                      data-testid="input-new-folder-name"
+                                      autoFocus
+                                    />
+                                    <Button
+                                      size="sm"
+                                      className="h-7 px-2 text-xs"
+                                      onClick={handleCreateNewFolder}
+                                      disabled={!newFolderName.trim() || creatingFolder}
+                                      data-testid="button-create-folder"
+                                    >
+                                      {creatingFolder ? <Loader2 className="w-3 h-3 animate-spin" /> : "Create"}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 px-1.5"
+                                      onClick={() => { setShowNewFolderInput(false); setNewFolderName(""); }}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </Button>
                                   </div>
                                 )}
                               </div>
-                            ))}
+                            </div>
+
+                            <Button
+                              onClick={() => deviceFileInputRef.current?.click()}
+                              disabled={!uploadTargetFolder || deviceUploading}
+                              className="w-full gap-2"
+                              size="sm"
+                              data-testid="button-browse-device"
+                            >
+                              {deviceUploading ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Uploading...</>
+                              ) : (
+                                <><Monitor className="w-3.5 h-3.5" />Browse from Device</>
+                              )}
+                            </Button>
+                            {!uploadTargetFolder && (
+                              <p className="text-[10px] text-muted-foreground text-center">Select a folder above first</p>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1057,6 +1244,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   setFileAttachments({});
                   fileAttachmentsRef.current = {};
                   setAttachedFiles([]);
+                  setUploadTargetFolder(null);
+                  setShowNewFolderInput(false);
+                  setNewFolderName("");
                 }}
                 className="flex-1"
                 data-testid="button-start-new"
