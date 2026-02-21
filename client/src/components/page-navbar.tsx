@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Menu, X } from "lucide-react";
+import SlideInButton from "@/components/slide-in-button";
+import { ArrowLeft, Menu, X } from "lucide-react";
 
 export default function PageNavbar() {
   const [, navigate] = useLocation();
@@ -41,14 +42,13 @@ export default function PageNavbar() {
           >
             Sign In
           </Button>
-          <Button
+          <SlideInButton
             onClick={() => navigate("/auth?mode=register")}
-            className="bg-gray-900 text-white font-medium rounded-full text-sm"
+            size="sm"
             data-testid="button-get-started-nav"
           >
             Get Started
-            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-          </Button>
+          </SlideInButton>
         </div>
         <div className="sm:hidden flex items-center gap-3">
           <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
@@ -73,14 +73,13 @@ export default function PageNavbar() {
           >
             Sign In
           </Button>
-          <Button
-            className="w-full justify-center bg-gray-900 text-white"
+          <SlideInButton
+            fullWidth
             onClick={() => { navigate("/auth?mode=register"); setMobileMenuOpen(false); }}
             data-testid="button-get-started-mobile"
           >
             Get Started
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
+          </SlideInButton>
         </div>
       )}
     </nav>

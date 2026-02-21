@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import SlideInButton from "@/components/slide-in-button";
 import {
   Layers,
   Users,
@@ -168,14 +169,13 @@ export default function LandingPage() {
             >
               Sign In
             </Button>
-            <Button
+            <SlideInButton
               onClick={() => navigate("/auth?mode=register")}
-              className="bg-gray-900 text-white font-medium rounded-full text-sm"
+              size="sm"
               data-testid="button-get-started-nav"
             >
               Get Started
-              <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-            </Button>
+            </SlideInButton>
           </div>
           <button
             className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-gray-700"
@@ -195,14 +195,13 @@ export default function LandingPage() {
             >
               Sign In
             </Button>
-            <Button
-              className="w-full justify-center bg-gray-900 text-white"
+            <SlideInButton
+              fullWidth
               onClick={() => { navigate("/auth?mode=register"); setMobileMenuOpen(false); }}
               data-testid="button-get-started-mobile"
             >
               Get Started
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
+            </SlideInButton>
           </div>
         )}
       </nav>
@@ -225,24 +224,22 @@ export default function LandingPage() {
                 The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts — without the DM chaos.
               </p>
               <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
-                <Button
+                <SlideInButton
                   size="lg"
                   onClick={() => navigate("/auth?mode=register")}
-                  className="bg-gray-900 text-white font-semibold rounded-full px-7"
                   data-testid="button-get-started"
                 >
                   Start for free
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
+                </SlideInButton>
+                <SlideInButton
                   size="lg"
                   variant="outline"
                   onClick={() => navigate("/auth")}
-                  className="rounded-full font-semibold text-gray-700 border-gray-300"
+                  icon={false}
                   data-testid="button-hero-signin"
                 >
                   Sign in
-                </Button>
+                </SlideInButton>
               </div>
             </div>
 
@@ -655,15 +652,14 @@ export default function LandingPage() {
               clips organized, accessible, and ready to post.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5">
-              <Button
+              <SlideInButton
                 size="lg"
+                variant="light"
                 onClick={() => navigate("/auth?mode=register")}
-                className="bg-white text-gray-900 font-medium rounded-full"
                 data-testid="button-cta-get-started"
               >
                 Get started - it's free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              </SlideInButton>
             </div>
           </div>
         </div>
