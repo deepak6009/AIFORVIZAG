@@ -308,6 +308,17 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const getSummaryText = (): string => {
     if (!summaryResult) return "";
     if (typeof summaryResult === "string") return summaryResult;
+
+    if (summaryResult.body) {
+      try {
+        const parsed = typeof summaryResult.body === "string" ? JSON.parse(summaryResult.body) : summaryResult.body;
+        const text = parsed?.summary || JSON.stringify(parsed, null, 2);
+        return text.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"');
+      } catch {
+        return String(summaryResult.body);
+      }
+    }
+
     const raw = summaryResult.brief || summaryResult.summary || summaryResult.result || summaryResult.message || "";
     if (!raw && typeof summaryResult === "object") return JSON.stringify(summaryResult, null, 2);
     return raw
