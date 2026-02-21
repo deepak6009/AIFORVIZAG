@@ -97,9 +97,8 @@ function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onSt
 export default function InterrogatorTab({ workspaceId }: { workspaceId: string }) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const transcriptRef = useRef<string>("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -111,6 +110,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [dragOver, setDragOver] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [liveTranscript, setLiveTranscript] = useState("");
 
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -119,7 +119,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+      if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
     };
   }, []);
 
@@ -133,92 +133,86 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     return `${m}:${s}`;
   };
 
-  const convertToMp3 = async (webmBlob: Blob): Promise<Blob> => {
-    const { Mp3Encoder } = await import("@breezystack/lamejs");
-    const audioContext = new AudioContext();
-    const arrayBuffer = await webmBlob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-    const sampleRate = audioBuffer.sampleRate;
-    const samples = audioBuffer.getChannelData(0);
-    const int16 = new Int16Array(samples.length);
-    for (let i = 0; i < samples.length; i++) {
-      const s = Math.max(-1, Math.min(1, samples[i]));
-      int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-
-    const encoder = new Mp3Encoder(1, sampleRate, 128);
-    const mp3Parts: Uint8Array[] = [];
-    const blockSize = 1152;
-    for (let i = 0; i < int16.length; i += blockSize) {
-      const chunk = int16.subarray(i, i + blockSize);
-      const encoded = encoder.encodeBuffer(chunk) as unknown as Uint8Array;
-      if (encoded.length > 0) mp3Parts.push(new Uint8Array(encoded));
-    }
-    const final = encoder.flush() as unknown as Uint8Array;
-    if (final.length > 0) mp3Parts.push(new Uint8Array(final));
-
-    await audioContext.close();
-    return new Blob(mp3Parts, { type: "audio/mpeg" });
-  };
-
   const startRecording = async () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Speech recognition not supported", description: "Please use Chrome or Edge for voice input.", variant: "destructive" });
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100,
-          channelCount: 1,
-        },
-      });
-      streamRef.current = stream;
-      audioChunksRef.current = [];
-
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm";
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        audioBitsPerSecond: 128000,
-      });
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      mediaRecorder.onstop = async () => {
-        const webmBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        stream.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-
-        try {
-          const mp3Blob = await convertToMp3(webmBlob);
-          const localUrl = URL.createObjectURL(mp3Blob);
-          const file = new File([mp3Blob], `voice-note-${timestamp}.mp3`, { type: "audio/mpeg" });
-          handleFilesSelected([file], localUrl);
-        } catch {
-          const localUrl = URL.createObjectURL(webmBlob);
-          const file = new File([webmBlob], `voice-note-${timestamp}.webm`, { type: "audio/webm" });
-          handleFilesSelected([file], localUrl);
-        }
-      };
-      mediaRecorder.start(100);
-      setIsRecording(true);
-      setRecordingTime(0);
-      timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+      await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       toast({ title: "Microphone access denied", description: "Please allow microphone access in your browser.", variant: "destructive" });
+      return;
     }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+
+    transcriptRef.current = "";
+    setLiveTranscript("");
+
+    let finalTranscript = "";
+
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const text = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += text + " ";
+        } else {
+          interim = text;
+        }
+      }
+      transcriptRef.current = finalTranscript;
+      setLiveTranscript(finalTranscript + interim);
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== "aborted") {
+        toast({ title: "Speech recognition error", description: `Error: ${event.error}. Try again.`, variant: "destructive" });
+      }
+      stopRecording();
+    };
+
+    recognition.onend = () => {
+      if (isRecording) {
+        try { recognition.start(); } catch {}
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+    setRecordingTime(0);
+    timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     setIsRecording(false);
     setRecordingTime(0);
+
+    const transcript = transcriptRef.current.trim();
+    if (transcript.length > 0) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      const txtBlob = new Blob([transcript], { type: "text/plain" });
+      const file = new File([txtBlob], `voice-note-${timestamp}.txt`, { type: "text/plain" });
+      handleFilesSelected([file]);
+      toast({ title: "Voice transcribed", description: `${transcript.split(/\s+/).length} words captured and saved as text file.` });
+    } else {
+      toast({ title: "No speech detected", description: "We couldn't pick up any words. Try speaking closer to your microphone.", variant: "destructive" });
+    }
+    setLiveTranscript("");
+    transcriptRef.current = "";
   };
 
   const uploadFileToS3 = useCallback(async (file: File): Promise<string> => {
@@ -373,26 +367,35 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <Mic className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">Record Voice Note</p>
-                    <p className="text-xs text-purple-500/70 dark:text-purple-400/60 mt-0.5">Click to start recording from your microphone</p>
+                    <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">Voice to Text</p>
+                    <p className="text-xs text-purple-500/70 dark:text-purple-400/60 mt-0.5">Speak into your mic — your voice will be transcribed to a text file</p>
                   </div>
                 </button>
               ) : (
-                <div className="w-full flex items-center gap-4 p-4 rounded-lg border-2 border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/30 animate-in">
-                  <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0 relative">
-                    <Mic className="w-6 h-6 text-red-600 dark:text-red-400" />
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <div className="w-full rounded-lg border-2 border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/30 overflow-hidden">
+                  <div className="flex items-center gap-4 p-4">
+                    <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0 relative">
+                      <Mic className="w-6 h-6 text-red-600 dark:text-red-400" />
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-300" data-testid="text-recording-time">
+                        Listening... {formatRecordingTime(recordingTime)}
+                      </p>
+                      <p className="text-xs text-red-500/70 dark:text-red-400/60 mt-0.5">Speak clearly — your words appear below in real time</p>
+                    </div>
+                    <Button variant="destructive" size="sm" className="gap-2 shrink-0" onClick={stopRecording} data-testid="button-stop-recording">
+                      <Square className="w-3.5 h-3.5" />
+                      Stop
+                    </Button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-300" data-testid="text-recording-time">
-                      Recording... {formatRecordingTime(recordingTime)}
-                    </p>
-                    <p className="text-xs text-red-500/70 dark:text-red-400/60 mt-0.5">Click stop when you're finished speaking</p>
-                  </div>
-                  <Button variant="destructive" size="sm" className="gap-2 shrink-0" onClick={stopRecording} data-testid="button-stop-recording">
-                    <Square className="w-3.5 h-3.5" />
-                    Stop
-                  </Button>
+                  {liveTranscript && (
+                    <div className="px-4 pb-4">
+                      <div className="p-3 rounded-md bg-white/70 dark:bg-black/20 border border-red-200 dark:border-red-800 text-sm text-foreground max-h-32 overflow-auto" data-testid="text-live-transcript">
+                        {liveTranscript}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -402,10 +405,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Uploaded ({uploadedFiles.filter(f => f.status === "done").length}/{uploadedFiles.length})
                 </h3>
-                {uploadedFiles.map(file => {
-                  const isAudio = file.type.startsWith("audio/") || file.name.match(/\.(mp3|wav|ogg|webm|m4a)$/i);
-                  const audioSrc = file.localUrl || (file.status === "done" ? file.cloudfrontUrl : undefined);
-                  return (
+                {uploadedFiles.map(file => (
                     <div key={file.id} className="rounded-lg border bg-card overflow-hidden" data-testid={`briefing-file-${file.id}`}>
                       <div className="flex items-center gap-3 p-2.5">
                         {getFileIcon(file.type, file.name)}
@@ -420,14 +420,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                           <X className="w-3.5 h-3.5" />
                         </Button>
                       </div>
-                      {isAudio && audioSrc && (
-                        <div className="px-2.5 pb-2.5">
-                          <audio controls className="w-full h-8" src={audioSrc} preload="metadata" data-testid={`audio-player-${file.id}`} />
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
+                ))}
               </div>
             )}
 
