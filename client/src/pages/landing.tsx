@@ -59,66 +59,48 @@ const testimonials = [
 
 function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
-  const handlePlay = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
+      videoRef.current.muted = !videoRef.current.muted;
+      setIsMuted(!isMuted);
     }
   };
 
   return (
-    <div className="relative">
-      <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
-        <div
-          className="aspect-[4/3] relative group cursor-pointer"
-          onClick={handlePlay}
-          data-testid="video-player"
-        >
-          <video
-            ref={videoRef}
-            src="https://d645yzu9m78ar.cloudfront.net/IMG_9172.MP4"
-            className="w-full h-full object-cover"
-            playsInline
-            onEnded={() => setIsPlaying(false)}
-          />
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white/20 group-hover:scale-110 transition-all duration-500 ease-out">
-                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-            <Upload className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-900">12 files uploaded</p>
-            <p className="text-[10px] text-gray-400">Just now</p>
-          </div>
-        </div>
-      </div>
-      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 hidden sm:block">
-        <div className="flex items-center gap-2">
-          <div className="flex -space-x-1.5">
-            <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white" />
-            <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white" />
-            <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" />
-          </div>
-          <span className="text-[10px] font-medium text-gray-500">3 online</span>
-        </div>
-      </div>
+    <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
+      <video
+        ref={videoRef}
+        src="https://d645yzu9m78ar.cloudfront.net/IMG_9172.MP4"
+        className="w-full h-full object-cover block"
+        playsInline
+        autoPlay
+        loop
+        muted
+        data-testid="video-player"
+      />
+      <button
+        onClick={toggleMute}
+        className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 transition-colors z-10"
+        data-testid="button-toggle-mute"
+        aria-label={isMuted ? "Unmute" : "Mute"}
+      >
+        {isMuted ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }
