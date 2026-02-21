@@ -179,14 +179,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="landing-fade-up landing-stagger-1">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-gray-200/80 mb-5 sm:mb-6">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-glow" />
-                <span className="text-[11px] sm:text-xs font-medium text-gray-500 tracking-wide uppercase">
-                  Workspace Media Manager
-                </span>
-              </div>
-            </div>
             <h1
               className="text-[2.25rem] leading-[1.08] sm:text-[3.25rem] md:text-[4rem] lg:text-[4.5rem] font-semibold tracking-[-0.035em] text-gray-900 landing-fade-up landing-stagger-2"
               data-testid="text-hero-heading"
@@ -199,7 +191,7 @@ export default function LandingPage() {
             </h1>
             <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-lg mx-auto leading-[1.7] font-normal landing-fade-up landing-stagger-3">
               The workspace where teams upload, organize, and collaborate on
-              images and videos — with folders, roles, and cloud storage
+              images and videos - with folders, roles, and cloud storage
               built right in.
             </p>
             <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
@@ -361,7 +353,7 @@ export default function LandingPage() {
               {
                 icon: Users,
                 title: "Team Roles",
-                description: "Admins, members, viewers — everyone gets the right level of access.",
+                description: "Admins, members, viewers - everyone gets the right level of access.",
                 tag: "Collaboration",
                 color: "text-violet-500",
                 bg: "bg-violet-50/80",
@@ -463,7 +455,7 @@ export default function LandingPage() {
               {
                 step: "02",
                 title: "Invite your team",
-                desc: "Add team members with the right roles — admin, member, or viewer.",
+                desc: "Add team members with the right roles - admin, member, or viewer.",
                 icon: Users,
               },
               {
@@ -668,7 +660,7 @@ export default function LandingPage() {
                 className="bg-white text-gray-900 font-medium rounded-full"
                 data-testid="button-cta-get-started"
               >
-                Get started — it's free
+                Get started - it's free
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
