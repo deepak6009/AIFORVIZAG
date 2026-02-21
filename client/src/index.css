@@ -340,10 +340,9 @@
 }
 
 .nav-gradient-animated {
-  background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(248,250,255,0.97), rgba(245,248,255,0.97), rgba(255,255,255,0.97));
-  background-size: 300% 300%;
-  animation: nav-gradient-shift 8s ease-in-out infinite;
-  backdrop-filter: blur(12px);
+  background: rgba(250, 250, 250, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 @keyframes fade-in {

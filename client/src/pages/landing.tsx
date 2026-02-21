@@ -252,10 +252,9 @@ export default function LandingPage() {
           <div className="marquee-track">
             {[...marqueeItems, ...marqueeItems].map((item, i) => (
               <div key={i} className="flex items-center gap-4 sm:gap-5 px-4 sm:px-6 shrink-0">
-                <span className="text-[13px] sm:text-sm font-medium uppercase tracking-[0.15em] text-gray-300 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 whitespace-nowrap bg-gray-100 px-4 py-1.5 rounded-full">
                   {item}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
               </div>
             ))}
           </div>
