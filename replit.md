@@ -12,7 +12,7 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 
 ## Branding
 - Project name: "The CREW" / "CREW"
-- Acronym: Creator Resource Editor Workspace
+- Acronym: Creator Editor Workspace (Cr-E-W)
 - Style: CRED-inspired bold typographic branding - uppercase "CREW" with wide letter-spacing (tracking-[0.15em])
 - No icon/logo box - pure typographic wordmark approach
 - Hero section: massive "CREW" text with acronym breakdown below

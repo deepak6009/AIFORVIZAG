@@ -457,7 +457,8 @@
 }
 
 .nav-gradient-animated {
-  background: linear-gradient(135deg, hsl(217 91% 45%), hsl(230 80% 55%), hsl(245 70% 55%), hsl(217 91% 48%));
+  background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(248,250,255,0.97), rgba(245,248,255,0.97), rgba(255,255,255,0.97));
   background-size: 300% 300%;
   animation: nav-gradient-shift 8s ease-in-out infinite;
+  backdrop-filter: blur(12px);
 }

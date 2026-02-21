@@ -84,11 +84,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
+              <span className="text-white font-bold text-sm tracking-[0.08em]">Cr</span>
+            </div>
             <span
-              className="text-lg sm:text-xl font-bold tracking-[0.15em] uppercase text-white"
+              className="text-lg sm:text-xl font-bold tracking-[0.15em] uppercase text-gray-900"
               data-testid="text-app-name"
             >
               CREW
@@ -97,7 +100,7 @@ export default function LandingPage() {
           <div className="hidden sm:flex items-center gap-3">
             <Button
               variant="ghost"
-              className="text-white/70 font-medium text-sm"
+              className="text-gray-500 font-medium text-sm"
               onClick={() => navigate("/auth")}
               data-testid="button-login"
             >
@@ -105,7 +108,7 @@ export default function LandingPage() {
             </Button>
             <Button
               onClick={() => navigate("/auth?mode=register")}
-              className="bg-white text-primary font-medium rounded-full text-sm"
+              className="bg-gray-900 text-white font-medium rounded-full text-sm"
               data-testid="button-get-started-nav"
             >
               Get Started
@@ -113,7 +116,7 @@ export default function LandingPage() {
             </Button>
           </div>
           <button
-            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-white"
+            className="sm:hidden flex items-center justify-center w-10 h-10 rounded-lg text-gray-700"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             data-testid="button-mobile-menu"
           >
@@ -121,17 +124,17 @@ export default function LandingPage() {
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-white/10 nav-gradient-animated px-5 py-4 space-y-3">
+          <div className="sm:hidden border-t border-gray-200/60 bg-white px-5 py-4 space-y-3">
             <Button
               variant="outline"
-              className="w-full justify-center border-white/20 text-white"
+              className="w-full justify-center"
               onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}
               data-testid="button-login-mobile"
             >
               Sign In
             </Button>
             <Button
-              className="w-full justify-center bg-white text-primary"
+              className="w-full justify-center bg-gray-900 text-white"
               onClick={() => { navigate("/auth?mode=register"); setMobileMenuOpen(false); }}
               data-testid="button-get-started-mobile"
             >
@@ -142,7 +145,7 @@ export default function LandingPage() {
         )}
       </nav>
 
-      <section className="pt-20 pb-8 sm:pt-24 sm:pb-10 lg:pt-28 lg:pb-14 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
+      <section className="pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-40 lg:pb-24 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -153,8 +156,7 @@ export default function LandingPage() {
                 </h1>
                 <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3">
                   {[
-                    { letter: "C", word: "reator" },
-                    { letter: "R", word: "esource" },
+                    { letter: "Cr", word: "eator" },
                     { letter: "E", word: "ditor" },
                     { letter: "W", word: "orkspace" },
                   ].map((item) => (
@@ -739,7 +741,10 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
-              <div className="flex items-center gap-2.5 mb-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
+                  <span className="text-white font-bold text-[11px] tracking-[0.08em]">Cr</span>
+                </div>
                 <span className="font-bold text-gray-900 text-[15px] tracking-[0.15em] uppercase">CREW</span>
               </div>
             </div>

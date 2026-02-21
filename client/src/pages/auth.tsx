@@ -51,9 +51,14 @@ export default function AuthPage() {
           Back to home
         </button>
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-[0.15em] uppercase"><span className="text-muted-foreground font-medium text-sm tracking-[0.08em] mr-1">The</span>CREW</h1>
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center">
+              <span className="text-white font-bold text-base tracking-[0.08em]">Cr</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-[0.15em] uppercase"><span className="text-muted-foreground font-medium text-sm tracking-[0.08em] mr-1">The</span>CREW</h1>
+          </div>
           <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
-            Creator Resource Editor Workspace
+            Creator Editor Workspace
           </p>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Welcome back" : "Create your account"}
