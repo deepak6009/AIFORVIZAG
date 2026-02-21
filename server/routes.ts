@@ -375,19 +375,44 @@ export async function registerRoutes(
       const summaryApiUrl = "https://uhqp6goc12.execute-api.ap-south-1.amazonaws.com/summary";
       const payload = { files };
       console.log("Sending to summary API:", JSON.stringify(payload));
-      const response = await fetch(summaryApiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Summary API error:", response.status, errorText);
-        return res.status(502).json({ error: `The summary service is temporarily unavailable. Please try again.` });
+      let data: any = null;
+      let lastError = "";
+      const MAX_RETRIES = 3;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), attempt === 1 ? 30000 : 45000);
+          const response = await fetch(summaryApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+
+          if (!response.ok) {
+            lastError = await response.text();
+            console.error(`Summary API attempt ${attempt}/${MAX_RETRIES} failed:`, response.status, lastError);
+            if (attempt < MAX_RETRIES) {
+              await new Promise(r => setTimeout(r, 2000 * attempt));
+              continue;
+            }
+            return res.status(502).json({ error: `The summary service is temporarily unavailable. Please try again.` });
+          }
+
+          data = await response.json();
+          break;
+        } catch (fetchErr: any) {
+          lastError = fetchErr.message || "Request failed";
+          console.error(`Summary API attempt ${attempt}/${MAX_RETRIES} error:`, lastError);
+          if (attempt < MAX_RETRIES) {
+            await new Promise(r => setTimeout(r, 2000 * attempt));
+            continue;
+          }
+          return res.status(502).json({ error: `The summary service is temporarily unavailable. Please try again.` });
+        }
       }
-
-      const data = await response.json();
 
       let summaryText = "";
       if (data?.body) {
