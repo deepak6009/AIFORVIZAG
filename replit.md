@@ -23,7 +23,8 @@ A workspace application where admins can create workspaces, add team members, cr
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
 - Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
 - Nav tabs: Users, Folders, Interrogator, Tasks, Resources
-- Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
+- Landing page at / for unauthenticated visitors (hero, features, highlights, CTA)
+- Routes: / (landing for guests, workspace selection for logged-in), /auth (sign in/up), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
 - `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models
@@ -33,7 +34,8 @@ A workspace application where admins can create workspaces, add team members, cr
 - `server/db.ts` - Database connection
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration
-- `client/src/pages/auth.tsx` - Sign in / Sign up page
+- `client/src/pages/landing.tsx` - Landing page for unauthenticated visitors
+- `client/src/pages/auth.tsx` - Sign in / Sign up page (supports ?mode=register)
 - `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
