@@ -143,6 +143,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   const [aiLoading, setAiLoading] = useState(false);
   const [currentLayer, setCurrentLayer] = useState(1);
   const [briefingComplete, setBriefingComplete] = useState(false);
+  const [finalDocument, setFinalDocument] = useState<string | null>(null);
+  const [generatingFinal, setGeneratingFinal] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -516,6 +518,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setUploadTargetFolder(null);
     setShowNewFolderInput(false);
     setNewFolderName("");
+    setFinalDocument(null);
 
     let summaryText = "";
     if (summaryData?.body) {
@@ -667,8 +670,25 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     setChatMicActive(true);
   };
 
-  const handleGenerateFinalDoc = () => {
+  const handleGenerateFinalDoc = async () => {
+    setGeneratingFinal(true);
+    setFinalDocument(null);
     setCurrentStep(3);
+    try {
+      const res = await apiRequest("POST", "/api/interrogator/generate-final", {
+        summary: getSummaryText(),
+        briefingAnswers,
+        fileAttachments: fileAttachmentsRef.current,
+        chatHistory: chatMessages,
+      });
+      const data = await res.json();
+      setFinalDocument(data.finalDocument || "No document generated.");
+    } catch (err: any) {
+      toast({ title: "Failed to generate final document", description: err.message, variant: "destructive" });
+      setFinalDocument("Error generating final document. Please try again.");
+    } finally {
+      setGeneratingFinal(false);
+    }
   };
 
   const hasContent = uploadedFiles.some(f => f.status === "done") || textBrief.trim().length > 0;
@@ -1160,63 +1180,24 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
               </div>
               <h2 className="text-lg font-semibold">Final Agenda</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Your structured brief based on the analysis and AI conversation.
+                AI-generated production brief combining your analysis and creative direction.
               </p>
             </div>
 
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileCheck className="w-5 h-5 text-green-600" />
-                  <h3 className="font-semibold">Structured Brief</h3>
-                </div>
-
-                {summaryResult ? (
-                  <div className="space-y-4">
-                    <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
-                      <ReactMarkdown>{getSummaryText()}</ReactMarkdown>
-                    </div>
-
-                    {Object.keys(briefingAnswers).length > 0 && (
-                      <div className="border-t pt-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Briefing Details</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {Object.entries(briefingAnswers).map(([key, val]) => (
-                            <div key={key} className="rounded-lg border bg-muted/30 p-2.5">
-                              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{key.replace(/([A-Z])/g, " $1").trim()}</p>
-                              <p className="text-sm font-medium mt-0.5">{Array.isArray(val) ? val.join(", ") : String(val)}</p>
-                              {fileAttachments[key] && fileAttachments[key].length > 0 && (
-                                <div className="mt-1.5 flex flex-wrap gap-1">
-                                  {fileAttachments[key].map((f, fi) => (
-                                    <a key={fi} href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] hover:bg-primary/20 transition-colors">
-                                      <Paperclip className="w-2.5 h-2.5" />
-                                      <span className="truncate max-w-[100px]">{f.folderName ? `${f.folderName}/` : ""}{f.name}</span>
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {Object.keys(fileAttachments).some(k => !briefingAnswers[k]) && Object.entries(fileAttachments).filter(([k]) => !briefingAnswers[k]).length > 0 && (
-                      <div className="border-t pt-4">
-                        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Referenced Files</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(fileAttachments).filter(([k]) => !briefingAnswers[k]).flatMap(([, files]) => files).map((f, i) => (
-                            <a key={i} href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 bg-muted rounded-md px-2 py-1 text-xs hover:bg-muted/80 transition-colors">
-                              <Paperclip className="w-3 h-3 text-muted-foreground" />
-                              <span>{f.folderName ? `${f.folderName}/` : ""}{f.name}</span>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                {generatingFinal ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-muted-foreground">Generating your final brief...</p>
+                    <p className="text-xs text-muted-foreground/60">Combining analysis, briefing answers, and file references</p>
+                  </div>
+                ) : finalDocument ? (
+                  <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid="text-final-document">
+                    <ReactMarkdown>{finalDocument}</ReactMarkdown>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No analysis data available. Please complete Step 1 first.</p>
+                  <p className="text-sm text-muted-foreground">No document generated yet. Please complete the briefing first.</p>
                 )}
               </CardContent>
             </Card>
@@ -1225,6 +1206,16 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
               <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to AI Chat
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleGenerateFinalDoc}
+                disabled={generatingFinal}
+                className="flex-1"
+                data-testid="button-regenerate-final"
+              >
+                {generatingFinal ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Regenerate
               </Button>
               <Button
                 variant="outline"
@@ -1247,11 +1238,12 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   setUploadTargetFolder(null);
                   setShowNewFolderInput(false);
                   setNewFolderName("");
+                  setFinalDocument(null);
                 }}
                 className="flex-1"
                 data-testid="button-start-new"
               >
-                Start New Interrogation
+                Start New
               </Button>
             </div>
           </div>

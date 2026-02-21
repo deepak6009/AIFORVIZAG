@@ -29,8 +29,8 @@ Table: `AIFORVIZAG_file_structure`
 - Image and video file uploads with previews
 - AI Interrogator with 3-step wizard: Upload & Analyse → Gemini AI Briefing Chat → Final Document
   - Step 1: Upload files (PDF, Word, audio, text), voice-to-text recording (browser STT), text input
-  - Step 2: Gemini AI chat agent with 6-layer briefing framework (Outcome, Style, Hook, Editing, Audio, Structure) with selectable chip options
-  - Step 3: Final structured brief with all briefing answers from DynamoDB
+  - Step 2: Gemini AI chat agent with 4-layer briefing framework (Goal & Audience, Style & Hook, Editing & Visuals, Audio & Format) with selectable chip options and file attachments
+  - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
 - Kanban task board (placeholder - will auto-generate from AI brief)
 - Resources section (placeholder - shared links and references)
 
@@ -79,7 +79,8 @@ Table: `AIFORVIZAG_file_structure`
 - `POST /api/aws/upload-url` - Get presigned S3 upload URL
 - `POST /api/interrogator/upload-text` - Convert text to .txt on S3
 - `POST /api/interrogator/summarize` - Proxy summary lambda + store in DynamoDB
-- `POST /api/interrogator/chat` - Gemini AI briefing chat with 6-layer framework
+- `POST /api/interrogator/chat` - Gemini AI briefing chat with 4-layer framework
+- `POST /api/interrogator/generate-final` - Gemini-powered final document generation (combines lambda summary + briefing answers + file attachments)
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000

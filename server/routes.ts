@@ -529,6 +529,104 @@ RULES:
     }
   });
 
+  // === Generate Final Document ===
+
+  app.post("/api/interrogator/generate-final", isAuthenticated, async (req: any, res) => {
+    try {
+      const { summary, briefingAnswers, fileAttachments, chatHistory } = req.body;
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      let answersBlock = "";
+      if (briefingAnswers && Object.keys(briefingAnswers).length > 0) {
+        answersBlock = Object.entries(briefingAnswers).map(([key, val]) => {
+          const label = key.replace(/([A-Z])/g, " $1").trim();
+          const value = Array.isArray(val) ? val.join(", ") : String(val);
+          const attachments = fileAttachments?.[key];
+          let attachStr = "";
+          if (attachments && attachments.length > 0) {
+            attachStr = "\n  Referenced files: " + attachments.map((f: any) => `${f.folderName ? f.folderName + "/" : ""}${f.name} (${f.url})`).join(", ");
+          }
+          return `- ${label}: ${value}${attachStr}`;
+        }).join("\n");
+      }
+
+      let otherAttachments = "";
+      if (fileAttachments) {
+        const orphanEntries = Object.entries(fileAttachments).filter(([k]) => !briefingAnswers?.[k]);
+        if (orphanEntries.length > 0) {
+          const files = orphanEntries.flatMap(([, files]) => files as any[]);
+          if (files.length > 0) {
+            otherAttachments = "\nAdditional referenced files:\n" + files.map((f: any) => `- ${f.folderName ? f.folderName + "/" : ""}${f.name} (${f.url})`).join("\n");
+          }
+        }
+      }
+
+      const prompt = `You are a production-ready video editing brief generator. Your job is to produce a clear, concise, actionable final brief that a video editor can follow exactly.
+
+INPUT DATA:
+1. Initial analysis summary from uploaded materials:
+${summary || "No summary available."}
+
+2. Briefing answers from creator conversation:
+${answersBlock || "No briefing answers."}
+${otherAttachments}
+
+INSTRUCTIONS:
+- Combine the initial analysis and the briefing answers into ONE structured final document.
+- Be EXTREMELY specific and actionable. No vague language. No filler words.
+- When a file was attached as a reference, you MUST explicitly mention it with its file path. For example: "Use the music from this reference video (FolderName/filename.mp4)" or "Match the color grading style shown in (References/sample.png)".
+- File attachments carry HIGH WEIGHT — they are the creator's explicit references. Always call them out clearly with their paths.
+- Structure the output with clear sections using markdown headers.
+- Keep it brief but complete. Every line should be an actionable instruction for the editor.
+
+OUTPUT FORMAT (use these exact sections):
+
+## Project Overview
+Brief 1-2 line summary of what this video is about and its goal.
+
+## Target Audience & Platform
+Who is this for, what platform, what duration.
+
+## Resources & References
+List ALL referenced files/attachments with their paths and what they should be used for. Be very explicit.
+
+## Style & Tone
+Visual style, vibe, energy level. Reference any attached style examples.
+
+## Hook & Opening
+How the video should start (first 3-5 seconds).
+
+## Editing Instructions
+- Pace and cut style
+- Caption style
+- Transitions
+- B-roll guidance
+- Any specific editing techniques mentioned
+
+## Audio & Music
+Music style, mood. If a music reference was attached, say exactly: "Use music/audio from [file path]".
+
+## Final Checklist
+Bullet list of key deliverables and specs.
+
+Remember: Be direct. No fluff. Every sentence should tell the editor exactly what to do.`;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+
+      res.json({ finalDocument: responseText });
+    } catch (error: any) {
+      console.error("Error generating final document:", error);
+      res.status(500).json({ error: error.message || "Failed to generate final document" });
+    }
+  });
+
   // === S3 Upload Route (used by folders-tab file upload) ===
 
   app.post("/api/uploads/request-url", isAuthenticated, async (req: any, res) => {
