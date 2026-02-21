@@ -84,7 +84,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-xl border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-white/10">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
@@ -124,7 +124,7 @@ export default function LandingPage() {
           </button>
         </div>
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-white/10 bg-primary px-5 py-4 space-y-3">
+          <div className="sm:hidden border-t border-white/10 nav-gradient-animated px-5 py-4 space-y-3">
             <Button
               variant="outline"
               className="w-full justify-center border-white/20 text-white"
@@ -145,93 +145,147 @@ export default function LandingPage() {
         )}
       </nav>
 
-      <section className="pt-20 pb-4 sm:pt-24 sm:pb-6 lg:pt-28 lg:pb-8 px-5 sm:px-8 lg:px-10 relative">
+      <section className="pt-20 pb-8 sm:pt-24 sm:pb-10 lg:pt-28 lg:pb-14 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
-          <div className="text-center max-w-3xl mx-auto relative">
-            <div className="hidden lg:block absolute -left-16 top-8 landing-fade-up landing-stagger-3">
-              <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100/60 flex items-center justify-center float-gentle">
-                <FolderTree className="w-5 h-5 text-blue-500" />
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="landing-fade-up">
+              <h1
+                className="text-[2.25rem] leading-[1.08] sm:text-[3rem] md:text-[3.5rem] lg:text-[4rem] font-semibold tracking-[-0.035em] text-gray-900"
+                data-testid="text-hero-heading"
+              >
+                Your team's media,{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
+                  finally organized.
+                </span>
+              </h1>
+              <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal landing-fade-up landing-stagger-2">
+                Upload, organize, and collaborate on images and videos - with folders, roles, and cloud storage built right in.
+              </p>
+              <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-3">
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/auth?mode=register")}
+                  className="bg-gray-900 text-white font-medium rounded-full"
+                  data-testid="button-get-started"
+                >
+                  Start for free
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/auth")}
+                  className="rounded-full font-medium text-gray-600"
+                  data-testid="button-hero-signin"
+                >
+                  Sign in
+                </Button>
               </div>
-            </div>
-            <div className="hidden lg:block absolute -right-12 top-4 landing-fade-up landing-stagger-4">
-              <div className="w-11 h-11 rounded-xl bg-violet-50 border border-violet-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "1s" }}>
-                <Image className="w-5 h-5 text-violet-500" />
-              </div>
-            </div>
-            <div className="hidden lg:block absolute -left-10 top-32 landing-fade-up landing-stagger-5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "2s" }}>
-                <Upload className="w-4 h-4 text-emerald-500" />
-              </div>
-            </div>
-            <div className="hidden lg:block absolute -right-16 top-28 landing-fade-up landing-stagger-6">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "1.5s" }}>
-                <Users className="w-4 h-4 text-amber-500" />
-              </div>
-            </div>
-            <div className="hidden lg:block absolute left-4 bottom-4 landing-fade-up landing-stagger-6">
-              <div className="w-9 h-9 rounded-lg bg-rose-50 border border-rose-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "2.5s" }}>
-                <Zap className="w-4 h-4 text-rose-500" />
-              </div>
-            </div>
-            <div className="hidden lg:block absolute right-0 bottom-8 landing-fade-up landing-stagger-7">
-              <div className="w-9 h-9 rounded-lg bg-cyan-50 border border-cyan-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "3s" }}>
-                <Shield className="w-4 h-4 text-cyan-500" />
+              <div className="mt-8 sm:mt-10 flex items-center gap-6 landing-fade-up landing-stagger-4">
+                {[
+                  { icon: FolderTree, label: "Folders", color: "text-blue-500", bg: "bg-blue-50" },
+                  { icon: Users, label: "Teams", color: "text-violet-500", bg: "bg-violet-50" },
+                  { icon: Upload, label: "Uploads", color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { icon: Shield, label: "Secure", color: "text-amber-500", bg: "bg-amber-50" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center`}>
+                      <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-500 hidden sm:inline">{item.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <h1
-              className="text-[2.25rem] leading-[1.08] sm:text-[3.25rem] md:text-[4rem] lg:text-[4.5rem] font-semibold tracking-[-0.035em] text-gray-900 landing-fade-up landing-stagger-2"
-              data-testid="text-hero-heading"
-            >
-              Your team's media,
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                finally organized.
-              </span>
-            </h1>
-            <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-lg mx-auto leading-[1.7] font-normal landing-fade-up landing-stagger-3">
-              The workspace where teams upload, organize, and collaborate on
-              images and videos - with folders, roles, and cloud storage
-              built right in.
-            </p>
-            <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
-              <Button
-                size="lg"
-                onClick={() => navigate("/auth?mode=register")}
-                className="bg-gray-900 text-white font-medium rounded-full"
-                data-testid="button-get-started"
-              >
-                Start for free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/auth")}
-                className="rounded-full font-medium text-gray-600"
-                data-testid="button-hero-signin"
-              >
-                Sign in to your workspace
-              </Button>
-            </div>
-          </div>
+            <div className="relative landing-scale-in landing-stagger-3">
+              <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
+                <div className="aspect-[4/3] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
+                  <div className="absolute inset-0 opacity-[0.03]" style={{
+                    backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
+                    backgroundSize: "28px 28px",
+                  }} />
 
-          <div className="mt-8 sm:mt-10 lg:mt-12 landing-scale-in landing-stagger-5">
-            <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_80px_-20px_rgba(0,0,0,0.15)]">
-              <div className="aspect-[16/9] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
-                <div className="absolute inset-0 opacity-[0.03]" style={{
-                  backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
-                  backgroundSize: "28px 28px",
-                }} />
-                <div className="relative flex flex-col items-center gap-4 sm:gap-5">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.12] flex items-center justify-center group-hover:bg-white/[0.14] group-hover:scale-105 transition-all duration-500 ease-out">
-                    <Play className="w-6 h-6 sm:w-7 sm:h-7 text-white/80 ml-0.5" />
+                  <div className="absolute top-4 left-4 right-4 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
+                    </div>
+                    <div className="flex-1 h-5 rounded bg-white/[0.06] ml-2" />
                   </div>
-                  <div className="text-center">
-                    <p className="text-white/70 font-medium text-sm sm:text-[15px]">See WorkVault in action</p>
-                    <p className="text-white/30 text-xs sm:text-sm mt-1 font-normal">Product walkthrough coming soon</p>
+
+                  <div className="absolute left-4 top-14 bottom-4 w-36 rounded-lg bg-white/[0.04] border border-white/[0.06] p-3 hidden sm:block">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <FolderTree className="w-3 h-3 text-blue-400/60" />
+                        <div className="h-2 rounded bg-white/10 flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2 pl-3">
+                        <FolderTree className="w-2.5 h-2.5 text-blue-400/40" />
+                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2 pl-3">
+                        <FolderTree className="w-2.5 h-2.5 text-blue-400/40" />
+                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <FolderTree className="w-3 h-3 text-violet-400/60" />
+                        <div className="h-2 rounded bg-white/10 flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2 pl-3">
+                        <FolderTree className="w-2.5 h-2.5 text-violet-400/40" />
+                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
+                      </div>
+                    </div>
                   </div>
+
+                  <div className="absolute sm:left-44 left-4 right-4 top-14 bottom-4 rounded-lg bg-white/[0.03] border border-white/[0.05] p-3 sm:p-4">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 h-full">
+                      {[
+                        "bg-gradient-to-br from-blue-500/30 to-blue-600/20",
+                        "bg-gradient-to-br from-violet-500/30 to-purple-600/20",
+                        "bg-gradient-to-br from-emerald-500/30 to-teal-600/20",
+                        "bg-gradient-to-br from-amber-500/30 to-orange-600/20",
+                        "bg-gradient-to-br from-rose-500/30 to-pink-600/20",
+                        "bg-gradient-to-br from-cyan-500/30 to-sky-600/20",
+                      ].map((bg, idx) => (
+                        <div key={idx} className={`rounded-lg ${bg} border border-white/[0.06] flex items-center justify-center`}>
+                          <Image className="w-4 h-4 sm:w-5 sm:h-5 text-white/20" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white/20 group-hover:scale-110 transition-all duration-500 ease-out">
+                      <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100 landing-fade-up landing-stagger-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <Upload className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">12 files uploaded</p>
+                    <p className="text-[10px] text-gray-400">Just now</p>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 landing-fade-up landing-stagger-7 hidden sm:block">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-1.5">
+                    <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white" />
+                    <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white" />
+                    <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" />
+                  </div>
+                  <span className="text-[10px] font-medium text-gray-500">3 online</span>
                 </div>
               </div>
             </div>

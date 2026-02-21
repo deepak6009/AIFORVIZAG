@@ -449,3 +449,15 @@
   transform: translateY(-4px);
   box-shadow: 0 12px 40px -8px rgba(0,0,0,0.08), 0 4px 12px -4px rgba(0,0,0,0.04);
 }
+
+@keyframes nav-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.nav-gradient-animated {
+  background: linear-gradient(135deg, hsl(217 91% 45%), hsl(230 80% 55%), hsl(245 70% 55%), hsl(217 91% 48%));
+  background-size: 300% 300%;
+  animation: nav-gradient-shift 8s ease-in-out infinite;
+}
