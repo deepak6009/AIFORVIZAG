@@ -1,15 +1,21 @@
 import {
   workspaces, workspaceMembers, folders, files,
+  AIFORVIZAG_organisations,
   type Workspace, type InsertWorkspace,
   type Folder, type InsertFolder,
   type FileRecord, type InsertFile,
   type WorkspaceMember, type InsertMember,
+  type Organisation, type InsertOrganisation,
 } from "@shared/schema";
 import { users, type User } from "@shared/models/auth";
 import { db } from "./db";
 import { eq, and, isNull } from "drizzle-orm";
 
 export interface IStorage {
+  createOrganisation(data: InsertOrganisation & { createdBy: string }): Promise<Organisation>;
+  getOrganisationsByUser(userId: string): Promise<Organisation[]>;
+  getOrganisation(id: string): Promise<Organisation | undefined>;
+
   createWorkspace(data: InsertWorkspace & { createdBy: string }): Promise<Workspace>;
   getWorkspacesByUser(userId: string): Promise<Workspace[]>;
   getWorkspace(id: string): Promise<Workspace | undefined>;
@@ -34,6 +40,20 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async createOrganisation(data: InsertOrganisation & { createdBy: string }): Promise<Organisation> {
+    const [org] = await db.insert(AIFORVIZAG_organisations).values(data).returning();
+    return org;
+  }
+
+  async getOrganisationsByUser(userId: string): Promise<Organisation[]> {
+    return db.select().from(AIFORVIZAG_organisations).where(eq(AIFORVIZAG_organisations.createdBy, userId));
+  }
+
+  async getOrganisation(id: string): Promise<Organisation | undefined> {
+    const [org] = await db.select().from(AIFORVIZAG_organisations).where(eq(AIFORVIZAG_organisations.orgId, id));
+    return org;
+  }
+
   async createWorkspace(data: InsertWorkspace & { createdBy: string }): Promise<Workspace> {
     const [workspace] = await db.insert(workspaces).values(data).returning();
     await db.insert(workspaceMembers).values({
