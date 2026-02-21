@@ -84,10 +84,7 @@ export default function Dashboard() {
       <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-6 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Layers className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-lg" data-testid="text-app-name">WorkVault</span>
+            <span className="font-bold text-lg tracking-[0.15em] uppercase" data-testid="text-app-name">CREW</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">

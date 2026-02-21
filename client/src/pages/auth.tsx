@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Layers, Mail, Lock, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 
 export default function AuthPage() {
   const [, navigate] = useLocation();
@@ -51,10 +51,10 @@ export default function AuthPage() {
           Back to home
         </button>
         <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Layers className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold">WorkVault</h1>
+          <h1 className="text-2xl font-bold tracking-[0.15em] uppercase">CREW</h1>
+          <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
+            Creator Resource Editor Workspace
+          </p>
           <p className="text-sm text-muted-foreground">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </p>

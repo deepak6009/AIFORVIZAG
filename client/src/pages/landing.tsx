@@ -56,7 +56,7 @@ const marqueeItems = [
 
 const testimonials = [
   {
-    quote: "WorkVault completely transformed how we manage our creative assets. No more digging through Slack threads for that one file.",
+    quote: "The CREW completely transformed how we manage our creative assets. No more digging through Slack threads for that one file.",
     name: "Sarah Chen",
     role: "Creative Director",
     company: "Bright Studio",
@@ -70,7 +70,7 @@ const testimonials = [
     rating: 5,
   },
   {
-    quote: "Simple, fast, and exactly what we needed. We ditched three other tools after switching to WorkVault.",
+    quote: "Simple, fast, and exactly what we needed. We ditched three other tools after switching to The CREW.",
     name: "Priya Desai",
     role: "Operations Manager",
     company: "Mosaic Co",
@@ -86,15 +86,12 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-white/10">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
-              <Layers className="w-4 h-4 text-white" />
-            </div>
+          <div className="flex items-center gap-1.5">
             <span
-              className="text-base sm:text-lg font-semibold tracking-tight text-white"
+              className="text-lg sm:text-xl font-bold tracking-[0.15em] uppercase text-white"
               data-testid="text-app-name"
             >
-              WorkVault
+              CREW
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
@@ -150,15 +147,31 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="landing-fade-up">
-              <h1
-                className="text-[2.25rem] leading-[1.08] sm:text-[3rem] md:text-[3.5rem] lg:text-[4rem] font-semibold tracking-[-0.035em] text-gray-900"
-                data-testid="text-hero-heading"
+              <div className="mb-3 sm:mb-4 landing-fade-up" data-testid="text-hero-heading">
+                <h1 className="text-[3.5rem] leading-[0.9] sm:text-[5rem] md:text-[6rem] lg:text-[7rem] font-bold tracking-[0.15em] uppercase text-gray-900">
+                  CREW
+                </h1>
+                <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3">
+                  {[
+                    { letter: "C", word: "reator" },
+                    { letter: "R", word: "esource" },
+                    { letter: "E", word: "ditor" },
+                    { letter: "W", word: "orkspace" },
+                  ].map((item) => (
+                    <span key={item.letter} className="text-[10px] sm:text-xs font-medium tracking-[0.08em] uppercase text-gray-400">
+                      <span className="text-gray-900 font-semibold">{item.letter}</span>{item.word}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <h2
+                className="text-xl leading-[1.2] sm:text-2xl md:text-[1.75rem] font-medium tracking-[-0.02em] text-gray-600"
               >
-                Your team's media,{" "}
+                AI-Powered{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                  finally organized.
+                  Creative Workspace
                 </span>
-              </h1>
+              </h2>
               <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal landing-fade-up landing-stagger-2">
                 Upload, organize, and collaborate on images and videos - with folders, roles, and cloud storage built right in.
               </p>
@@ -388,7 +401,7 @@ export default function LandingPage() {
               .
             </h2>
             <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-              WorkVault brings your team's images and videos into a single,
+              The CREW brings your team's images and videos into a single,
               beautifully organized workspace.
             </p>
           </AnimatedSection>
@@ -704,7 +717,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg text-gray-500 max-w-lg mx-auto leading-[1.7]">
-              Join teams that already use WorkVault to keep their visual assets
+              Join teams that already use The CREW to keep their visual assets
               organized, accessible, and secure.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5">
@@ -727,10 +740,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2.5 mb-1">
-                <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
-                  <Layers className="w-3.5 h-3.5 text-white" />
-                </div>
-                <span className="font-semibold text-gray-900 text-[15px]">WorkVault</span>
+                <span className="font-bold text-gray-900 text-[15px] tracking-[0.15em] uppercase">CREW</span>
               </div>
             </div>
 
@@ -781,7 +791,7 @@ export default function LandingPage() {
 
           <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-gray-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-400">
-              &copy; {new Date().getFullYear()} WorkVault. All rights reserved.
+              &copy; {new Date().getFullYear()} The CREW. All rights reserved.
             </p>
           </div>
         </div>

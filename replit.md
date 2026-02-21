@@ -1,7 +1,7 @@
-# WorkVault - Workspace Media Manager
+# The CREW - AI-Powered Creative Workspace
 
 ## Overview
-A workspace application where admins can create workspaces, add team members, create folder structures, and upload/organize images and videos.
+CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where admins can create workspaces, add team members, create folder structures, and upload/organize images and videos. Features CRED-style bold typographic branding with the "CREW" wordmark as a visual centerpiece.
 
 ## Architecture
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
@@ -9,6 +9,14 @@ A workspace application where admins can create workspaces, add team members, cr
 - **Database**: PostgreSQL with Drizzle ORM
 - **Auth**: Email/password with bcrypt + express-session (stored in PostgreSQL)
 - **File Storage**: Replit Object Storage (Google Cloud Storage presigned URLs)
+
+## Branding
+- Project name: "The CREW" / "CREW"
+- Acronym: Creator Resource Editor Workspace
+- Style: CRED-inspired bold typographic branding - uppercase "CREW" with wide letter-spacing (tracking-[0.15em])
+- No icon/logo box - pure typographic wordmark approach
+- Hero section: massive "CREW" text with acronym breakdown below
+- Navbar, footer, auth page all use the typographic wordmark treatment
 
 ## Key Features
 - Workspace creation and management with workspace switcher
@@ -21,10 +29,17 @@ A workspace application where admins can create workspaces, add team members, cr
 
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
-- Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
+- Top bar: CREW wordmark | Workspace switcher dropdown | User avatar + logout
 - Nav tabs: Users, Folders, Interrogator, Tasks, Resources
 - Landing page at / for unauthenticated visitors (hero, features, highlights, CTA)
 - Routes: / (landing for guests, workspace selection for logged-in), /auth (sign in/up), /workspace/:id/:tab (workspace view)
+
+## Design System
+- Typography: SF Pro for Apple devices, Inter for all other platforms; semibold/medium weights, negative letter-spacing
+- Animations: blur-up reveals with filter: blur() in keyframes, cubic-bezier(0.22, 1, 0.36, 1) easing
+- Light theme: #fafafa warm background, softer borders (border-gray-200/60), subtle gradients
+- Navbar: animated gradient (linear-gradient with 8s animation shift)
+- Hero: split layout - typographic CREW name left, app preview mockup right
 
 ## Project Structure
 - `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models

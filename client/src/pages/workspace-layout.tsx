@@ -114,10 +114,7 @@ export default function WorkspaceLayout() {
       <div className="min-h-screen bg-background">
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-sm" data-testid="text-app-name">WorkVault</span>
+            <span className="font-bold text-sm tracking-[0.15em] uppercase" data-testid="text-app-name">CREW</span>
           </div>
           <div className="flex items-center gap-2">
             <Avatar className="w-7 h-7">
@@ -132,7 +129,7 @@ export default function WorkspaceLayout() {
 
         <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
           <div className="text-center mb-8 sm:mb-10">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to WorkVault</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to The CREW</h1>
             <p className="text-muted-foreground text-sm sm:text-base">Select a workspace or create a new one to get started</p>
           </div>
 
@@ -225,10 +222,7 @@ export default function WorkspaceLayout() {
       <header className="h-12 sm:h-12 border-b bg-background shrink-0 flex items-center justify-between px-3 sm:px-4 z-50">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-sm hidden md:inline" data-testid="text-app-name">WorkVault</span>
+            <span className="font-bold text-sm tracking-[0.15em] uppercase hidden md:inline" data-testid="text-app-name">CREW</span>
           </div>
 
           <div className="h-5 w-px bg-border mx-0.5 sm:mx-1" />
