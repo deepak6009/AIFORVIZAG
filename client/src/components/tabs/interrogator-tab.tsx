@@ -172,16 +172,31 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100,
+          channelCount: 1,
+        },
+      });
       streamRef.current = stream;
       audioChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        audioBitsPerSecond: 128000,
+      });
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       mediaRecorder.onstop = async () => {
-        const webmBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const webmBlob = new Blob(audioChunksRef.current, { type: mimeType });
         stream.getTracks().forEach(t => t.stop());
         streamRef.current = null;
 
@@ -198,7 +213,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
           handleFilesSelected([file], localUrl);
         }
       };
-      mediaRecorder.start(250);
+      mediaRecorder.start(100);
       setIsRecording(true);
       setRecordingTime(0);
       timerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
