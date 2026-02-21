@@ -114,9 +114,7 @@ export default function WorkspaceLayout() {
       <div className="min-h-screen bg-background">
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
-              <span className="text-white font-bold text-[11px] tracking-[0.08em]">Cr</span>
-            </div>
+            <img src="/images/crew-mark.png" alt="CREW" className="w-7 h-7" />
             <span className="font-bold text-sm tracking-[0.15em] uppercase" data-testid="text-app-name">CREW</span>
           </div>
           <div className="flex items-center gap-2">
@@ -225,9 +223,7 @@ export default function WorkspaceLayout() {
       <header className="h-12 sm:h-12 border-b bg-background shrink-0 flex items-center justify-between px-3 sm:px-4 z-50">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
-              <span className="text-white font-bold text-[11px] tracking-[0.08em]">Cr</span>
-            </div>
+            <img src="/images/crew-mark.png" alt="CREW" className="w-7 h-7" />
             <span className="font-bold text-sm tracking-[0.15em] uppercase hidden md:inline" data-testid="text-app-name">CREW</span>
           </div>
 

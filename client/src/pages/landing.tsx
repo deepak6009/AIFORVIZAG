@@ -86,10 +86,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#fafafa] overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center">
-              <span className="text-white font-bold text-sm tracking-[0.08em]">Cr</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <img src="/images/crew-mark.png" alt="CREW" className="w-7 h-7 sm:w-8 sm:h-8" />
             <span
               className="text-lg sm:text-xl font-bold tracking-[0.15em] uppercase text-gray-900"
               data-testid="text-app-name"
@@ -150,27 +148,31 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="landing-fade-up">
-              <div className="mb-3 sm:mb-4 landing-fade-up" data-testid="text-hero-heading">
-                <h1 className="text-[3.5rem] leading-[0.9] sm:text-[5rem] md:text-[6rem] lg:text-[7rem] font-bold tracking-[0.15em] uppercase text-gray-900">
-                  <span className="text-gray-400 font-medium text-[0.4em] tracking-[0.08em] align-baseline mr-1">The</span>CREW
+              <div className="mb-5 sm:mb-6 landing-fade-up" data-testid="text-hero-heading">
+                <p className="text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-gray-400 mb-2 sm:mb-3">The</p>
+                <h1 className="text-[4rem] leading-[0.85] sm:text-[5.5rem] md:text-[7rem] lg:text-[8rem] font-extrabold tracking-[0.08em] uppercase text-gray-900">
+                  CREW
                 </h1>
-                <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3">
+                <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
                   {[
                     { letter: "Cr", word: "eator" },
                     { letter: "E", word: "ditor" },
                     { letter: "W", word: "orkspace" },
-                  ].map((item) => (
-                    <span key={item.letter} className="text-[10px] sm:text-xs font-medium tracking-[0.08em] uppercase text-gray-400">
-                      <span className="text-gray-900 font-semibold">{item.letter}</span>{item.word}
+                  ].map((item, i) => (
+                    <span key={item.letter} className="flex items-center gap-1.5 sm:gap-2">
+                      {i > 0 && <span className="w-1 h-1 rounded-full bg-gray-300" />}
+                      <span className="text-[10px] sm:text-xs font-medium tracking-[0.1em] uppercase text-gray-400">
+                        <span className="text-gray-900 font-bold">{item.letter}</span>{item.word}
+                      </span>
                     </span>
                   ))}
                 </div>
               </div>
               <h2
-                className="text-xl leading-[1.2] sm:text-2xl md:text-[1.75rem] font-medium tracking-[-0.02em] text-gray-600"
+                className="text-lg leading-[1.3] sm:text-xl md:text-2xl font-medium tracking-[-0.01em] text-gray-500"
               >
                 AI-Powered{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 font-semibold">
                   Creative Workspace
                 </span>
               </h2>
@@ -742,9 +744,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-md bg-gray-900 flex items-center justify-center">
-                  <span className="text-white font-bold text-[11px] tracking-[0.08em]">Cr</span>
-                </div>
+                <img src="/images/crew-mark.png" alt="CREW" className="w-6 h-6" />
                 <span className="font-bold text-gray-900 text-[15px] tracking-[0.15em] uppercase">CREW</span>
               </div>
             </div>
