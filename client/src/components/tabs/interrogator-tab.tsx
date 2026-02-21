@@ -459,9 +459,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error !== "aborted") {
-        toast({ title: "Speech recognition error", description: `Error: ${event.error}`, variant: "destructive" });
-      }
+      if (event.error === "no-speech" || event.error === "aborted") return;
+      toast({ title: "Speech recognition error", description: `Error: ${event.error}`, variant: "destructive" });
       setChatMicActive(false);
       chatRecognitionRef.current = null;
     };
