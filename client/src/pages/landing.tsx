@@ -202,43 +202,45 @@ export default function LandingPage() {
       <section className="pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-40 lg:pb-24 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
-          <div className="max-w-3xl mx-auto text-center mb-10 sm:mb-14">
-            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-5 sm:mb-6 animate-fade-in">
-              AI-Powered Creative Workspace
-            </p>
-            <h1 className="text-[2.5rem] leading-[1.05] sm:text-[3.5rem] md:text-[4.5rem] lg:text-[5.5rem] font-semibold tracking-[-0.03em] text-gray-900 animate-fade-in-up" data-testid="text-hero-heading">
-              Your media,{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
-                finally organized.
-              </span>
-            </h1>
-            <p className="mt-5 sm:mt-7 text-base sm:text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-[1.7] font-normal animate-fade-in-up-delay">
-              Upload, organize, and collaborate on images and videos — with folders, roles, and cloud storage built right in.
-            </p>
-            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
-              <Button
-                size="lg"
-                onClick={() => navigate("/auth?mode=register")}
-                className="bg-gray-900 text-white font-medium rounded-full"
-                data-testid="button-get-started"
-              >
-                Start for free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/auth")}
-                className="rounded-full font-medium text-gray-600"
-                data-testid="button-hero-signin"
-              >
-                Sign in
-              </Button>
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div className="animate-fade-in-up">
+              <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-5 sm:mb-6">
+                AI-Powered Creative Workspace
+              </p>
+              <h1 className="text-[2.5rem] leading-[1.05] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] font-semibold tracking-[-0.03em] text-gray-900" data-testid="text-hero-heading">
+                Your media,{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
+                  finally organized.
+                </span>
+              </h1>
+              <p className="mt-5 sm:mt-6 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal animate-fade-in-up-delay">
+                Upload, organize, and collaborate on images and videos — with folders, roles, and cloud storage built right in.
+              </p>
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/auth?mode=register")}
+                  className="bg-gray-900 text-white font-medium rounded-full"
+                  data-testid="button-get-started"
+                >
+                  Start for free
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate("/auth")}
+                  className="rounded-full font-medium text-gray-600"
+                  data-testid="button-hero-signin"
+                >
+                  Sign in
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <div className="animate-fade-in-up-delay-2">
-            <HeroVideo />
+            <div className="animate-fade-in-up-delay">
+              <HeroVideo />
+            </div>
           </div>
         </div>
       </section>
