@@ -204,23 +204,23 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <div className="animate-fade-in-up">
-              <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-5 sm:mb-6">
+              <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-4 sm:mb-5">
                 AI-Powered Creative Workspace
               </p>
-              <h1 className="text-[2.5rem] leading-[1.05] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] font-semibold tracking-[-0.03em] text-gray-900" data-testid="text-hero-heading">
+              <h1 className="text-[2.8rem] leading-[1.02] sm:text-[3.8rem] md:text-[4.5rem] lg:text-[5rem] font-bold tracking-[-0.035em] text-gray-950" data-testid="text-hero-heading">
                 Your media,{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
                   finally organized.
                 </span>
               </h1>
-              <p className="mt-5 sm:mt-6 text-[15px] sm:text-lg text-gray-400 max-w-md leading-[1.7] font-normal animate-fade-in-up-delay">
+              <p className="mt-5 sm:mt-6 text-base sm:text-lg text-gray-500 max-w-md leading-[1.7] font-normal animate-fade-in-up-delay">
                 Upload, organize, and collaborate on images and videos — with folders, roles, and cloud storage built right in.
               </p>
               <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-3.5 animate-fade-in-up-delay-2">
                 <Button
                   size="lg"
                   onClick={() => navigate("/auth?mode=register")}
-                  className="bg-gray-900 text-white font-medium rounded-full"
+                  className="bg-gray-900 text-white font-semibold rounded-full px-7"
                   data-testid="button-get-started"
                 >
                   Start for free
@@ -230,7 +230,7 @@ export default function LandingPage() {
                   size="lg"
                   variant="outline"
                   onClick={() => navigate("/auth")}
-                  className="rounded-full font-medium text-gray-600"
+                  className="rounded-full font-semibold text-gray-700 border-gray-300"
                   data-testid="button-hero-signin"
                 >
                   Sign in
@@ -245,7 +245,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-8 sm:py-12 overflow-hidden bg-gray-950">
+      <section className="py-4 sm:py-5 overflow-hidden bg-gray-950">
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-gray-950 to-transparent z-10" />
           <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-gray-950 to-transparent z-10" />
