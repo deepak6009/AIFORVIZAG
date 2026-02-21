@@ -245,16 +245,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-6 sm:py-10 overflow-hidden">
+      <section className="py-8 sm:py-12 overflow-hidden bg-gray-950">
         <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-[#fafafa] to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-[#fafafa] to-transparent z-10" />
+          <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-gray-950 to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-gray-950 to-transparent z-10" />
           <div className="marquee-track">
             {[...marqueeItems, ...marqueeItems].map((item, i) => (
-              <div key={i} className="flex items-center gap-4 sm:gap-5 px-4 sm:px-6 shrink-0">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-gray-400 whitespace-nowrap bg-gray-100 px-4 py-1.5 rounded-full">
+              <div key={i} className="flex items-center gap-5 sm:gap-7 px-5 sm:px-7 shrink-0">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-gray-400 whitespace-nowrap">
                   {item}
                 </span>
+                <span className="w-1 h-1 rounded-full bg-gray-700 shrink-0" />
               </div>
             ))}
           </div>
