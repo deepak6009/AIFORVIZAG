@@ -6,9 +6,23 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace built
 ## Architecture
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
 - **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: DynamoDB (AIFORVIZAG_file_structure table) for ALL business data (orgs, workspaces, members, folders, files). PostgreSQL ONLY for auth (users, sessions).
 - **Auth**: Email/password with bcrypt + express-session (stored in PostgreSQL)
-- **File Storage**: Replit Object Storage (Google Cloud Storage presigned URLs)
+- **File Storage**: AWS S3 (bucket: aiforvizag21022026-workvault) + CloudFront CDN
+- **Legacy File Storage**: Replit Object Storage (still available for existing workspace files)
+
+## DynamoDB Single-Table Design
+Table: `AIFORVIZAG_file_structure`
+- **Organisation**: pk=`ORG#<orgId>`, sk=`METADATA`
+- **Workspace**: pk=`ORG#<orgId>`, sk=`WS#<workspaceId>`
+- **Member**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#MEMBER#<userId>`
+- **Folder**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>`
+- **File**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>`
+- **Interrogation**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#INTERROGATION#<id>` (stores summary, fileUrls, briefingAnswers, status)
+- **Task**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>` (title, description, status, priority, sourceInterrogationId)
+- **TaskComment**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` (text, timestampSec, authorId)
+- GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
+- Each user gets a default org auto-created on first workspace creation
 
 ## Branding
 - Project name: "thecrew" (lowercase, one word)
@@ -26,50 +40,38 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace built
 - Team member management with role-based access (admin, member, viewer)
 - Nested folder structure within workspaces
 - Image and video file uploads with previews
-- AI Interrogator chat interface (placeholder - will create structured briefs)
-- Kanban task board (placeholder - will auto-generate from AI brief)
+- AI Interrogator with 3-step wizard: Upload & Analyse → Gemini AI Briefing Chat → Final Document
+  - Step 1: Upload files (PDF, Word, audio, text), voice-to-text recording (browser STT), text input
+  - Step 2: Gemini AI chat agent with 4-layer briefing framework (Goal & Audience, Style & Hook, Editing & Visuals, Audio & Format) with selectable chip options and file attachments
+  - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
+- Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
+- Task video review: upload video to task, add timestamped comments with clickable playback, AI summary of all comments, task-specific AI chat bot for editors
 - Resources section (placeholder - shared links and references)
 
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
-- Top bar: CREW wordmark | Workspace switcher dropdown | User avatar + logout
-- Nav tabs: Users, Folders, Interrogator, Tasks, Resources
-- Landing page at / for unauthenticated visitors (hero, features, highlights, CTA)
-- Routes: / (landing for guests, workspace selection for logged-in), /auth (sign in/up), /workspace/:id/:tab (workspace view)
-
-## Design System
-- Typography: SF Pro for Apple devices, Inter for all other platforms; semibold/medium weights, negative letter-spacing
-- Animations: fade-in and fade-in-up on hero elements with staggered delays, cubic-bezier(0.22, 1, 0.36, 1) easing, card hover lift effects
-- Light theme: #fafafa warm background, softer borders (border-gray-200/60), subtle gradients
-- Navbar: glossy frosted glass effect on scroll (nav-glass-scrolled CSS class)
-- Hero: split layout with tagline heading left, video right
+- Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
+- Nav tabs: Users, Folders, Interrogator, Final Agenda, Tasks, Resources
+- Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
-- `shared/schema.ts` - All Drizzle models (workspaces, members, folders, files) + re-exports auth models
-- `shared/models/auth.ts` - Auth-related models (users, sessions)
-- `server/routes.ts` - All API endpoints with auth middleware
-- `server/storage.ts` - DatabaseStorage class implementing IStorage interface
-- `server/db.ts` - Database connection
+- `shared/schema.ts` - TypeScript interfaces for all entities (Workspace, Folder, FileRecord, WorkspaceMember, Organisation) + re-exports auth models
+- `shared/models/auth.ts` - Auth-related Drizzle models (users, sessions) — only Drizzle tables in the project
+- `server/routes.ts` - All API endpoints with auth middleware, uses DynamoDB fileService
+- `server/storage.ts` - Minimal storage class for auth-only operations (getUserByEmail, getUserById)
+- `server/db.ts` - PostgreSQL connection (auth only)
+- `server/aws/config.ts` - AWS SDK clients (S3, CloudFront, DynamoDB) and constants
+- `server/aws/setup.ts` - Auto-creates S3 bucket, CloudFront distribution, DynamoDB table + GSIs on startup
+- `server/aws/fileService.ts` - All DynamoDB CRUD: organisations, workspaces, members, folders, files + S3 upload
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
-- `server/replit_integrations/object_storage/` - Object storage integration
-- `client/src/components/page-navbar.tsx` - Shared glossy scroll-aware navbar for static pages
-- `client/src/components/page-footer.tsx` - Shared full footer with navigation links for static pages
-- `client/src/pages/landing.tsx` - Landing page for unauthenticated visitors
-- `client/src/pages/auth.tsx` - Sign in / Sign up page (supports ?mode=register)
-- `client/src/pages/about.tsx` - About page
-- `client/src/pages/pricing.tsx` - Pricing page with tiers
-- `client/src/pages/blog.tsx` - Blog page with article cards
-- `client/src/pages/changelog.tsx` - Changelog with version timeline
-- `client/src/pages/help-center.tsx` - Help center with category cards
-- `client/src/pages/privacy-policy.tsx` - Privacy policy
-- `client/src/pages/support.tsx` - Support page with contact form
-- `client/src/pages/request-feature.tsx` - Feature request form
-- `client/src/pages/contact.tsx` - Contact page with form
+- `server/replit_integrations/object_storage/` - Object storage integration (legacy)
+- `client/src/pages/auth.tsx` - Sign in / Sign up page
 - `client/src/pages/workspace-layout.tsx` - Main app shell with workspace switcher + tab routing
 - `client/src/components/tabs/users-tab.tsx` - Member management (functional)
 - `client/src/components/tabs/folders-tab.tsx` - Folder/file management (functional)
-- `client/src/components/tabs/interrogator-tab.tsx` - AI chat interface (placeholder)
-- `client/src/components/tabs/tasks-tab.tsx` - Kanban board (placeholder)
+- `client/src/components/tabs/interrogator-tab.tsx` - 3-step Interrogator wizard with Gemini AI briefing chat
+- `client/src/components/tabs/final-agenda-tab.tsx` - Final Agenda listing (saved production briefs from Interrogator)
+- `client/src/components/tabs/tasks-tab.tsx` - Kanban board with drag-and-drop, task detail drawer, comments, AI generation
 - `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
 
 ## API Routes
@@ -77,17 +79,33 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace built
 - `POST /api/auth/login` - Sign in with email/password
 - `POST /api/auth/logout` - Sign out (destroy session)
 - `GET /api/auth/user` - Get current authenticated user
-- `GET/POST /api/workspaces` - List/create workspaces
-- `GET/DELETE /api/workspaces/:id` - Get/delete workspace
-- `GET/POST /api/workspaces/:id/members` - List/add members
-- `DELETE /api/workspaces/:wsId/members/:memberId` - Remove member
-- `GET/POST /api/workspaces/:id/folders` - List/create folders
-- `DELETE /api/workspaces/:wsId/folders/:folderId` - Delete folder
-- `GET /api/workspaces/:wsId/folders/:folderId/files` - List files in folder
-- `POST /api/workspaces/:id/files` - Create file record
-- `DELETE /api/workspaces/:wsId/files/:fileId` - Delete file
-- `POST /api/uploads/request-url` - Get presigned upload URL
+- `GET/POST /api/workspaces` - List/create workspaces (DynamoDB)
+- `GET/DELETE /api/workspaces/:id` - Get/delete workspace (DynamoDB)
+- `GET/POST /api/workspaces/:id/members` - List/add members (DynamoDB)
+- `DELETE /api/workspaces/:wsId/members/:memberId` - Remove member (DynamoDB)
+- `GET/POST /api/workspaces/:id/folders` - List/create folders (DynamoDB)
+- `DELETE /api/workspaces/:wsId/folders/:folderId` - Delete folder (DynamoDB + S3)
+- `GET /api/workspaces/:wsId/folders/:folderId/files` - List files in folder (DynamoDB)
+- `POST /api/workspaces/:id/files` - Create file record (DynamoDB)
+- `DELETE /api/workspaces/:wsId/files/:fileId` - Delete file (DynamoDB + S3)
+- `POST /api/uploads/request-url` - Get presigned upload URL (S3)
+- `GET/POST /api/organisations` - List/create organisations (DynamoDB)
+- `GET /api/organisations/:orgId` - Get organisation (DynamoDB)
+- `POST /api/aws/upload-url` - Get presigned S3 upload URL
+- `POST /api/interrogator/upload-text` - Convert text to .txt on S3
+- `POST /api/interrogator/summarize` - Proxy summary lambda + store in DynamoDB
+- `GET /api/workspaces/:id/interrogations` - List interrogations for a workspace (DynamoDB)
+- `POST /api/interrogator/chat` - Gemini AI briefing chat with 4-layer framework
+- `POST /api/interrogator/generate-final` - Gemini-powered final document generation (combines lambda summary + briefing answers + file attachments)
+- `GET/POST /api/workspaces/:id/tasks` - List/create tasks (DynamoDB)
+- `PATCH /api/workspaces/:wsId/tasks/:taskId` - Update task (DynamoDB)
+- `DELETE /api/workspaces/:wsId/tasks/:taskId` - Delete task (DynamoDB)
+- `POST /api/workspaces/:id/tasks/generate` - Auto-generate tasks from Final Agenda via Gemini AI
+- `GET/POST /api/workspaces/:wsId/tasks/:taskId/comments` - List/add timestamped comments (DynamoDB)
+- `POST /api/workspaces/:wsId/tasks/revision-checklist` - Gemini AI revision checklist from all task comments
+- `POST /api/workspaces/:wsId/tasks/:taskId/summarize` - AI summary of all timestamped comments for one task
+- `POST /api/workspaces/:wsId/tasks/:taskId/chat` - Task-aware AI chatbot for editors (knows task context + comments)
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000
-- `npm run db:push` pushes schema changes to database
+- `npm run db:push` pushes auth schema changes to PostgreSQL

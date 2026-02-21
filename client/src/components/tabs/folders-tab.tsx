@@ -255,6 +255,24 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                           <div className="aspect-square rounded-md bg-muted flex items-center justify-center mb-2 relative overflow-hidden">
                             {isImage(file.type) ? (
                               <img src={file.objectPath} alt={file.name} className="w-full h-full object-cover rounded-md" />
+                            ) : isVideo(file.type) ? (
+                              <div className="w-full h-full relative">
+                                <video
+                                  src={file.objectPath}
+                                  muted
+                                  preload="metadata"
+                                  className="w-full h-full object-cover rounded-md"
+                                  onLoadedData={(e) => {
+                                    const video = e.currentTarget;
+                                    video.currentTime = 0.5;
+                                  }}
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
+                                  </div>
+                                </div>
+                              </div>
                             ) : (
                               getFileIcon(file.type)
                             )}

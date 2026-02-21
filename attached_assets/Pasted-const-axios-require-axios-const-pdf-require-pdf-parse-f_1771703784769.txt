@@ -1,0 +1,175 @@
+const axios = require("axios");
+const pdf = require("pdf-parse-fork");
+const mammoth = require("mammoth");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { URL } = require("url");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+const MAX_FILE_SIZE_MB = 25;
+const allowedDomains = (process.env.ALLOWED_DOMAINS || "").split(",");
+
+// =======================
+// Extract Links Helper
+// =======================
+function extractLinks(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const matches = text.match(urlRegex);
+  return matches ? [...new Set(matches)] : [];
+}
+
+/**
+ * Downloads binary data with headers to bypass CloudFront restrictions
+ */
+async function downloadFile(url) {
+  const response = await axios({
+    method: "get",
+    url: url,
+    responseType: "arraybuffer",
+    timeout: 30000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': '*/*'
+    }
+  });
+
+  return Buffer.from(response.data);
+}
+
+/**
+ * Main File Processing Logic
+ */
+async function processFile(file) {
+  try {
+    console.log(`INFO: Downloading ${file.url}`);
+    const buffer = await downloadFile(file.url);
+    
+    const { fileTypeFromBuffer } = await import('file-type');
+    const type = await fileTypeFromBuffer(buffer);
+    
+    let extracted = "";
+    const mime = type?.mime || "";
+    const lowerUrl = file.url.toLowerCase();
+
+    if (mime === "application/pdf" || lowerUrl.endsWith(".pdf")) {
+      const data = await pdf(buffer, { pagerender: () => "" });
+      extracted = data.text;
+    } 
+    else if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || lowerUrl.endsWith(".docx")) {
+      const result = await mammoth.extractRawText({ buffer });
+      extracted = result.value;
+    } 
+    else if (mime.startsWith("audio/")) {
+      // Configuration to prevent hallucination during transcription
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.0-flash",
+        generationConfig: { temperature: 0.1 } 
+      }); 
+
+      const result = await model.generateContent([
+        { inlineData: { data: buffer.toString("base64"), mimeType: mime } },
+        { text: "Transcribe this audio exactly as spoken. If not in English, translate accurately to English. Do not add any extra information or commentary." }
+      ]);
+      
+      extracted = result.response.text();
+      
+      // PRINT WHAT HAS BEEN EXTRACTED FROM VOICE FILE
+      console.log(`\n🎙️ AUDIO EXTRACTION (${file.url}):\n${extracted}\n`);
+    } 
+    else {
+      extracted = buffer.toString("utf8").substring(0, 50000);
+    }
+
+    return extracted ? `\n\n[SOURCE: ${file.url}]\n${extracted}` : "";
+
+  } catch (err) {
+    console.error(`ERROR: Failed processing ${file.url} ->`, err.message);
+    return "";
+  }
+}
+
+// =======================
+// Generate Structured Creator Brief
+// =======================
+async function generateBrief(combinedText) {
+  // SYSTEM INSTRUCTIONS: Force the model to be a grounded assistant
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.0-flash",
+    systemInstruction: "You are a grounded assistant that only uses the provided text to generate a brief. Do not invent details, names, or requirements that are not explicitly stated. If information for a section is missing, state 'Not specified' rather than hallucinating.",
+  });
+
+  const links = extractLinks(combinedText);
+
+  // LOGGING LINKS
+  console.log("\n🔗 Extracted Reference Links:\n", links);
+
+  const prompt = `
+You are generating a PROFESSIONAL CREATOR-TO-EDITOR BRIEFING DOCUMENT.
+STRICT RULE: Do not hallucinate. Use ONLY the content provided below.
+
+The FINAL OUTPUT MUST BE STRICTLY IN ENGLISH.
+
+Follow this EXACT STRUCTURE:
+--------------------------------------
+1. PROJECT OVERVIEW
+2. CREATOR'S CORE INTENT
+3. TARGET AUDIENCE
+4. KEY MESSAGES
+5. VISUAL DIRECTION
+6. AUDIO & SOUND DIRECTION
+7. PACING & TRANSITIONS
+8. MANDATORY ELEMENTS
+9. CONSTRAINTS / DO NOT DO
+10. REFERENCE LINKS
+List ALL links provided below:
+${links.join("\n")}
+
+11. DELIVERABLE EXPECTATIONS
+--------------------------------------
+
+CONTENT TO PROCESS:
+${combinedText}
+`;
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.0, // Zero temperature is the best defense against hallucination
+      topP: 0.1,
+    }
+  });
+
+  return result.response.text();
+}
+
+/**
+ * AWS Lambda Handler
+ */
+exports.handler = async (event) => {
+  try {
+    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
+    
+    if (!body?.files || !Array.isArray(body.files)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "No files provided" }) };
+    }
+
+    const fileResults = await Promise.all(body.files.map(f => processFile(f)));
+    const allText = fileResults.join("").trim();
+
+    if (!allText) {
+      return { statusCode: 422, body: JSON.stringify({ error: "Extraction failed." }) };
+    }
+
+    const brief = await generateBrief(allText);
+
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brief })
+    };
+
+  } catch (error) {
+    console.error("FATAL ERROR:", error);
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+  }
+};
