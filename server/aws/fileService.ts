@@ -1,36 +1,8 @@
 import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { PutCommand, QueryCommand, DeleteCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, DeleteCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { s3Client, docClient, S3_BUCKET_NAME, DYNAMODB_TABLE_NAME } from "./config";
 import { v4 as uuidv4 } from "uuid";
-
-export interface FileMetadata {
-  pk: string;
-  sk: string;
-  fileId: string;
-  orgId: string;
-  folderId: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  s3Key: string;
-  cloudfrontUrl: string;
-  uploadedBy: string;
-  createdAt: string;
-  itemType: "file" | "folder";
-}
-
-export interface FolderMetadata {
-  pk: string;
-  sk: string;
-  folderId: string;
-  orgId: string;
-  parentFolderId: string | null;
-  folderName: string;
-  createdBy: string;
-  createdAt: string;
-  itemType: "folder";
-}
 
 export function getCloudfrontUrl(s3Key: string): string {
   const cloudfrontDomain = process.env.CLOUDFRONT_DOMAIN;
@@ -40,6 +12,256 @@ export function getCloudfrontUrl(s3Key: string): string {
   const region = process.env.AWS_REGION || "us-east-1";
   return `https://${S3_BUCKET_NAME}.s3.${region}.amazonaws.com/${s3Key}`;
 }
+
+// === Organisation ===
+
+export async function createOrganisation(params: {
+  name: string;
+  description?: string;
+  logo?: string;
+  createdBy: string;
+}) {
+  const orgId = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${orgId}`,
+    sk: "METADATA",
+    orgId,
+    name: params.name,
+    description: params.description || null,
+    logo: params.logo || null,
+    createdBy: params.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    itemType: "organisation",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getOrganisation(orgId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: "METADATA" },
+  }));
+  return result.Item || null;
+}
+
+export async function getOrganisationsByUser(userId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    IndexName: "createdBy-index",
+    KeyConditionExpression: "createdBy = :userId",
+    FilterExpression: "itemType = :itemType",
+    ExpressionAttributeValues: {
+      ":userId": userId,
+      ":itemType": "organisation",
+    },
+  }));
+  return result.Items || [];
+}
+
+// === Workspace ===
+
+export async function createWorkspace(params: {
+  orgId: string;
+  name: string;
+  description?: string;
+  createdBy: string;
+}) {
+  const workspaceId = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${workspaceId}`,
+    orgId: params.orgId,
+    id: workspaceId,
+    name: params.name,
+    description: params.description || null,
+    createdBy: params.createdBy,
+    createdAt: now,
+    itemType: "workspace",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+
+  await addWorkspaceMember({
+    orgId: params.orgId,
+    workspaceId,
+    userId: params.createdBy,
+    role: "admin",
+  });
+
+  return item;
+}
+
+export async function getWorkspace(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}` },
+  }));
+  return result.Item || null;
+}
+
+export async function getWorkspacesByOrg(orgId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    FilterExpression: "itemType = :itemType",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":sk": "WS#",
+      ":itemType": "workspace",
+    },
+  }));
+  return result.Items || [];
+}
+
+export async function getWorkspacesByUser(userId: string) {
+  const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
+  const scanResult = await docClient.send(new ScanCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    FilterExpression: "itemType = :t AND userId = :userId",
+    ExpressionAttributeValues: {
+      ":t": "member",
+      ":userId": userId,
+    },
+  }));
+
+  const members = scanResult.Items || [];
+  const workspaces: any[] = [];
+
+  for (const member of members) {
+    const ws = await getWorkspace(member.orgId, member.workspaceId);
+    if (ws) workspaces.push(ws);
+  }
+
+  return workspaces;
+}
+
+export async function deleteWorkspace(orgId: string, workspaceId: string) {
+  const members = await getWorkspaceMembers(orgId, workspaceId);
+  for (const m of members) {
+    await docClient.send(new DeleteCommand({
+      TableName: DYNAMODB_TABLE_NAME,
+      Key: { pk: `ORG#${orgId}`, sk: m.sk },
+    }));
+  }
+
+  const folders = await getFoldersByWorkspace(orgId, workspaceId);
+  for (const f of folders) {
+    await deleteFolderAndFiles(orgId, workspaceId, f.id);
+  }
+
+  await docClient.send(new DeleteCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}` },
+  }));
+}
+
+// === Members ===
+
+export async function addWorkspaceMember(params: {
+  orgId: string;
+  workspaceId: string;
+  userId: string;
+  role: string;
+}) {
+  const memberId = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#MEMBER#${params.userId}`,
+    id: memberId,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    userId: params.userId,
+    role: params.role,
+    addedAt: now,
+    itemType: "member",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getWorkspaceMembers(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    FilterExpression: "itemType = :itemType",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":sk": `WS#${workspaceId}#MEMBER#`,
+      ":itemType": "member",
+    },
+  }));
+  return result.Items || [];
+}
+
+export async function getMemberByUserAndWorkspace(orgId: string, workspaceId: string, userId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#MEMBER#${userId}` },
+  }));
+  return result.Item || null;
+}
+
+export async function removeWorkspaceMember(orgId: string, workspaceId: string, userId: string) {
+  await docClient.send(new DeleteCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#MEMBER#${userId}` },
+  }));
+}
+
+// === Folders ===
+
+export async function createFolder(params: {
+  orgId: string;
+  workspaceId: string;
+  name: string;
+  parentId?: string | null;
+  createdBy: string;
+}) {
+  const folderId = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#FOLDER#${folderId}`,
+    id: folderId,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    name: params.name,
+    parentId: params.parentId || null,
+    createdBy: params.createdBy,
+    createdAt: now,
+    itemType: "folder",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getFoldersByWorkspace(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    FilterExpression: "itemType = :itemType",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":sk": `WS#${workspaceId}#FOLDER#`,
+      ":itemType": "folder",
+    },
+  }));
+  return result.Items || [];
+}
+
+export async function getFolder(orgId: string, workspaceId: string, folderId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#FOLDER#${folderId}` },
+  }));
+  return result.Item || null;
+}
+
+// === Files ===
 
 export async function getPresignedUploadUrl(orgId: string, fileName: string, fileType: string): Promise<{ uploadUrl: string; s3Key: string; cloudfrontUrl: string }> {
   const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -58,112 +280,49 @@ export async function getPresignedUploadUrl(orgId: string, fileName: string, fil
   return { uploadUrl, s3Key, cloudfrontUrl };
 }
 
-export async function saveFileMetadata(params: {
+export async function createFile(params: {
   orgId: string;
+  workspaceId: string;
   folderId: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  s3Key: string;
-  cloudfrontUrl: string;
-  uploadedBy: string;
-}): Promise<FileMetadata> {
+  name: string;
+  type: string;
+  objectPath: string;
+  size: number;
+  createdBy: string;
+}) {
   const fileId = uuidv4();
   const now = new Date().toISOString();
-
-  const item: FileMetadata = {
+  const item = {
     pk: `ORG#${params.orgId}`,
-    sk: `FOLDER#${params.folderId}#FILE#${fileId}`,
-    fileId,
+    sk: `WS#${params.workspaceId}#FOLDER#${params.folderId}#FILE#${fileId}`,
+    id: fileId,
     orgId: params.orgId,
+    workspaceId: params.workspaceId,
     folderId: params.folderId,
-    fileName: params.fileName,
-    fileType: params.fileType,
-    fileSize: params.fileSize,
-    s3Key: params.s3Key,
-    cloudfrontUrl: params.cloudfrontUrl,
-    uploadedBy: params.uploadedBy,
+    name: params.name,
+    type: params.type,
+    objectPath: params.objectPath,
+    size: params.size,
+    createdBy: params.createdBy,
     createdAt: now,
     itemType: "file",
   };
-
-  await docClient.send(new PutCommand({
-    TableName: DYNAMODB_TABLE_NAME,
-    Item: item,
-  }));
-
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
   return item;
 }
 
-export async function saveFolderMetadata(params: {
-  orgId: string;
-  folderName: string;
-  parentFolderId: string | null;
-  createdBy: string;
-}): Promise<FolderMetadata> {
-  const folderId = uuidv4();
-  const now = new Date().toISOString();
-
-  const item: FolderMetadata = {
-    pk: `ORG#${params.orgId}`,
-    sk: `FOLDER#${folderId}`,
-    folderId,
-    orgId: params.orgId,
-    parentFolderId: params.parentFolderId,
-    folderName: params.folderName,
-    createdBy: params.createdBy,
-    createdAt: now,
-    itemType: "folder",
-  };
-
-  await docClient.send(new PutCommand({
-    TableName: DYNAMODB_TABLE_NAME,
-    Item: item,
-  }));
-
-  return item;
-}
-
-export async function getFilesByFolder(orgId: string, folderId: string): Promise<FileMetadata[]> {
-  const result = await docClient.send(new QueryCommand({
-    TableName: DYNAMODB_TABLE_NAME,
-    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
-    ExpressionAttributeValues: {
-      ":pk": `ORG#${orgId}`,
-      ":sk": `FOLDER#${folderId}#FILE#`,
-    },
-  }));
-
-  return (result.Items || []) as FileMetadata[];
-}
-
-export async function getFoldersByOrg(orgId: string): Promise<FolderMetadata[]> {
+export async function getFilesByFolder(orgId: string, workspaceId: string, folderId: string) {
   const result = await docClient.send(new QueryCommand({
     TableName: DYNAMODB_TABLE_NAME,
     KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
     FilterExpression: "itemType = :itemType",
     ExpressionAttributeValues: {
       ":pk": `ORG#${orgId}`,
-      ":sk": "FOLDER#",
-      ":itemType": "folder",
-    },
-  }));
-
-  return (result.Items || []) as FolderMetadata[];
-}
-
-export async function getAllFilesByOrg(orgId: string): Promise<FileMetadata[]> {
-  const result = await docClient.send(new QueryCommand({
-    TableName: DYNAMODB_TABLE_NAME,
-    KeyConditionExpression: "pk = :pk",
-    FilterExpression: "itemType = :itemType",
-    ExpressionAttributeValues: {
-      ":pk": `ORG#${orgId}`,
+      ":sk": `WS#${workspaceId}#FOLDER#${folderId}#FILE#`,
       ":itemType": "file",
     },
   }));
-
-  return (result.Items || []) as FileMetadata[];
+  return result.Items || [];
 }
 
 export async function deleteFileFromS3(s3Key: string): Promise<void> {
@@ -173,28 +332,39 @@ export async function deleteFileFromS3(s3Key: string): Promise<void> {
   }));
 }
 
-export async function deleteFileMetadata(orgId: string, folderId: string, fileId: string): Promise<void> {
+export async function deleteFile(orgId: string, workspaceId: string, folderId: string, fileId: string) {
+  const file = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#FOLDER#${folderId}#FILE#${fileId}` },
+  }));
+  if (file.Item?.objectPath) {
+    try {
+      const s3Key = file.Item.objectPath.includes("cloudfront") 
+        ? `${orgId}/${file.Item.objectPath.split("/").pop()}`
+        : file.Item.objectPath;
+      await deleteFileFromS3(s3Key);
+    } catch (e) {}
+  }
   await docClient.send(new DeleteCommand({
     TableName: DYNAMODB_TABLE_NAME,
-    Key: {
-      pk: `ORG#${orgId}`,
-      sk: `FOLDER#${folderId}#FILE#${fileId}`,
-    },
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#FOLDER#${folderId}#FILE#${fileId}` },
   }));
 }
 
-export async function deleteFolderMetadata(orgId: string, folderId: string): Promise<void> {
-  const files = await getFilesByFolder(orgId, folderId);
+export async function deleteFolderAndFiles(orgId: string, workspaceId: string, folderId: string) {
+  const files = await getFilesByFolder(orgId, workspaceId, folderId);
   for (const file of files) {
-    await deleteFileFromS3(file.s3Key);
-    await deleteFileMetadata(orgId, folderId, file.fileId);
+    await deleteFile(orgId, workspaceId, folderId, file.id);
+  }
+
+  const allFolders = await getFoldersByWorkspace(orgId, workspaceId);
+  const children = allFolders.filter((f: any) => f.parentId === folderId);
+  for (const child of children) {
+    await deleteFolderAndFiles(orgId, workspaceId, child.id);
   }
 
   await docClient.send(new DeleteCommand({
     TableName: DYNAMODB_TABLE_NAME,
-    Key: {
-      pk: `ORG#${orgId}`,
-      sk: `FOLDER#${folderId}`,
-    },
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#FOLDER#${folderId}` },
   }));
 }

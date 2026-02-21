@@ -6,10 +6,20 @@ A workspace application where admins can create workspaces, add team members, cr
 ## Architecture
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
 - **Backend**: Express.js with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM + DynamoDB (AIFORVIZAG_file_structure table for folder/file metadata)
+- **Database**: DynamoDB (AIFORVIZAG_file_structure table) for ALL business data (orgs, workspaces, members, folders, files). PostgreSQL ONLY for auth (users, sessions).
 - **Auth**: Email/password with bcrypt + express-session (stored in PostgreSQL)
-- **File Storage**: AWS S3 (bucket: aiforvizag21022026-workvault) + CloudFront CDN (d645yzu9m78ar.cloudfront.net)
+- **File Storage**: AWS S3 (bucket: aiforvizag21022026-workvault) + CloudFront CDN
 - **Legacy File Storage**: Replit Object Storage (still available for existing workspace files)
+
+## DynamoDB Single-Table Design
+Table: `AIFORVIZAG_file_structure`
+- **Organisation**: pk=`ORG#<orgId>`, sk=`METADATA`
+- **Workspace**: pk=`ORG#<orgId>`, sk=`WS#<workspaceId>`
+- **Member**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#MEMBER#<userId>`
+- **Folder**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>`
+- **File**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>`
+- GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
+- Each user gets a default org auto-created on first workspace creation
 
 ## Key Features
 - Workspace creation and management with workspace switcher
@@ -27,14 +37,14 @@ A workspace application where admins can create workspaces, add team members, cr
 - Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
-- `shared/schema.ts` - All Drizzle models (organisations, workspaces, members, folders, files) + re-exports auth models
-- `shared/models/auth.ts` - Auth-related models (users, sessions)
-- `server/routes.ts` - All API endpoints with auth middleware
-- `server/storage.ts` - DatabaseStorage class implementing IStorage interface
-- `server/db.ts` - Database connection
+- `shared/schema.ts` - TypeScript interfaces for all entities (Workspace, Folder, FileRecord, WorkspaceMember, Organisation) + re-exports auth models
+- `shared/models/auth.ts` - Auth-related Drizzle models (users, sessions) — only Drizzle tables in the project
+- `server/routes.ts` - All API endpoints with auth middleware, uses DynamoDB fileService
+- `server/storage.ts` - Minimal storage class for auth-only operations (getUserByEmail, getUserById)
+- `server/db.ts` - PostgreSQL connection (auth only)
 - `server/aws/config.ts` - AWS SDK clients (S3, CloudFront, DynamoDB) and constants
-- `server/aws/setup.ts` - Auto-creates S3 bucket, CloudFront distribution, DynamoDB table on startup
-- `server/aws/fileService.ts` - S3 upload (presigned URLs), DynamoDB CRUD for file/folder metadata
+- `server/aws/setup.ts` - Auto-creates S3 bucket, CloudFront distribution, DynamoDB table + GSIs on startup
+- `server/aws/fileService.ts` - All DynamoDB CRUD: organisations, workspaces, members, folders, files + S3 upload
 - `server/replit_integrations/auth/` - Email/password auth (register, login, logout, session)
 - `server/replit_integrations/object_storage/` - Object storage integration (legacy)
 - `client/src/pages/auth.tsx` - Sign in / Sign up page
@@ -50,27 +60,20 @@ A workspace application where admins can create workspaces, add team members, cr
 - `POST /api/auth/login` - Sign in with email/password
 - `POST /api/auth/logout` - Sign out (destroy session)
 - `GET /api/auth/user` - Get current authenticated user
-- `GET/POST /api/workspaces` - List/create workspaces
-- `GET/DELETE /api/workspaces/:id` - Get/delete workspace
-- `GET/POST /api/workspaces/:id/members` - List/add members
-- `DELETE /api/workspaces/:wsId/members/:memberId` - Remove member
-- `GET/POST /api/workspaces/:id/folders` - List/create folders
-- `DELETE /api/workspaces/:wsId/folders/:folderId` - Delete folder
-- `GET /api/workspaces/:wsId/folders/:folderId/files` - List files in folder
-- `POST /api/workspaces/:id/files` - Create file record
-- `DELETE /api/workspaces/:wsId/files/:fileId` - Delete file
-- `POST /api/uploads/request-url` - Get presigned upload URL
-- `GET/POST /api/organisations` - List/create organisations
-- `GET /api/organisations/:orgId` - Get organisation
-- `POST /api/aws/upload-url` - Get presigned S3 upload URL (orgId/filename)
-- `POST /api/aws/files` - Save file metadata to DynamoDB
-- `GET /api/aws/orgs/:orgId/files` - Get all files for an org
-- `GET /api/aws/orgs/:orgId/folders/:folderId/files` - Get files in folder
-- `POST /api/aws/folders` - Create folder in DynamoDB
-- `GET /api/aws/orgs/:orgId/folders` - Get all folders for an org
-- `DELETE /api/aws/orgs/:orgId/files/:folderId/:fileId` - Delete file from S3 + DynamoDB
-- `DELETE /api/aws/orgs/:orgId/folders/:folderId` - Delete folder + its files
+- `GET/POST /api/workspaces` - List/create workspaces (DynamoDB)
+- `GET/DELETE /api/workspaces/:id` - Get/delete workspace (DynamoDB)
+- `GET/POST /api/workspaces/:id/members` - List/add members (DynamoDB)
+- `DELETE /api/workspaces/:wsId/members/:memberId` - Remove member (DynamoDB)
+- `GET/POST /api/workspaces/:id/folders` - List/create folders (DynamoDB)
+- `DELETE /api/workspaces/:wsId/folders/:folderId` - Delete folder (DynamoDB + S3)
+- `GET /api/workspaces/:wsId/folders/:folderId/files` - List files in folder (DynamoDB)
+- `POST /api/workspaces/:id/files` - Create file record (DynamoDB)
+- `DELETE /api/workspaces/:wsId/files/:fileId` - Delete file (DynamoDB + S3)
+- `POST /api/uploads/request-url` - Get presigned upload URL (S3)
+- `GET/POST /api/organisations` - List/create organisations (DynamoDB)
+- `GET /api/organisations/:orgId` - Get organisation (DynamoDB)
+- `POST /api/aws/upload-url` - Get presigned S3 upload URL
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000
-- `npm run db:push` pushes schema changes to database
+- `npm run db:push` pushes auth schema changes to PostgreSQL

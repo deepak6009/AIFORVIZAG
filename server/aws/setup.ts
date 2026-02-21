@@ -13,6 +13,7 @@ import {
 import {
   CreateTableCommand,
   DescribeTableCommand,
+  UpdateTableCommand,
   ResourceInUseException,
 } from "@aws-sdk/client-dynamodb";
 import { s3Client, cloudFrontClient, dynamoDBClient, S3_BUCKET_NAME, DYNAMODB_TABLE_NAME } from "./config";
@@ -200,9 +201,50 @@ async function setupCloudFront(): Promise<string | null> {
 }
 
 async function createDynamoDBTable(): Promise<boolean> {
+  let tableExists = false;
   try {
-    await dynamoDBClient.send(new DescribeTableCommand({ TableName: DYNAMODB_TABLE_NAME }));
+    const desc = await dynamoDBClient.send(new DescribeTableCommand({ TableName: DYNAMODB_TABLE_NAME }));
     console.log(`[AWS] DynamoDB table '${DYNAMODB_TABLE_NAME}' already exists.`);
+    tableExists = true;
+
+    const existingGSIs = desc.Table?.GlobalSecondaryIndexes?.map(g => g.IndexName) || [];
+    const neededGSIs = [
+      { name: "createdBy-index", hashKey: "createdBy" },
+    ];
+
+    for (const gsi of neededGSIs) {
+      if (!existingGSIs.includes(gsi.name)) {
+        try {
+          await dynamoDBClient.send(new UpdateTableCommand({
+            TableName: DYNAMODB_TABLE_NAME,
+            AttributeDefinitions: [
+              { AttributeName: gsi.hashKey, AttributeType: "S" },
+            ],
+            GlobalSecondaryIndexUpdates: [
+              {
+                Create: {
+                  IndexName: gsi.name,
+                  KeySchema: [
+                    { AttributeName: gsi.hashKey, KeyType: "HASH" },
+                  ],
+                  Projection: { ProjectionType: "ALL" },
+                  ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+                },
+              },
+            ],
+          }));
+          console.log(`[AWS] Added GSI '${gsi.name}' to '${DYNAMODB_TABLE_NAME}'.`);
+          await new Promise(r => setTimeout(r, 5000));
+        } catch (gsiErr: any) {
+          if (gsiErr.message?.includes("already exists")) {
+            console.log(`[AWS] GSI '${gsi.name}' already exists.`);
+          } else {
+            console.error(`[AWS] Error adding GSI '${gsi.name}': ${gsiErr.message}`);
+          }
+        }
+      }
+    }
+
     return true;
   } catch (err: any) {
     if (err.name !== "ResourceNotFoundException") {
@@ -222,6 +264,7 @@ async function createDynamoDBTable(): Promise<boolean> {
         { AttributeName: "pk", AttributeType: "S" },
         { AttributeName: "sk", AttributeType: "S" },
         { AttributeName: "orgId", AttributeType: "S" },
+        { AttributeName: "createdBy", AttributeType: "S" },
       ],
       GlobalSecondaryIndexes: [
         {
@@ -229,6 +272,14 @@ async function createDynamoDBTable(): Promise<boolean> {
           KeySchema: [
             { AttributeName: "orgId", KeyType: "HASH" },
             { AttributeName: "sk", KeyType: "RANGE" },
+          ],
+          Projection: { ProjectionType: "ALL" },
+          ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+        },
+        {
+          IndexName: "createdBy-index",
+          KeySchema: [
+            { AttributeName: "createdBy", KeyType: "HASH" },
           ],
           Projection: { ProjectionType: "ALL" },
           ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
