@@ -84,8 +84,8 @@ export default function Dashboard() {
       <header className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-6 py-3">
           <div className="flex items-center gap-2">
-            <img src="/images/crew-mark.png" alt="thecrew" className="w-8 h-8" />
-            <span className="font-extrabold text-lg tracking-[0.08em] uppercase" data-testid="text-app-name"><span className="text-muted-foreground font-semibold text-[0.7em] tracking-[0.12em] mr-0.5">the</span>crew</span>
+            <img src="/images/crew-mark.png" alt="thecrew" className="w-9 h-9" />
+            <span className="font-bold text-lg tracking-[0.06em] lowercase" data-testid="text-app-name">thecrew</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">

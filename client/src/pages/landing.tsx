@@ -87,12 +87,12 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center gap-2">
-            <img src="/images/crew-mark.png" alt="thecrew" className="w-7 h-7 sm:w-8 sm:h-8" />
+            <img src="/images/crew-mark.png" alt="thecrew" className="w-8 h-8 sm:w-9 sm:h-9" />
             <span
-              className="text-base sm:text-lg font-extrabold tracking-[0.08em] uppercase text-gray-900"
+              className="text-base sm:text-lg font-bold tracking-[0.06em] lowercase text-gray-900"
               data-testid="text-app-name"
             >
-              <span className="text-gray-400 font-semibold text-[0.7em] tracking-[0.12em] mr-0.5">the</span>crew
+              thecrew
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
@@ -149,8 +149,8 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="landing-fade-up">
               <div className="mb-5 sm:mb-6 landing-fade-up" data-testid="text-hero-heading">
-                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-extrabold tracking-[0.06em] uppercase text-gray-900">
-                  <span className="text-gray-400 font-semibold text-[0.35em] tracking-[0.2em] align-[0.15em] mr-1">the</span>crew
+                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-extrabold tracking-[0.04em] lowercase text-gray-900">
+                  thecrew
                 </h1>
                 <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
                   {[
@@ -743,8 +743,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2 mb-1">
-                <img src="/images/crew-mark.png" alt="thecrew" className="w-6 h-6" />
-                <span className="font-extrabold text-gray-900 text-[15px] tracking-[0.08em] uppercase"><span className="text-gray-400 font-semibold text-[0.7em] tracking-[0.12em] mr-0.5">the</span>crew</span>
+                <img src="/images/crew-mark.png" alt="thecrew" className="w-7 h-7" />
+                <span className="font-bold text-gray-900 text-[15px] tracking-[0.06em] lowercase">thecrew</span>
               </div>
             </div>
 
