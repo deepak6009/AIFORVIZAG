@@ -693,9 +693,9 @@ export default function LandingPage() {
             <div className="col-span-1 sm:col-span-2">
               <h4 className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 mb-4">Resources</h4>
               <ul className="space-y-2.5">
-                {["Help Center", "Blog", "Changelog"].map((item) => (
-                  <li key={item}>
-                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-default transition-colors duration-200" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                {[{ label: "Help Center", path: "/help-center" }, { label: "Blog", path: "/blog" }, { label: "Changelog", path: "/changelog" }].map((item) => (
+                  <li key={item.label}>
+                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer transition-colors duration-200" onClick={() => navigate(item.path)} data-testid={`footer-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>{item.label}</span>
                   </li>
                 ))}
               </ul>
@@ -704,9 +704,9 @@ export default function LandingPage() {
             <div className="col-span-1 sm:col-span-2">
               <h4 className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 mb-4">Company</h4>
               <ul className="space-y-2.5">
-                {["About", "Pricing", "Privacy Policy"].map((item) => (
-                  <li key={item}>
-                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-default transition-colors duration-200" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                {[{ label: "About", path: "/about" }, { label: "Pricing", path: "/pricing" }, { label: "Privacy Policy", path: "/privacy-policy" }].map((item) => (
+                  <li key={item.label}>
+                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer transition-colors duration-200" onClick={() => navigate(item.path)} data-testid={`footer-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>{item.label}</span>
                   </li>
                 ))}
               </ul>
@@ -715,9 +715,9 @@ export default function LandingPage() {
             <div className="col-span-1 sm:col-span-3">
               <h4 className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 mb-4">Help</h4>
               <ul className="space-y-2.5">
-                {["Support", "Request a Feature", "Contact Us"].map((item) => (
-                  <li key={item}>
-                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-default transition-colors duration-200" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                {[{ label: "Support", path: "/support" }, { label: "Request a Feature", path: "/request-feature" }, { label: "Contact Us", path: "/contact" }].map((item) => (
+                  <li key={item.label}>
+                    <span className="text-sm text-gray-500 hover:text-gray-900 cursor-pointer transition-colors duration-200" onClick={() => navigate(item.path)} data-testid={`footer-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>{item.label}</span>
                   </li>
                 ))}
               </ul>
