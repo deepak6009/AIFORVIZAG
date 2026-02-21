@@ -145,11 +145,42 @@ export default function LandingPage() {
         )}
       </nav>
 
-      <section className="pt-28 pb-6 sm:pt-36 sm:pb-10 lg:pt-44 lg:pb-14 px-5 sm:px-8 lg:px-10 relative">
+      <section className="pt-20 pb-4 sm:pt-24 sm:pb-6 lg:pt-28 lg:pb-8 px-5 sm:px-8 lg:px-10 relative">
         <div className="max-w-6xl mx-auto relative">
-          <div className="text-center max-w-3xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto relative">
+            <div className="hidden lg:block absolute -left-16 top-8 landing-fade-up landing-stagger-3">
+              <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100/60 flex items-center justify-center float-gentle">
+                <FolderTree className="w-5 h-5 text-blue-500" />
+              </div>
+            </div>
+            <div className="hidden lg:block absolute -right-12 top-4 landing-fade-up landing-stagger-4">
+              <div className="w-11 h-11 rounded-xl bg-violet-50 border border-violet-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "1s" }}>
+                <Image className="w-5 h-5 text-violet-500" />
+              </div>
+            </div>
+            <div className="hidden lg:block absolute -left-10 top-32 landing-fade-up landing-stagger-5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "2s" }}>
+                <Upload className="w-4 h-4 text-emerald-500" />
+              </div>
+            </div>
+            <div className="hidden lg:block absolute -right-16 top-28 landing-fade-up landing-stagger-6">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "1.5s" }}>
+                <Users className="w-4 h-4 text-amber-500" />
+              </div>
+            </div>
+            <div className="hidden lg:block absolute left-4 bottom-4 landing-fade-up landing-stagger-6">
+              <div className="w-9 h-9 rounded-lg bg-rose-50 border border-rose-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "2.5s" }}>
+                <Zap className="w-4 h-4 text-rose-500" />
+              </div>
+            </div>
+            <div className="hidden lg:block absolute right-0 bottom-8 landing-fade-up landing-stagger-7">
+              <div className="w-9 h-9 rounded-lg bg-cyan-50 border border-cyan-100/60 flex items-center justify-center float-gentle" style={{ animationDelay: "3s" }}>
+                <Shield className="w-4 h-4 text-cyan-500" />
+              </div>
+            </div>
+
             <div className="landing-fade-up landing-stagger-1">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-gray-200/80 mb-7 sm:mb-9">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-gray-200/80 mb-5 sm:mb-6">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-glow" />
                 <span className="text-[11px] sm:text-xs font-medium text-gray-500 tracking-wide uppercase">
                   Workspace Media Manager
@@ -157,7 +188,7 @@ export default function LandingPage() {
               </div>
             </div>
             <h1
-              className="text-[2.25rem] leading-[1.08] sm:text-[3.5rem] md:text-[4.25rem] lg:text-[5rem] font-semibold tracking-[-0.035em] text-gray-900 landing-fade-up landing-stagger-2"
+              className="text-[2.25rem] leading-[1.08] sm:text-[3.25rem] md:text-[4rem] lg:text-[4.5rem] font-semibold tracking-[-0.035em] text-gray-900 landing-fade-up landing-stagger-2"
               data-testid="text-hero-heading"
             >
               Your team's media,
@@ -166,12 +197,12 @@ export default function LandingPage() {
                 finally organized.
               </span>
             </h1>
-            <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg md:text-xl text-gray-400 max-w-xl mx-auto leading-[1.7] font-normal landing-fade-up landing-stagger-3">
+            <p className="mt-4 sm:mt-5 text-[15px] sm:text-lg text-gray-400 max-w-lg mx-auto leading-[1.7] font-normal landing-fade-up landing-stagger-3">
               The workspace where teams upload, organize, and collaborate on
               images and videos — with folders, roles, and cloud storage
               built right in.
             </p>
-            <div className="mt-7 sm:mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
+            <div className="mt-5 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 landing-fade-up landing-stagger-4">
               <Button
                 size="lg"
                 onClick={() => navigate("/auth?mode=register")}
@@ -193,7 +224,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-12 sm:mt-16 lg:mt-20 landing-scale-in landing-stagger-5">
+          <div className="mt-8 sm:mt-10 lg:mt-12 landing-scale-in landing-stagger-5">
             <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_80px_-20px_rgba(0,0,0,0.15)]">
               <div className="aspect-[16/9] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
