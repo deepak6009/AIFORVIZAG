@@ -160,15 +160,14 @@ export default function LandingPage() {
               <span className="font-light">the</span><span className="font-bold">crew</span>
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-3">
-            <Button
-              variant="ghost"
-              className="text-gray-500 font-medium text-sm"
+          <div className="hidden sm:flex items-center gap-2.5">
+            <button
               onClick={() => navigate("/auth")}
+              className="text-gray-500 hover:text-gray-900 font-medium text-sm px-4 h-9 rounded-full transition-colors duration-200"
               data-testid="button-login"
             >
               Sign In
-            </Button>
+            </button>
             <SlideInButton
               onClick={() => navigate("/auth?mode=register")}
               size="sm"
@@ -187,14 +186,13 @@ export default function LandingPage() {
         </div>
         {mobileMenuOpen && (
           <div className="sm:hidden border-t border-gray-200/60 bg-white px-5 py-4 space-y-3">
-            <Button
-              variant="outline"
-              className="w-full justify-center"
+            <button
+              className="w-full h-10 rounded-full border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors"
               onClick={() => { navigate("/auth"); setMobileMenuOpen(false); }}
               data-testid="button-login-mobile"
             >
               Sign In
-            </Button>
+            </button>
             <SlideInButton
               fullWidth
               onClick={() => { navigate("/auth?mode=register"); setMobileMenuOpen(false); }}

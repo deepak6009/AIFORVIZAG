@@ -13,6 +13,8 @@ interface SlideInButtonProps {
   "data-testid"?: string;
 }
 
+const easeOut = [0.22, 1, 0.36, 1];
+
 export default function SlideInButton({
   children,
   onClick,
@@ -26,31 +28,31 @@ export default function SlideInButton({
   const [hovered, setHovered] = useState(false);
 
   const sizeStyles = {
-    sm: "h-9 px-5 text-sm gap-1.5",
-    md: "h-10 px-6 text-sm gap-2",
-    lg: "h-11 px-7 text-[15px] gap-2",
+    sm: "h-9 px-5 text-sm",
+    md: "h-10 px-6 text-sm",
+    lg: "h-11 px-7 text-[15px]",
   };
 
   const variantConfig = {
     dark: {
       bg: "bg-gray-900",
-      text: "text-white",
+      textColor: "rgb(255, 255, 255)",
+      hoverTextColor: "rgb(255, 255, 255)",
       hoverBg: "rgb(37, 99, 235)",
-      hoverText: "text-white",
       border: "",
     },
     light: {
       bg: "bg-white",
-      text: "text-gray-900",
+      textColor: "rgb(17, 24, 39)",
+      hoverTextColor: "rgb(255, 255, 255)",
       hoverBg: "rgb(17, 24, 39)",
-      hoverText: "text-white",
       border: "",
     },
     outline: {
       bg: "bg-transparent",
-      text: "text-gray-700",
+      textColor: "rgb(55, 65, 81)",
+      hoverTextColor: "rgb(255, 255, 255)",
       hoverBg: "rgb(17, 24, 39)",
-      hoverText: "text-white",
       border: "border border-gray-300",
     },
   };
@@ -62,7 +64,7 @@ export default function SlideInButton({
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`relative overflow-hidden rounded-full font-semibold inline-flex items-center justify-center cursor-pointer ${sizeStyles[size]} ${config.bg} ${config.text} ${config.border} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`relative overflow-hidden rounded-full font-semibold inline-flex items-center justify-center cursor-pointer ${sizeStyles[size]} ${config.bg} ${config.border} ${fullWidth ? "w-full" : ""} ${className}`}
       data-testid={testId}
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.15 }}
@@ -75,14 +77,17 @@ export default function SlideInButton({
             ? "circle(141% at 50% 100%)"
             : "circle(0% at 50% 100%)",
         }}
-        transition={{
-          duration: 0.5,
-          ease: [0.22, 1, 0.36, 1],
-        }}
+        transition={{ duration: 0.5, ease: easeOut }}
         style={{ backgroundColor: config.hoverBg }}
       />
 
-      <span className={`relative z-10 flex items-center ${sizeStyles[size].split(" ").filter(s => s.startsWith("gap")).join(" ")}`}>
+      <motion.span
+        className="relative z-10 flex items-center gap-2"
+        animate={{
+          color: hovered ? config.hoverTextColor : config.textColor,
+        }}
+        transition={{ duration: 0.35, ease: easeOut }}
+      >
         <span>{children}</span>
         {icon && (
           <motion.span
@@ -91,15 +96,12 @@ export default function SlideInButton({
               x: hovered ? 0 : -4,
               opacity: hovered ? 1 : 0.7,
             }}
-            transition={{
-              duration: 0.35,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            transition={{ duration: 0.35, ease: easeOut }}
           >
             <ArrowRight className={size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"} />
           </motion.span>
         )}
-      </span>
+      </motion.span>
     </motion.button>
   );
 }

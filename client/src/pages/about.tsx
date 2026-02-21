@@ -1,6 +1,9 @@
 import { Sparkles, Users, Shield, Zap } from "lucide-react";
 import PageNavbar from "@/components/page-navbar";
 import PageFooter from "@/components/page-footer";
+import saiDeepakImg from "@assets/WhatsApp_Image_2026-02-14_at_1.23.17_PM_1771711854316.jpeg";
+import ashishImg from "@assets/WhatsApp_Image_2025-03-19_at_14.23.34_c99293f4_1771712034052.jpg";
+import lokeshImg from "@assets/file_00000000dac472069ef0df3151b3d363_1771712079650.png";
 
 const values = [
   {
@@ -34,10 +37,21 @@ const values = [
 ];
 
 const team = [
-  { initials: "AK", name: "Alex Kim", role: "Founder & CEO" },
-  { initials: "JR", name: "Jordan Rivera", role: "Head of Engineering" },
-  { initials: "ML", name: "Maya Lin", role: "Lead Designer" },
-  { initials: "SC", name: "Sam Chen", role: "Head of Product" },
+  {
+    name: "Sai Deepak",
+    role: "AI & Cloud Architect",
+    image: saiDeepakImg,
+  },
+  {
+    name: "Ashish Pragada",
+    role: "Product & UI/UX Developer",
+    image: ashishImg,
+  },
+  {
+    name: "Unnam Lokesh Chowdary",
+    role: "AI Engineer",
+    image: lokeshImg,
+  },
 ];
 
 export default function AboutPage() {
@@ -95,17 +109,27 @@ export default function AboutPage() {
 
       <section className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 bg-white border-y border-gray-200/60">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-8">
-            The Team
+          <p className="text-[11px] sm:text-xs font-semibold tracking-[0.2em] uppercase text-blue-500 mb-3">
+            Meet The Team
+          </p>
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-[-0.02em] text-gray-900 mb-3">
+            The people behind thecrew
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5">
+          <p className="text-gray-500 text-sm sm:text-[15px] leading-relaxed max-w-xl mb-10">
+            We're a small team of builders who understand the creator-editor workflow because we've lived it.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
             {team.map((t) => (
-              <div key={t.name} className="text-center" data-testid={`card-team-${t.initials.toLowerCase()}`}>
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center text-white font-semibold text-lg sm:text-xl mx-auto mb-3">
-                  {t.initials}
+              <div key={t.name} className="group" data-testid={`card-team-${t.name.split(" ")[0].toLowerCase()}`}>
+                <div className="relative w-full aspect-[4/5] rounded-2xl overflow-hidden mb-4 bg-gray-100">
+                  <img
+                    src={t.image}
+                    alt={t.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
-                <p className="font-semibold text-sm text-gray-900">{t.name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{t.role}</p>
+                <h3 className="font-semibold text-base text-gray-900">{t.name}</h3>
+                <p className="text-sm text-gray-400 mt-0.5">{t.role}</p>
               </div>
             ))}
           </div>
