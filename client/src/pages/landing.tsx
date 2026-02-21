@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CrewLogo } from "@/components/crew-logo";
@@ -56,6 +56,72 @@ const testimonials = [
     rating: 5,
   },
 ];
+
+function HeroVideo() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
+        <div
+          className="aspect-[4/3] relative group cursor-pointer"
+          onClick={handlePlay}
+          data-testid="video-player"
+        >
+          <video
+            ref={videoRef}
+            src="https://d645yzu9m78ar.cloudfront.net/IMG_9172.MP4"
+            className="w-full h-full object-cover"
+            playsInline
+            onEnded={() => setIsPlaying(false)}
+          />
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white/20 group-hover:scale-110 transition-all duration-500 ease-out">
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+            <Upload className="w-4 h-4 text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-900">12 files uploaded</p>
+            <p className="text-[10px] text-gray-400">Just now</p>
+          </div>
+        </div>
+      </div>
+      <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 hidden sm:block">
+        <div className="flex items-center gap-2">
+          <div className="flex -space-x-1.5">
+            <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white" />
+            <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white" />
+            <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" />
+          </div>
+          <span className="text-[10px] font-medium text-gray-500">3 online</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   const [, navigate] = useLocation();
@@ -194,96 +260,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="relative rounded-2xl sm:rounded-[20px] border border-gray-200/60 bg-gray-900 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.2)]">
-                <div className="aspect-[4/3] flex items-center justify-center relative group cursor-pointer" data-testid="video-placeholder">
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950" />
-                  <div className="absolute inset-0 opacity-[0.03]" style={{
-                    backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)",
-                    backgroundSize: "28px 28px",
-                  }} />
-
-                  <div className="absolute top-4 left-4 right-4 flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-400/60" />
-                    </div>
-                    <div className="flex-1 h-5 rounded bg-white/[0.06] ml-2" />
-                  </div>
-
-                  <div className="absolute left-4 top-14 bottom-4 w-36 rounded-lg bg-white/[0.04] border border-white/[0.06] p-3 hidden sm:block">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <FolderTree className="w-3 h-3 text-blue-400/60" />
-                        <div className="h-2 rounded bg-white/10 flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2 pl-3">
-                        <FolderTree className="w-2.5 h-2.5 text-blue-400/40" />
-                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2 pl-3">
-                        <FolderTree className="w-2.5 h-2.5 text-blue-400/40" />
-                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2 mt-3">
-                        <FolderTree className="w-3 h-3 text-violet-400/60" />
-                        <div className="h-2 rounded bg-white/10 flex-1" />
-                      </div>
-                      <div className="flex items-center gap-2 pl-3">
-                        <FolderTree className="w-2.5 h-2.5 text-violet-400/40" />
-                        <div className="h-2 rounded bg-white/[0.06] flex-1" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="absolute sm:left-44 left-4 right-4 top-14 bottom-4 rounded-lg bg-white/[0.03] border border-white/[0.05] p-3 sm:p-4">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3 h-full">
-                      {[
-                        "bg-gradient-to-br from-blue-500/30 to-blue-600/20",
-                        "bg-gradient-to-br from-violet-500/30 to-purple-600/20",
-                        "bg-gradient-to-br from-emerald-500/30 to-teal-600/20",
-                        "bg-gradient-to-br from-amber-500/30 to-orange-600/20",
-                        "bg-gradient-to-br from-rose-500/30 to-pink-600/20",
-                        "bg-gradient-to-br from-cyan-500/30 to-sky-600/20",
-                      ].map((bg, idx) => (
-                        <div key={idx} className={`rounded-lg ${bg} border border-white/[0.06] flex items-center justify-center`}>
-                          <Image className="w-4 h-4 sm:w-5 sm:h-5 text-white/20" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white/20 group-hover:scale-110 transition-all duration-500 ease-out">
-                      <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 bg-white rounded-xl p-3 shadow-lg border border-gray-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <Upload className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">12 files uploaded</p>
-                    <p className="text-[10px] text-gray-400">Just now</p>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 bg-white rounded-xl p-2.5 shadow-lg border border-gray-100 hidden sm:block">
-                <div className="flex items-center gap-2">
-                  <div className="flex -space-x-1.5">
-                    <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white" />
-                    <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white" />
-                    <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white" />
-                  </div>
-                  <span className="text-[10px] font-medium text-gray-500">3 online</span>
-                </div>
-              </div>
-            </div>
+            <HeroVideo />
           </div>
         </div>
       </section>
