@@ -2,6 +2,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LayoutGrid, Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -163,9 +165,9 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b bg-background px-6 py-3 flex items-center justify-between gap-4 shrink-0">
+      <div className="border-b bg-background px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input placeholder="Search tasks..." className="pl-8 h-8 w-48 text-sm" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} data-testid="input-search-tasks" />
           </div>

@@ -71,16 +71,16 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="h-full overflow-auto">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 sm:mb-6">
           <div>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               Team Members
             </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">Manage who has access to this workspace</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage who has access to this workspace</p>
           </div>
-          <Button size="sm" onClick={() => setAddOpen(true)} data-testid="button-add-member">
+          <Button size="sm" className="h-10 sm:h-9 w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-member">
             <Plus className="w-4 h-4 mr-1.5" />
             Add Member
           </Button>
@@ -98,45 +98,45 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
               return (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-card"
+                  className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-lg border bg-card"
                   data-testid={`member-${member.id}`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="w-9 h-9">
+                    <Avatar className="w-9 h-9 shrink-0">
                       <AvatarFallback className="text-xs bg-primary/10 text-primary">
                         {member.user.email?.[0]?.toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{member.user.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Joined {member.addedAt ? new Date(member.addedAt).toLocaleDateString() : "recently"}
-                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="secondary" className={`${config.color} gap-1 text-[10px] sm:text-xs`}>
+                          <RoleIcon className="w-3 h-3" />
+                          {config.label}
+                        </Badge>
+                        <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
+                          Joined {member.addedAt ? new Date(member.addedAt).toLocaleDateString() : "recently"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className={`${config.color} gap-1`}>
-                      <RoleIcon className="w-3 h-3" />
-                      {config.label}
-                    </Badge>
-                    {member.role !== "admin" && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeMutation.mutate(member.id)}
-                        data-testid={`button-remove-member-${member.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
+                  {member.role !== "admin" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive shrink-0"
+                      onClick={() => removeMutation.mutate(member.id)}
+                      data-testid={`button-remove-member-${member.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="text-center py-16 border rounded-lg bg-card/50">
+          <div className="text-center py-12 sm:py-16 border rounded-lg bg-card/50">
             <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <h3 className="font-semibold mb-1">No members yet</h3>
             <p className="text-sm text-muted-foreground mb-4">Add team members to start collaborating</p>
@@ -157,13 +157,14 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
+                className="h-11"
                 data-testid="input-member-email"
               />
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger data-testid="select-member-role">
+                <SelectTrigger className="h-11" data-testid="select-member-role">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

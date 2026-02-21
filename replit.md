@@ -1,7 +1,7 @@
-# WorkVault - Workspace Media Manager
+# The CREW - AI-Powered Creative Workspace
 
 ## Overview
-A workspace application where admins can create workspaces, add team members, create folder structures, and upload/organize images and videos.
+CREW = Creator Resource Editor Workspace. An AI-powered creative workspace built specifically for short-form content creators and their editors. Enables workspace creation, team member management with role-based access, nested folder structures for content pipelines (Raw → Draft → Final), and media file uploads/organization. Features CRED-style bold typographic branding with the "CREW" wordmark as a visual centerpiece.
 
 ## Architecture
 - **Frontend**: React + TypeScript with Vite, TanStack Query, wouter routing, shadcn/ui
@@ -23,6 +23,17 @@ Table: `AIFORVIZAG_file_structure`
 - **TaskComment**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` (text, timestampSec, authorId)
 - GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
 - Each user gets a default org auto-created on first workspace creation
+
+## Branding
+- Project name: "thecrew" (lowercase, one word)
+- Acronym: Creator Editor Workspace (Cr-E-W)
+- Logo: Typography-only wordmark — "the" (font-light) + "crew" (font-extrabold), no separate SVG icon
+- Style: Lowercase wordmark "thecrew" with weight contrast is the logo itself, tracking-[0.02em]
+- Hero section: Split layout — tagline-focused text left ("Your content, finally organized.") + video right, framed for short-form creators & editors
+- Navbar: glossy frosted glass scroll effect (transparent at top, nav-glass-scrolled class on scroll with backdrop-blur + saturate)
+- Navbar, footer, auth page, dashboard all use pure typographic wordmark as logo
+- Favicon: "cw" initials on dark rounded square
+- Shared components: PageNavbar (client/src/components/page-navbar.tsx) and PageFooter (client/src/components/page-footer.tsx) used across all static pages
 
 ## Key Features
 - Workspace creation and management with workspace switcher
