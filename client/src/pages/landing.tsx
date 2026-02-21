@@ -199,7 +199,7 @@ export default function LandingPage() {
         )}
       </nav>
 
-      <section className="pt-24 pb-10 sm:pt-28 sm:pb-14 lg:pt-32 lg:pb-16 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
+      <section className="pt-24 pb-0 sm:pt-28 sm:pb-0 lg:pt-32 lg:pb-0 px-5 sm:px-8 lg:px-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/[0.04] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3" />
         <div className="max-w-6xl mx-auto relative">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
@@ -245,17 +245,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-4 sm:py-5 overflow-hidden bg-gray-950">
+      <section className="py-4 sm:py-5 overflow-hidden bg-blue-600">
         <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-gray-950 to-transparent z-10" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-gray-950 to-transparent z-10" />
+          <div className="absolute left-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-r from-blue-600 to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 sm:w-32 bg-gradient-to-l from-blue-600 to-transparent z-10" />
           <div className="marquee-track">
             {[...marqueeItems, ...marqueeItems].map((item, i) => (
               <div key={i} className="flex items-center gap-5 sm:gap-7 px-5 sm:px-7 shrink-0">
-                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-gray-400 whitespace-nowrap">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-white/80 whitespace-nowrap">
                   {item}
                 </span>
-                <span className="w-1 h-1 rounded-full bg-gray-700 shrink-0" />
+                <span className="w-1 h-1 rounded-full bg-white/30 shrink-0" />
               </div>
             ))}
           </div>
