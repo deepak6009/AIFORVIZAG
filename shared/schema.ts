@@ -50,3 +50,16 @@ export interface Organisation {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface Interrogation {
+  id: string;
+  orgId: string;
+  workspaceId: string;
+  summary: string;
+  fileUrls: string[];
+  briefingAnswers: Record<string, any>;
+  status: "analysed" | "briefing" | "completed";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
