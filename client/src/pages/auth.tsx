@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { CrewLogo } from "@/components/crew-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -51,8 +52,8 @@ export default function AuthPage() {
           Back to home
         </button>
         <div className="flex flex-col items-center gap-2">
-          <img src="/images/crew-mark.png" alt="thecrew" className="w-14 h-14" />
-          <h1 className="text-2xl font-bold tracking-[0.06em] lowercase">thecrew</h1>
+          <CrewLogo size={48} color="#1e293b" />
+          <h1 className="text-2xl font-bold tracking-[0.02em] lowercase">thecrew</h1>
           <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
             Creator Editor Workspace
           </p>

@@ -2,6 +2,7 @@ import { type ReactNode, useState } from "react";
 import { useLocation } from "wouter";
 import { useInView } from "@/hooks/use-in-view";
 import { Button } from "@/components/ui/button";
+import { CrewLogo } from "@/components/crew-logo";
 import {
   Layers,
   Users,
@@ -87,9 +88,9 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center gap-2">
-            <img src="/images/crew-mark.png" alt="thecrew" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <CrewLogo size={30} color="#1e293b" />
             <span
-              className="text-base sm:text-lg font-bold tracking-[0.06em] lowercase text-gray-900"
+              className="text-base sm:text-lg font-bold tracking-[0.02em] lowercase text-gray-900"
               data-testid="text-app-name"
             >
               thecrew
@@ -743,8 +744,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2 mb-1">
-                <img src="/images/crew-mark.png" alt="thecrew" className="w-7 h-7" />
-                <span className="font-bold text-gray-900 text-[15px] tracking-[0.06em] lowercase">thecrew</span>
+                <CrewLogo size={24} color="#1e293b" />
+                <span className="font-bold text-gray-900 text-[15px] tracking-[0.02em] lowercase">thecrew</span>
               </div>
             </div>
 

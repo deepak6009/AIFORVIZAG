@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, useLocation } from "wouter";
+import { CrewLogo } from "@/components/crew-logo";
 import type { Workspace } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -114,8 +115,8 @@ export default function WorkspaceLayout() {
       <div className="min-h-screen bg-background">
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <img src="/images/crew-mark.png" alt="thecrew" className="w-8 h-8" />
-            <span className="font-bold text-sm tracking-[0.06em] lowercase" data-testid="text-app-name">thecrew</span>
+            <CrewLogo size={28} />
+            <span className="font-bold text-sm tracking-[0.02em] lowercase" data-testid="text-app-name">thecrew</span>
           </div>
           <div className="flex items-center gap-2">
             <Avatar className="w-7 h-7">
@@ -223,8 +224,8 @@ export default function WorkspaceLayout() {
       <header className="h-12 sm:h-12 border-b bg-background shrink-0 flex items-center justify-between px-3 sm:px-4 z-50">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <img src="/images/crew-mark.png" alt="thecrew" className="w-8 h-8" />
-            <span className="font-bold text-sm tracking-[0.06em] lowercase hidden md:inline" data-testid="text-app-name">thecrew</span>
+            <CrewLogo size={28} />
+            <span className="font-bold text-sm tracking-[0.02em] lowercase hidden md:inline" data-testid="text-app-name">thecrew</span>
           </div>
 
           <div className="h-5 w-px bg-border mx-0.5 sm:mx-1" />

@@ -11,12 +11,12 @@ CREW = Creator Resource Editor Workspace. An AI-powered creative workspace where
 - **File Storage**: Replit Object Storage (Google Cloud Storage presigned URLs)
 
 ## Branding
-- Project name: "The CREW" / "CREW"
+- Project name: "thecrew" (lowercase, one word)
 - Acronym: Creator Editor Workspace (Cr-E-W)
-- Style: CRED-inspired bold typographic branding - uppercase "CREW" with wide letter-spacing (tracking-[0.15em])
-- No icon/logo box - pure typographic wordmark approach
-- Hero section: massive "CREW" text with acronym breakdown below
-- Navbar, footer, auth page all use the typographic wordmark treatment
+- Logo: SVG component (CrewLogo) - two flowing organic shapes with center dot, Higgsfield-inspired abstract mark suggesting creative collaboration
+- Style: Bold lowercase wordmark "thecrew" paired with SVG logo mark, tracking-[0.02em]
+- Hero section: massive lowercase "thecrew" text with acronym breakdown below
+- Navbar, footer, auth page, dashboard all use logo + wordmark lockup
 
 ## Key Features
 - Workspace creation and management with workspace switcher
