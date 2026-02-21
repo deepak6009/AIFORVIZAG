@@ -339,11 +339,15 @@ export async function deleteFile(orgId: string, workspaceId: string, folderId: s
   }));
   if (file.Item?.objectPath) {
     try {
-      const s3Key = file.Item.objectPath.includes("cloudfront") 
-        ? `${orgId}/${file.Item.objectPath.split("/").pop()}`
-        : file.Item.objectPath;
+      let s3Key = file.Item.objectPath;
+      if (s3Key.startsWith("https://")) {
+        const url = new URL(s3Key);
+        s3Key = url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname;
+      }
       await deleteFileFromS3(s3Key);
-    } catch (e) {}
+    } catch (e) {
+      console.error("[AWS] Error deleting S3 object:", e);
+    }
   }
   await docClient.send(new DeleteCommand({
     TableName: DYNAMODB_TABLE_NAME,

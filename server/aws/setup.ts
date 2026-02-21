@@ -22,16 +22,20 @@ export async function setupAWSInfrastructure() {
   console.log("[AWS] Starting infrastructure setup...");
 
   const bucketCreated = await createS3Bucket();
-  const cloudfrontDomain = await setupCloudFront();
   const tableCreated = await createDynamoDBTable();
 
-  if (cloudfrontDomain) {
-    process.env.CLOUDFRONT_DOMAIN = cloudfrontDomain;
-    console.log(`[AWS] CloudFront domain: ${cloudfrontDomain}`);
+  if (process.env.CLOUDFRONT_DOMAIN) {
+    console.log(`[AWS] Using existing CloudFront domain: ${process.env.CLOUDFRONT_DOMAIN}`);
+  } else {
+    const cloudfrontDomain = await setupCloudFront();
+    if (cloudfrontDomain) {
+      process.env.CLOUDFRONT_DOMAIN = cloudfrontDomain;
+      console.log(`[AWS] CloudFront domain: ${cloudfrontDomain}`);
+    }
   }
 
   console.log("[AWS] Infrastructure setup complete.");
-  return { bucketCreated, cloudfrontDomain, tableCreated };
+  return { bucketCreated, cloudfrontDomain: process.env.CLOUDFRONT_DOMAIN || null, tableCreated };
 }
 
 async function createS3Bucket(): Promise<boolean> {

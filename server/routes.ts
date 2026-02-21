@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, registerAuthRoutes } from "./replit_integrations/auth";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import {
   createOrganisation,
   getOrganisation,
@@ -32,7 +31,6 @@ export async function registerRoutes(
 ): Promise<Server> {
   await setupAuth(app);
   registerAuthRoutes(app);
-  registerObjectStorageRoutes(app);
 
   async function getOrCreateDefaultOrg(userId: string): Promise<string> {
     const orgs = await getOrganisationsByUser(userId);
@@ -342,7 +340,27 @@ export async function registerRoutes(
     }
   });
 
-  // === AWS S3 Upload Route ===
+  // === S3 Upload Route (used by folders-tab file upload) ===
+
+  app.post("/api/uploads/request-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { name, size, contentType } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "Missing required field: name" });
+      }
+      const result = await getPresignedUploadUrl(orgId, name, contentType || "application/octet-stream");
+      res.json({
+        uploadURL: result.uploadUrl,
+        objectPath: result.cloudfrontUrl,
+        s3Key: result.s3Key,
+      });
+    } catch (error: any) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: error.message || "Failed to generate upload URL" });
+    }
+  });
 
   app.post("/api/aws/upload-url", isAuthenticated, async (req: any, res) => {
     try {
