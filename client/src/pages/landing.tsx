@@ -645,17 +645,78 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="py-10 sm:py-14 px-4 sm:px-6 lg:px-10 border-t border-gray-100 bg-white">
+      <footer className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10 border-t border-gray-100 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-                <Layers className="w-4 h-4 text-white" />
+          <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
+            <div className="col-span-2 sm:col-span-3">
+              <div className="flex items-center gap-2.5 mb-1">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+                  <Layers className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-gray-900 text-lg">WorkVault</span>
               </div>
-              <span className="font-bold text-gray-900">WorkVault</span>
             </div>
-            <p className="text-sm text-gray-400 text-center sm:text-right">
-              Built for teams who care about their creative assets.
+
+            <div className="col-span-1 sm:col-span-2">
+              <div className="flex items-center gap-1.5 mb-4">
+                <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Product</h4>
+              </div>
+              <ul className="space-y-2.5">
+                {["Workspaces", "Folders", "Uploads", "Team Roles", "Previews"].map((item) => (
+                  <li key={item}>
+                    <span className="text-sm text-gray-600 hover:text-gray-900 cursor-default transition-colors" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-span-1 sm:col-span-2">
+              <div className="flex items-center gap-1.5 mb-4">
+                <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Resources</h4>
+              </div>
+              <ul className="space-y-2.5">
+                {["Help Center", "Blog", "Changelog"].map((item) => (
+                  <li key={item}>
+                    <span className="text-sm text-gray-600 hover:text-gray-900 cursor-default transition-colors" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-span-1 sm:col-span-2">
+              <div className="flex items-center gap-1.5 mb-4">
+                <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Company</h4>
+              </div>
+              <ul className="space-y-2.5">
+                {["About", "Pricing", "Privacy Policy"].map((item) => (
+                  <li key={item}>
+                    <span className="text-sm text-gray-600 hover:text-gray-900 cursor-default transition-colors" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-span-1 sm:col-span-3">
+              <div className="flex items-center gap-1.5 mb-4">
+                <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">Help</h4>
+              </div>
+              <ul className="space-y-2.5">
+                {["Support", "Request a Feature", "Contact Us"].map((item) => (
+                  <li key={item}>
+                    <span className="text-sm text-gray-600 hover:text-gray-900 cursor-default transition-colors" data-testid={`footer-link-${item.toLowerCase().replace(/\s+/g, "-")}`}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-400">
+              &copy; {new Date().getFullYear()} WorkVault. All rights reserved.
             </p>
           </div>
         </div>
