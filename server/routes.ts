@@ -775,7 +775,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       const userId = req.userId;
       const orgId = await getOrCreateDefaultOrg(userId);
       const { wsId, taskId } = req.params;
-      const { title, description, status, priority, assignee } = req.body;
+      const { title, description, status, priority, assignee, videoUrl } = req.body;
       const allowedStatuses = ["todo", "in_progress", "review", "done"];
       const allowedPriorities = ["high", "medium", "low"];
       const safeUpdates: Record<string, any> = {};
@@ -784,6 +784,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       if (status !== undefined && allowedStatuses.includes(status)) safeUpdates.status = status;
       if (priority !== undefined && allowedPriorities.includes(priority)) safeUpdates.priority = priority;
       if (assignee !== undefined) safeUpdates.assignee = String(assignee);
+      if (videoUrl !== undefined) safeUpdates.videoUrl = String(videoUrl);
       await updateTask(orgId, wsId, taskId, safeUpdates);
       res.json({ success: true });
     } catch (error: any) {
@@ -988,6 +989,130 @@ Output a clear, structured revision checklist in markdown.`;
     } catch (error: any) {
       console.error("Error generating revision checklist:", error);
       res.status(500).json({ error: error.message || "Failed to generate revision checklist" });
+    }
+  });
+
+  // === Per-Task AI Summary (summarize all timestamped comments for one task) ===
+
+  app.post("/api/workspaces/:wsId/tasks/:taskId/summarize", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      const tasks = await getTasksByWorkspace(orgId, wsId);
+      const task = tasks.find((t: any) => t.id === taskId);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+
+      const comments = await getTaskComments(orgId, wsId, taskId);
+      if (comments.length === 0) {
+        return res.status(400).json({ error: "No comments found on this task. Add timestamped feedback first." });
+      }
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const commentLines = comments.map((c: any) => {
+        const ts = c.timestampSec != null ? `[${Math.floor(c.timestampSec / 60)}:${String(c.timestampSec % 60).padStart(2, "0")}]` : "[General]";
+        return `${ts} ${c.authorEmail || "Reviewer"}: ${c.text}`;
+      }).join("\n");
+
+      const prompt = `You are a senior video editor's assistant. Below is a video review task and all the timestamped revision comments from reviewers.
+
+TASK: "${task.title}"
+TASK DESCRIPTION: ${task.description || "No description"}
+
+REVIEWER COMMENTS (${comments.length} total):
+${commentLines}
+
+YOUR JOB:
+Create a comprehensive, detailed revision summary for the video editor. Organize by timestamp order and:
+
+1. **Timestamp-Ordered Revision List**: For each timestamp mentioned, explain exactly what needs to change, why, and how
+2. **Priority Classification**: Mark each revision as 🔴 Critical, 🟡 Important, or 🟢 Nice-to-have
+3. **Grouped Themes**: If multiple comments relate to the same area (audio, pacing, visuals, text overlays), group them
+4. **Specific Action Items**: Each item should be concrete enough for the editor to execute without asking questions
+5. **Overall Summary**: A 2-3 sentence overview of the revision scope
+
+Use markdown formatting with clear headers, numbered lists, and timestamp references in bold.`;
+
+      const result = await model.generateContent(prompt);
+      const summary = result.response.text();
+      res.json({ summary });
+    } catch (error: any) {
+      console.error("Error generating task summary:", error);
+      res.status(500).json({ error: error.message || "Failed to generate summary" });
+    }
+  });
+
+  // === Per-Task AI Chat (task-aware bot for editors) ===
+
+  app.post("/api/workspaces/:wsId/tasks/:taskId/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { wsId, taskId } = req.params;
+      const { message, history } = req.body;
+
+      if (!message?.trim()) return res.status(400).json({ error: "Message is required" });
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({ error: "Gemini API key not configured" });
+      }
+
+      const tasks = await getTasksByWorkspace(orgId, wsId);
+      const task = tasks.find((t: any) => t.id === taskId);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+
+      const comments = await getTaskComments(orgId, wsId, taskId);
+
+      const commentLines = comments.length > 0
+        ? comments.map((c: any) => {
+            const ts = c.timestampSec != null ? `[${Math.floor(c.timestampSec / 60)}:${String(c.timestampSec % 60).padStart(2, "0")}]` : "[General]";
+            return `${ts} ${c.authorEmail || "Reviewer"}: ${c.text}`;
+          }).join("\n")
+        : "No comments yet.";
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      const conversationHistory = Array.isArray(history)
+        ? history.map((h: any) => `${h.role === "user" ? "Editor" : "Assistant"}: ${h.content}`).join("\n")
+        : "";
+
+      const prompt = `You are an AI assistant embedded in a video editing task management tool. You have COMPLETE knowledge of this specific task and all its reviewer feedback. Your job is to help the video editor understand what needs to be done, answer questions, provide creative suggestions, and help resolve any ambiguity in the feedback.
+
+TASK CONTEXT:
+- Title: "${task.title}"
+- Description: ${task.description || "No description"}
+- Status: ${task.status}
+- Priority: ${task.priority}
+
+REVIEWER COMMENTS (${comments.length} total):
+${commentLines}
+
+${conversationHistory ? `PREVIOUS CONVERSATION:\n${conversationHistory}\n` : ""}
+
+EDITOR'S QUESTION: ${message}
+
+INSTRUCTIONS:
+- Answer specifically based on the task context and reviewer comments above
+- If the editor asks about a specific timestamp, reference the relevant comment(s)
+- Provide concrete, actionable recommendations
+- If you're unsure about something, say so and suggest what the editor should clarify with the reviewer
+- Be concise but thorough
+- Use markdown formatting when helpful`;
+
+      const result = await model.generateContent(prompt);
+      const reply = result.response.text();
+      res.json({ reply });
+    } catch (error: any) {
+      console.error("Error in task chat:", error);
+      res.status(500).json({ error: error.message || "Failed to get AI response" });
     }
   });
 

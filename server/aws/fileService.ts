@@ -536,6 +536,7 @@ export async function updateTask(orgId: string, workspaceId: string, taskId: str
   status?: string;
   priority?: string;
   assignee?: string;
+  videoUrl?: string;
 }) {
   const expressions: string[] = [];
   const names: Record<string, string> = {};
@@ -546,6 +547,7 @@ export async function updateTask(orgId: string, workspaceId: string, taskId: str
   if (updates.status !== undefined) { expressions.push("#s = :s"); names["#s"] = "status"; values[":s"] = updates.status; }
   if (updates.priority !== undefined) { expressions.push("#p = :p"); names["#p"] = "priority"; values[":p"] = updates.priority; }
   if (updates.assignee !== undefined) { expressions.push("#a = :a"); names["#a"] = "assignee"; values[":a"] = updates.assignee; }
+  if (updates.videoUrl !== undefined) { expressions.push("#vu = :vu"); names["#vu"] = "videoUrl"; values[":vu"] = updates.videoUrl; }
   expressions.push("#ua = :ua"); names["#ua"] = "updatedAt"; values[":ua"] = new Date().toISOString();
 
   if (expressions.length === 1) return;

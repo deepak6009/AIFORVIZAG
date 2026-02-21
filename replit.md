@@ -34,6 +34,7 @@ Table: `AIFORVIZAG_file_structure`
   - Step 2: Gemini AI chat agent with 4-layer briefing framework (Goal & Audience, Style & Hook, Editing & Visuals, Audio & Format) with selectable chip options and file attachments
   - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
 - Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
+- Task video review: upload video to task, add timestamped comments with clickable playback, AI summary of all comments, task-specific AI chat bot for editors
 - Resources section (placeholder - shared links and references)
 
 ## UI Layout
@@ -91,6 +92,8 @@ Table: `AIFORVIZAG_file_structure`
 - `POST /api/workspaces/:id/tasks/generate` - Auto-generate tasks from Final Agenda via Gemini AI
 - `GET/POST /api/workspaces/:wsId/tasks/:taskId/comments` - List/add timestamped comments (DynamoDB)
 - `POST /api/workspaces/:wsId/tasks/revision-checklist` - Gemini AI revision checklist from all task comments
+- `POST /api/workspaces/:wsId/tasks/:taskId/summarize` - AI summary of all timestamped comments for one task
+- `POST /api/workspaces/:wsId/tasks/:taskId/chat` - Task-aware AI chatbot for editors (knows task context + comments)
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000
