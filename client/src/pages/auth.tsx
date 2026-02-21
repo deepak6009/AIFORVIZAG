@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Layers, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Layers, Mail, Lock, ArrowRight, Loader2, ChevronLeft } from "lucide-react";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [, navigate] = useLocation();
+  const searchParams = new URLSearchParams(window.location.search);
+  const [mode, setMode] = useState<"login" | "register">(
+    searchParams.get("mode") === "register" ? "register" : "login"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, register, isLoggingIn, isRegistering } = useAuth();
@@ -37,6 +42,14 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+          data-testid="link-back-to-landing"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to home
+        </button>
         <div className="flex flex-col items-center gap-2">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
             <Layers className="w-6 h-6 text-primary-foreground" />
