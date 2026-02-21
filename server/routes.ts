@@ -23,6 +23,7 @@ import {
   deleteFolderAndFiles,
   getPresignedUploadUrl,
   getCloudfrontUrl,
+  uploadTextToS3,
 } from "./aws/fileService";
 
 export async function registerRoutes(
@@ -337,6 +338,52 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching organisation:", error);
       res.status(500).json({ message: "Failed to fetch organisation" });
+    }
+  });
+
+  // === Interrogator Routes ===
+
+  app.post("/api/interrogator/upload-text", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { text } = req.body;
+      if (!text || !text.trim()) {
+        return res.status(400).json({ error: "Text content is required" });
+      }
+      const result = await uploadTextToS3(orgId, text, "brief-notes.txt");
+      res.json({ cloudfrontUrl: result.cloudfrontUrl, s3Key: result.s3Key });
+    } catch (error: any) {
+      console.error("Error uploading text to S3:", error);
+      res.status(500).json({ error: error.message || "Failed to upload text" });
+    }
+  });
+
+  app.post("/api/interrogator/summarize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { files } = req.body;
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return res.status(400).json({ error: "At least one file URL is required" });
+      }
+
+      const summaryApiUrl = "https://uhqp6goc12.execute-api.ap-south-1.amazonaws.com/summary";
+      const response = await fetch(summaryApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Summary API error:", response.status, errorText);
+        return res.status(response.status).json({ error: `Summary API error: ${errorText}` });
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error: any) {
+      console.error("Error calling summary API:", error);
+      res.status(500).json({ error: error.message || "Failed to get summary" });
     }
   });
 

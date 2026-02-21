@@ -263,6 +263,23 @@ export async function getFolder(orgId: string, workspaceId: string, folderId: st
 
 // === Files ===
 
+export async function uploadTextToS3(orgId: string, text: string, fileName?: string): Promise<{ s3Key: string; cloudfrontUrl: string }> {
+  const name = fileName || `text-brief-${Date.now()}.txt`;
+  const sanitizedName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const uniqueName = `${Date.now()}-${sanitizedName}`;
+  const s3Key = `${orgId}/briefs/${uniqueName}`;
+
+  await s3Client.send(new PutObjectCommand({
+    Bucket: S3_BUCKET_NAME,
+    Key: s3Key,
+    Body: text,
+    ContentType: "text/plain",
+  }));
+
+  const cloudfrontUrl = getCloudfrontUrl(s3Key);
+  return { s3Key, cloudfrontUrl };
+}
+
 export async function getPresignedUploadUrl(orgId: string, fileName: string, fileType: string): Promise<{ uploadUrl: string; s3Key: string; cloudfrontUrl: string }> {
   const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   const uniqueName = `${Date.now()}-${sanitizedName}`;
