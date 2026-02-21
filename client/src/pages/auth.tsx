@@ -51,8 +51,8 @@ export default function AuthPage() {
           Back to home
         </button>
         <div className="flex flex-col items-center gap-2">
-          <img src="/images/crew-mark.png" alt="CREW" className="w-12 h-12" />
-          <h1 className="text-2xl font-bold tracking-[0.15em] uppercase"><span className="text-muted-foreground font-medium text-sm tracking-[0.08em] mr-1">The</span>CREW</h1>
+          <img src="/images/crew-mark.png" alt="thecrew" className="w-12 h-12" />
+          <h1 className="text-2xl font-extrabold tracking-[0.08em] uppercase"><span className="text-muted-foreground font-semibold text-sm tracking-[0.12em] mr-0.5">the</span>crew</h1>
           <p className="text-[10px] font-medium tracking-[0.08em] uppercase text-muted-foreground -mt-1">
             Creator Editor Workspace
           </p>

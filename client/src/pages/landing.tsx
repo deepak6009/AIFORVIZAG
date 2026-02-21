@@ -56,7 +56,7 @@ const marqueeItems = [
 
 const testimonials = [
   {
-    quote: "The CREW completely transformed how we manage our creative assets. No more digging through Slack threads for that one file.",
+    quote: "thecrew completely transformed how we manage our creative assets. No more digging through Slack threads for that one file.",
     name: "Sarah Chen",
     role: "Creative Director",
     company: "Bright Studio",
@@ -70,7 +70,7 @@ const testimonials = [
     rating: 5,
   },
   {
-    quote: "Simple, fast, and exactly what we needed. We ditched three other tools after switching to The CREW.",
+    quote: "Simple, fast, and exactly what we needed. We ditched three other tools after switching to thecrew.",
     name: "Priya Desai",
     role: "Operations Manager",
     company: "Mosaic Co",
@@ -87,12 +87,12 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 nav-gradient-animated border-b border-gray-200/60">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center gap-2">
-            <img src="/images/crew-mark.png" alt="CREW" className="w-7 h-7 sm:w-8 sm:h-8" />
+            <img src="/images/crew-mark.png" alt="thecrew" className="w-7 h-7 sm:w-8 sm:h-8" />
             <span
-              className="text-lg sm:text-xl font-bold tracking-[0.15em] uppercase text-gray-900"
+              className="text-base sm:text-lg font-extrabold tracking-[0.08em] uppercase text-gray-900"
               data-testid="text-app-name"
             >
-              CREW
+              <span className="text-gray-400 font-semibold text-[0.7em] tracking-[0.12em] mr-0.5">the</span>crew
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
@@ -149,9 +149,8 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="landing-fade-up">
               <div className="mb-5 sm:mb-6 landing-fade-up" data-testid="text-hero-heading">
-                <p className="text-xs sm:text-sm font-semibold tracking-[0.25em] uppercase text-gray-400 mb-2 sm:mb-3">The</p>
-                <h1 className="text-[4rem] leading-[0.85] sm:text-[5.5rem] md:text-[7rem] lg:text-[8rem] font-extrabold tracking-[0.08em] uppercase text-gray-900">
-                  CREW
+                <h1 className="text-[3.5rem] leading-[0.85] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-extrabold tracking-[0.06em] uppercase text-gray-900">
+                  <span className="text-gray-400 font-semibold text-[0.35em] tracking-[0.2em] align-[0.15em] mr-1">the</span>crew
                 </h1>
                 <div className="mt-3 sm:mt-4 flex items-center gap-1.5 sm:gap-2">
                   {[
@@ -405,7 +404,7 @@ export default function LandingPage() {
               .
             </h2>
             <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-              The CREW brings your team's images and videos into a single,
+              thecrew brings your team's images and videos into a single,
               beautifully organized workspace.
             </p>
           </AnimatedSection>
@@ -721,7 +720,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-5 sm:mt-7 text-[15px] sm:text-lg text-gray-500 max-w-lg mx-auto leading-[1.7]">
-              Join teams that already use The CREW to keep their visual assets
+              Join teams that already use thecrew to keep their visual assets
               organized, accessible, and secure.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-3.5">
@@ -744,8 +743,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center gap-2 mb-1">
-                <img src="/images/crew-mark.png" alt="CREW" className="w-6 h-6" />
-                <span className="font-bold text-gray-900 text-[15px] tracking-[0.15em] uppercase">CREW</span>
+                <img src="/images/crew-mark.png" alt="thecrew" className="w-6 h-6" />
+                <span className="font-extrabold text-gray-900 text-[15px] tracking-[0.08em] uppercase"><span className="text-gray-400 font-semibold text-[0.7em] tracking-[0.12em] mr-0.5">the</span>crew</span>
               </div>
             </div>
 
@@ -796,7 +795,7 @@ export default function LandingPage() {
 
           <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-gray-200/60 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-400">
-              &copy; {new Date().getFullYear()} The CREW. All rights reserved.
+              &copy; {new Date().getFullYear()} thecrew. All rights reserved.
             </p>
           </div>
         </div>
