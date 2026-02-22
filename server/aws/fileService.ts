@@ -138,6 +138,21 @@ export async function getWorkspacesByUser(userId: string) {
   return workspaces;
 }
 
+export async function getOrgIdForWorkspace(userId: string, workspaceId: string): Promise<string | null> {
+  const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
+  const scanResult = await docClient.send(new ScanCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    FilterExpression: "itemType = :t AND userId = :userId AND workspaceId = :wsId",
+    ExpressionAttributeValues: {
+      ":t": "member",
+      ":userId": userId,
+      ":wsId": workspaceId,
+    },
+  }));
+  const member = scanResult.Items?.[0];
+  return member ? member.orgId : null;
+}
+
 export async function deleteWorkspace(orgId: string, workspaceId: string) {
   const members = await getWorkspaceMembers(orgId, workspaceId);
   for (const m of members) {
