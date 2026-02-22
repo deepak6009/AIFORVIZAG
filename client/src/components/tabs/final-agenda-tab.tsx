@@ -24,8 +24,13 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
     onSuccess: (data: any) => {
       setGeneratingFor(null);
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "tasks"] });
-      toast({ title: `Generated ${Array.isArray(data) ? data.length : 0} tasks from this brief` });
-      if (onNavigate) onNavigate("tasks");
+      const count = Array.isArray(data) ? data.length : 0;
+      if (count === 0) {
+        toast({ title: "No new tasks needed", description: "All tasks from this brief already exist in your board." });
+      } else {
+        toast({ title: `Generated ${count} new tasks from this brief` });
+        if (onNavigate) onNavigate("tasks");
+      }
     },
     onError: (e: Error) => {
       setGeneratingFor(null);
@@ -132,9 +137,12 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
               const isExpanded = expandedId === doc.id;
               return (
                 <Card key={doc.id} className={`overflow-hidden transition-shadow ${isExpanded ? "shadow-md ring-1 ring-primary/10" : "hover:shadow-sm"}`} data-testid={`card-agenda-${doc.id}`}>
-                  <button
-                    className="w-full px-5 py-4 flex items-start justify-between text-left hover:bg-muted/30 transition-colors"
+                  <div
+                    className="px-5 py-4 flex items-start justify-between cursor-pointer hover:bg-muted/30 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : doc.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpandedId(isExpanded ? null : doc.id); } }}
                     data-testid={`button-toggle-agenda-${doc.id}`}
                   >
                     <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -161,10 +169,24 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0 ml-3 mt-1">
+                    <div className="flex items-center gap-2 shrink-0 ml-3 mt-0.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5 text-xs"
+                        disabled={generatingFor === doc.id}
+                        onClick={(e) => { e.stopPropagation(); generateTasksMut.mutate(doc.id); }}
+                        data-testid={`button-generate-tasks-row-${doc.id}`}
+                      >
+                        {generatingFor === doc.id ? (
+                          <><Loader2 className="w-3.5 h-3.5 animate-spin" />Generating...</>
+                        ) : (
+                          <><ListTodo className="w-3.5 h-3.5" />Generate Tasks</>
+                        )}
+                      </Button>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                  </button>
+                  </div>
                   {isExpanded && (
                     <CardContent className="pt-0 pb-5 px-5 border-t">
                       <div className="prose prose-sm dark:prose-invert max-w-none mt-4 prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid={`content-agenda-${doc.id}`}>

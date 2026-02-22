@@ -316,6 +316,25 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
                             </a>
                           )}
                         </div>
+                        {ref.analysis?.summary && (
+                          <p className="text-xs text-muted-foreground/70 mt-2 line-clamp-2 leading-relaxed" data-testid={`text-analysis-preview-${ref.id}`}>
+                            {ref.analysis.summary}
+                          </p>
+                        )}
+                        {ref.analysis?.sections && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {Object.entries(ref.analysis.sections).slice(0, 5).map(([key, section]: [string, any]) => {
+                              const Icon = sectionIcons[key] || Sparkles;
+                              const color = sectionColors[key] || "text-primary";
+                              return (
+                                <span key={key} className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted/80 text-muted-foreground" data-testid={`chip-section-${ref.id}-${key}`}>
+                                  <Icon className={`w-2.5 h-2.5 ${color}`} />
+                                  {section.title}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {ref.analysisStatus === "completed" && ref.analysis && (

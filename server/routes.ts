@@ -842,13 +842,19 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
         return res.status(400).json({ error: "No completed final agenda found. Please complete the Interrogator first." });
       }
 
+      const existingTasks = await getTasksByWorkspace(orgId, wsId);
+      const existingTaskTitles = existingTasks.map((t: any) => t.title?.toLowerCase().trim()).filter(Boolean);
+      const existingContext = existingTasks.length > 0
+        ? `\n\nEXISTING TASKS (do NOT duplicate these — create only NEW tasks):\n${existingTasks.map((t: any) => `- ${t.title}`).join("\n")}`
+        : "";
+
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const prompt = `You are a video production project manager. Based on the following production brief, generate a list of actionable tasks for a video editor.
 
 PRODUCTION BRIEF:
-${finalDocument}
+${finalDocument}${existingContext}
 
 INSTRUCTIONS:
 - Break the brief into specific, actionable editing tasks
@@ -858,6 +864,7 @@ INSTRUCTIONS:
 - All tasks start with status "todo"
 - Generate 5-15 tasks depending on complexity
 - Task descriptions should be detailed enough for the editor to work independently
+- IMPORTANT: Do NOT create tasks that overlap with existing tasks listed above. Only generate NEW, unique tasks.
 
 Return ONLY valid JSON array, no markdown, no code fences. Each object must have:
 {"title": "string", "description": "string", "priority": "high|medium|low"}
@@ -881,8 +888,13 @@ Example:
         return res.status(500).json({ error: "AI did not return a task array. Please try again." });
       }
 
+      const filteredTasks = tasks.filter((t: any) => {
+        const title = (t.title || "").toLowerCase().trim();
+        return title && !existingTaskTitles.includes(title);
+      });
+
       const createdTasks = [];
-      for (const t of tasks) {
+      for (const t of filteredTasks) {
         const task = await createTask({
           orgId, workspaceId: wsId,
           title: t.title || "Untitled Task",
