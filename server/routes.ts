@@ -39,6 +39,7 @@ import {
   getReference,
   updateReferenceAnalysis,
   deleteReference,
+  getOrgIdForWorkspace,
 } from "./aws/fileService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
@@ -61,6 +62,12 @@ export async function registerRoutes(
     return org.orgId;
   }
 
+  async function resolveOrgForWorkspace(userId: string, workspaceId: string): Promise<string> {
+    const orgId = await getOrgIdForWorkspace(userId, workspaceId);
+    if (!orgId) throw new Error("ACCESS_DENIED");
+    return orgId;
+  }
+
   // === Workspace Routes ===
 
   app.get("/api/workspaces", isAuthenticated, async (req: any, res) => {
@@ -77,13 +84,14 @@ export async function registerRoutes(
   app.get("/api/workspaces/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const workspace = await getWorkspace(orgId, req.params.id);
       if (!workspace) return res.status(404).json({ message: "Workspace not found" });
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member) return res.status(403).json({ message: "Access denied" });
       res.json(workspace);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error fetching workspace:", error);
       res.status(500).json({ message: "Failed to fetch workspace" });
     }
@@ -111,12 +119,13 @@ export async function registerRoutes(
   app.delete("/api/workspaces/:id", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member || member.role !== "admin") return res.status(403).json({ message: "Only admins can delete workspaces" });
       await deleteWorkspace(orgId, req.params.id);
       res.status(204).end();
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error deleting workspace:", error);
       res.status(500).json({ message: "Failed to delete workspace" });
     }
@@ -127,7 +136,7 @@ export async function registerRoutes(
   app.get("/api/workspaces/:id/members", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const members = await getWorkspaceMembers(orgId, req.params.id);
@@ -141,7 +150,8 @@ export async function registerRoutes(
         })
       );
       res.json(membersWithUser);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error fetching members:", error);
       res.status(500).json({ message: "Failed to fetch members" });
     }
@@ -150,15 +160,22 @@ export async function registerRoutes(
   app.post("/api/workspaces/:id/members", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const adminMember = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!adminMember || adminMember.role !== "admin") return res.status(403).json({ message: "Only admins can add members" });
 
-      const { email, role } = req.body;
+      const { email, password, role } = req.body;
       if (!email) return res.status(400).json({ message: "Email is required" });
 
-      const targetUser = await storage.getUserByEmail(email);
-      if (!targetUser) return res.status(404).json({ message: "User not found. They need to sign in first." });
+      let targetUser = await storage.getUserByEmail(email);
+      if (!targetUser) {
+        if (!password) return res.status(400).json({ message: "Password is required for new users" });
+        if (password.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+        const bcrypt = await import("bcrypt");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { authStorage } = await import("./replit_integrations/auth/storage");
+        targetUser = await authStorage.createUser({ email, password: hashedPassword });
+      }
 
       const existing = await getMemberByUserAndWorkspace(orgId, req.params.id, targetUser.id);
       if (existing) return res.status(400).json({ message: "User is already a member" });
@@ -171,6 +188,7 @@ export async function registerRoutes(
       });
       res.status(201).json(member);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error adding member:", error);
       res.status(400).json({ message: error.message || "Failed to add member" });
     }
@@ -179,7 +197,7 @@ export async function registerRoutes(
   app.delete("/api/workspaces/:workspaceId/members/:memberId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.workspaceId);
       const adminMember = await getMemberByUserAndWorkspace(orgId, req.params.workspaceId, userId);
       if (!adminMember || adminMember.role !== "admin") return res.status(403).json({ message: "Only admins can remove members" });
       const members = await getWorkspaceMembers(orgId, req.params.workspaceId);
@@ -187,7 +205,8 @@ export async function registerRoutes(
       if (!target) return res.status(404).json({ message: "Member not found" });
       await removeWorkspaceMember(orgId, req.params.workspaceId, (target as any).userId);
       res.status(204).end();
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error removing member:", error);
       res.status(500).json({ message: "Failed to remove member" });
     }
@@ -198,12 +217,13 @@ export async function registerRoutes(
   app.get("/api/workspaces/:id/folders", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const foldersData = await getFoldersByWorkspace(orgId, req.params.id);
       res.json(foldersData);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error fetching folders:", error);
       res.status(500).json({ message: "Failed to fetch folders" });
     }
@@ -212,7 +232,7 @@ export async function registerRoutes(
   app.post("/api/workspaces/:id/folders", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot create folders" });
 
@@ -235,6 +255,7 @@ export async function registerRoutes(
       });
       res.status(201).json(folder);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error creating folder:", error);
       res.status(400).json({ message: error.message || "Failed to create folder" });
     }
@@ -243,12 +264,13 @@ export async function registerRoutes(
   app.delete("/api/workspaces/:workspaceId/folders/:folderId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.workspaceId);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.workspaceId, userId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot delete folders" });
       await deleteFolderAndFiles(orgId, req.params.workspaceId, req.params.folderId);
       res.status(204).end();
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error deleting folder:", error);
       res.status(500).json({ message: "Failed to delete folder" });
     }
@@ -259,12 +281,13 @@ export async function registerRoutes(
   app.get("/api/workspaces/:workspaceId/folders/:folderId/files", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.workspaceId);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.workspaceId, userId);
       if (!member) return res.status(403).json({ message: "Access denied" });
       const filesData = await getFilesByFolder(orgId, req.params.workspaceId, req.params.folderId);
       res.json(filesData);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error fetching files:", error);
       res.status(500).json({ message: "Failed to fetch files" });
     }
@@ -273,7 +296,7 @@ export async function registerRoutes(
   app.post("/api/workspaces/:id/files", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot upload files" });
 
@@ -294,6 +317,7 @@ export async function registerRoutes(
       });
       res.status(201).json(file);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error creating file:", error);
       res.status(400).json({ message: error.message || "Failed to create file" });
     }
@@ -302,7 +326,7 @@ export async function registerRoutes(
   app.delete("/api/workspaces/:workspaceId/files/:fileId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.workspaceId);
       const member = await getMemberByUserAndWorkspace(orgId, req.params.workspaceId, userId);
       if (!member || member.role === "viewer") return res.status(403).json({ message: "Viewers cannot delete files" });
       const folders = await getFoldersByWorkspace(orgId, req.params.workspaceId);
@@ -315,7 +339,8 @@ export async function registerRoutes(
         }
       }
       res.status(404).json({ message: "File not found" });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error deleting file:", error);
       res.status(500).json({ message: "Failed to delete file" });
     }
@@ -544,10 +569,10 @@ Respond ONLY in this JSON format:
         parsed = { message: responseText, currentLayer: 1, options: [], isComplete: false };
       }
 
-      if (interrogationId && briefingAnswers) {
+      if (interrogationId && briefingAnswers && workspaceId) {
         const userId = req.userId;
-        const orgId = await getOrCreateDefaultOrg(userId);
-        const wsId = workspaceId || "default";
+        const orgId = await resolveOrgForWorkspace(userId, workspaceId);
+        const wsId = workspaceId;
         try {
           await updateInterrogation(orgId, wsId, interrogationId, {
             briefingAnswers,
@@ -560,6 +585,7 @@ Respond ONLY in this JSON format:
 
       res.json(parsed);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error in Gemini chat:", error);
       res.status(500).json({ error: error.message || "Failed to get AI response" });
     }
@@ -570,7 +596,7 @@ Respond ONLY in this JSON format:
   app.get("/api/workspaces/:id/interrogations", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const wsId = req.params.id;
       const interrogations = await getInterrogationsByWorkspace(orgId, wsId);
       const sorted = interrogations.sort((a: any, b: any) => {
@@ -580,6 +606,7 @@ Respond ONLY in this JSON format:
       });
       res.json(sorted);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error listing interrogations:", error);
       res.status(500).json({ error: error.message || "Failed to list interrogations" });
     }
@@ -694,7 +721,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       if (interrogationId && workspaceId) {
         try {
           const userId = req.userId;
-          const orgId = await getOrCreateDefaultOrg(userId);
+          const orgId = await resolveOrgForWorkspace(userId, workspaceId);
           await updateInterrogation(orgId, workspaceId, interrogationId, {
             finalDocument: responseText,
             status: "completed",
@@ -706,6 +733,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
 
       res.json({ finalDocument: responseText });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error generating final document:", error);
       res.status(500).json({ error: error.message || "Failed to generate final document" });
     }
@@ -720,13 +748,14 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
         return res.status(400).json({ error: "Missing required fields" });
       }
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, workspaceId);
       await updateInterrogation(orgId, workspaceId, interrogationId, {
         finalDocument,
         status: "completed",
       });
       res.json({ success: true });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error saving final document:", error);
       res.status(500).json({ error: error.message || "Failed to save final document" });
     }
@@ -737,7 +766,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
   app.get("/api/workspaces/:id/tasks", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const wsId = req.params.id;
       const tasks = await getTasksByWorkspace(orgId, wsId);
       const sorted = tasks.sort((a: any, b: any) => {
@@ -747,6 +776,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       });
       res.json(sorted);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error listing tasks:", error);
       res.status(500).json({ error: error.message || "Failed to list tasks" });
     }
@@ -755,7 +785,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
   app.post("/api/workspaces/:id/tasks", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const wsId = req.params.id;
       const { title, description, status, priority, sourceInterrogationId, assignees } = req.body;
       if (!title) return res.status(400).json({ error: "Title is required" });
@@ -770,6 +800,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       });
       res.json(task);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error creating task:", error);
       res.status(500).json({ error: error.message || "Failed to create task" });
     }
@@ -778,7 +809,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
   app.patch("/api/workspaces/:wsId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
       const { title, description, status, priority, assignees, videoUrl } = req.body;
       const allowedStatuses = ["todo", "in_progress", "review", "done"];
@@ -793,6 +824,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       await updateTask(orgId, wsId, taskId, safeUpdates);
       res.json({ success: true });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error updating task:", error);
       res.status(500).json({ error: error.message || "Failed to update task" });
     }
@@ -801,11 +833,12 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
   app.delete("/api/workspaces/:wsId/tasks/:taskId", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
       await deleteTask(orgId, wsId, taskId);
       res.json({ success: true });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error deleting task:", error);
       res.status(500).json({ error: error.message || "Failed to delete task" });
     }
@@ -816,7 +849,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
   app.post("/api/workspaces/:id/tasks/generate", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const wsId = req.params.id;
       const { interrogationId } = req.body;
 
@@ -909,6 +942,7 @@ Example:
 
       res.json(createdTasks);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error generating tasks:", error);
       res.status(500).json({ error: error.message || "Failed to generate tasks" });
     }
@@ -919,12 +953,13 @@ Example:
   app.get("/api/workspaces/:wsId/tasks/:taskId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
       const comments = await getTaskComments(orgId, wsId, taskId);
       const sorted = comments.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       res.json(sorted);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error listing comments:", error);
       res.status(500).json({ error: error.message || "Failed to list comments" });
     }
@@ -933,7 +968,7 @@ Example:
   app.post("/api/workspaces/:wsId/tasks/:taskId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
       const { text, timestampSec } = req.body;
       if (!text?.trim()) return res.status(400).json({ error: "Comment text is required" });
@@ -948,6 +983,7 @@ Example:
       });
       res.json(comment);
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error creating comment:", error);
       res.status(500).json({ error: error.message || "Failed to create comment" });
     }
@@ -958,7 +994,7 @@ Example:
   app.post("/api/workspaces/:wsId/tasks/revision-checklist", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const wsId = req.params.wsId;
 
       if (!process.env.GEMINI_API_KEY) {
@@ -1004,6 +1040,7 @@ Output a clear, structured revision checklist in markdown.`;
       const checklist = result.response.text();
       res.json({ checklist });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error generating revision checklist:", error);
       res.status(500).json({ error: error.message || "Failed to generate revision checklist" });
     }
@@ -1014,7 +1051,7 @@ Output a clear, structured revision checklist in markdown.`;
   app.post("/api/workspaces/:wsId/tasks/:taskId/summarize", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
 
       if (!process.env.GEMINI_API_KEY) {
@@ -1061,6 +1098,7 @@ Use markdown formatting with clear headers, numbered lists, and timestamp refere
       const summary = result.response.text();
       res.json({ summary });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error generating task summary:", error);
       res.status(500).json({ error: error.message || "Failed to generate summary" });
     }
@@ -1071,7 +1109,7 @@ Use markdown formatting with clear headers, numbered lists, and timestamp refere
   app.post("/api/workspaces/:wsId/tasks/:taskId/chat", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.userId;
-      const orgId = await getOrCreateDefaultOrg(userId);
+      const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
       const { message, history } = req.body;
 
@@ -1128,6 +1166,7 @@ INSTRUCTIONS:
       const reply = result.response.text();
       res.json({ reply });
     } catch (error: any) {
+      if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error in task chat:", error);
       res.status(500).json({ error: error.message || "Failed to get AI response" });
     }

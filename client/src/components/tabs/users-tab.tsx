@@ -26,6 +26,7 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
   const { toast } = useToast();
   const [addOpen, setAddOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("member");
 
   const { data: members, isLoading } = useQuery<MemberWithUser[]>({
@@ -34,7 +35,7 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (data: { email: string; role: string }) => {
+    mutationFn: async (data: { email: string; password: string; role: string }) => {
       const res = await apiRequest("POST", `/api/workspaces/${workspaceId}/members`, data);
       return res.json();
     },
@@ -42,6 +43,7 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
       queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "members"] });
       setAddOpen(false);
       setEmail("");
+      setPassword("");
       setRole("member");
       toast({ title: "Member added" });
     },
@@ -66,7 +68,7 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    addMutation.mutate({ email: email.trim(), role });
+    addMutation.mutate({ email: email.trim(), password, role });
   };
 
   return (
@@ -166,6 +168,18 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
                 className="h-11"
                 data-testid="input-member-email"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <Input
+                placeholder="Min 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                className="h-11"
+                data-testid="input-member-password"
+              />
+              <p className="text-[11px] text-muted-foreground">The member will use this password to sign in. Leave blank if they already have an account.</p>
             </div>
             <div className="space-y-2">
               <Label>Role</Label>

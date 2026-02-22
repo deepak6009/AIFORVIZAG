@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, useLocation } from "wouter";
 
-import type { Workspace } from "@shared/schema";
+import type { Workspace, WorkspaceMember } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import {
   Layers, Plus, Users, FolderOpen, MessageSquare, FileCheck, LayoutGrid,
   FileText, LogOut, ChevronDown, Settings, ChevronsUpDown, Sparkles, Video
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { isUnauthorizedError } from "@/lib/auth-utils";
 
 import UsersTab from "@/components/tabs/users-tab";
@@ -39,7 +39,7 @@ const tabs = [
   { id: "resources", label: "References", icon: Video, accent: false },
 ] as const;
 
-type TabId = typeof tabs[number]["id"];
+type TabId = typeof allTabs[number]["id"];
 
 export default function WorkspaceLayout() {
   const { user, logout } = useAuth();
@@ -56,7 +56,7 @@ export default function WorkspaceLayout() {
   const [description, setDescription] = useState("");
 
   useEffect(() => {
-    if (urlTab && tabs.some(t => t.id === urlTab)) {
+    if (urlTab && allTabs.some(t => t.id === urlTab)) {
       setActiveTab(urlTab);
     }
   }, [urlTab]);
@@ -69,6 +69,21 @@ export default function WorkspaceLayout() {
     queryKey: ["/api/workspaces", workspaceId],
     enabled: !!workspaceId,
   });
+
+  type MemberWithUser = WorkspaceMember & { user: { id: string; email: string } };
+  const { data: members } = useQuery<MemberWithUser[]>({
+    queryKey: ["/api/workspaces", workspaceId, "members"],
+    enabled: !!workspaceId,
+  });
+  const currentUserRole = members?.find(m => m.userId === user?.id)?.role;
+  const isAdmin = currentUserRole === "admin";
+  const tabs = useMemo(() => allTabs.filter(t => !t.adminOnly || isAdmin), [isAdmin]);
+
+  useEffect(() => {
+    if (members && !isAdmin && activeTab === "interrogator") {
+      setActiveTab("folders");
+    }
+  }, [members, isAdmin, activeTab]);
 
   const createMutation = useMutation({
     mutationFn: async (data: { name: string; description?: string }) => {
