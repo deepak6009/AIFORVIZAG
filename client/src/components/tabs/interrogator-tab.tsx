@@ -930,26 +930,22 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                     <p className="text-xs text-muted-foreground mt-0.5">Quick guided questions — only what's missing</p>
                   </div>
                 </div>
-                <div className={`text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${briefingComplete ? "bg-green-500/10 text-green-600" : "bg-primary/10 text-primary"}`}>
-                  {briefingComplete ? (
-                    <><span>🚀</span> Ready!</>
-                  ) : (
-                    <><span>{["🎯","🎨","✂️","🎵"][currentLayer - 1]}</span> {currentLayer}/4</>
-                  )}
+                <div className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${briefingComplete ? "bg-green-500/10 text-green-600" : "bg-primary/10 text-primary"}`}>
+                  {briefingComplete ? "Complete" : `Layer ${currentLayer} of 4`}
                 </div>
               </div>
               <div className="flex gap-1">
                 {[
-                  { name: "Goal & Audience", emoji: "🎯" },
-                  { name: "Style & Hook", emoji: "🎨" },
-                  { name: "Editing & Visuals", emoji: "✂️" },
-                  { name: "Audio & Format", emoji: "🎵" },
-                ].map((item, i) => {
+                  "Goal & Audience",
+                  "Style & Hook",
+                  "Editing & Visuals",
+                  "Audio & Format",
+                ].map((name, i) => {
                   const layer = i + 1;
                   const isDone = layer < currentLayer || briefingComplete;
                   const isActive = layer === currentLayer && !briefingComplete;
                   return (
-                    <div key={layer} className="flex-1" title={item.name}>
+                    <div key={layer} className="flex-1" title={name}>
                       <div className="relative">
                         <div className={`h-2 rounded-full transition-all duration-500 ${
                           isDone ? "bg-primary" :
@@ -964,14 +960,12 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                         </div>
                       </div>
                       <div className="flex items-center justify-center gap-0.5 mt-1.5">
-                        <span className={`text-[10px] ${isDone ? "opacity-100" : isActive ? "opacity-80" : "opacity-30"}`}>
-                          {isDone ? "✅" : item.emoji}
-                        </span>
+                        {isDone && <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />}
                         <p className={`text-[9px] truncate font-medium ${
                           isDone ? "text-primary" :
                           isActive ? "text-foreground/80" :
                           "text-muted-foreground/40"
-                        }`}>{item.name}</p>
+                        }`}>{name}</p>
                       </div>
                     </div>
                   );
@@ -1294,10 +1288,12 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
             </Card>
 
             {briefingComplete && (
-              <div className="rounded-lg border-2 border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20 p-4 text-center" data-testid="briefing-complete-banner">
-                <p className="text-lg mb-1">🎉</p>
-                <p className="text-sm font-semibold text-green-700 dark:text-green-400">Briefing complete!</p>
-                <p className="text-xs text-green-600/70 dark:text-green-500/60 mt-0.5">All creative direction captured. Generate your production brief below.</p>
+              <div className="rounded-lg border border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20 p-3 text-center" data-testid="briefing-complete-banner">
+                <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <p className="text-sm font-semibold text-green-700 dark:text-green-400">Briefing complete</p>
+                </div>
+                <p className="text-xs text-green-600/70 dark:text-green-500/60">All creative direction captured. Generate your production brief below.</p>
               </div>
             )}
 
@@ -1306,8 +1302,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Upload
               </Button>
-              <Button onClick={handleGenerateFinalDoc} disabled={!briefingComplete} className="flex-1" data-testid="button-generate-final">
-                {briefingComplete ? "🚀 " : ""}Generate Brief
+              <Button onClick={handleGenerateFinalDoc} disabled={chatMessages.length === 0} className="flex-1" data-testid="button-generate-final">
+                {!briefingComplete && chatMessages.length > 0 ? "Skip & " : ""}Generate Brief
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
