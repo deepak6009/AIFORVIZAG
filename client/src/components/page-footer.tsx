@@ -8,9 +8,12 @@ export default function PageFooter() {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
           <div className="col-span-2 sm:col-span-3">
-            <div className="flex items-center mb-1">
+            <div className="flex items-center mb-2">
               <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-gray-900 text-[15px] tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity"><span className="font-light">the</span><span className="font-bold">crew</span></a>
             </div>
+            <p className="text-xs text-gray-400 leading-relaxed max-w-[180px]">
+              The workspace for creators and their editors.
+            </p>
           </div>
 
           <div className="col-span-1 sm:col-span-2">

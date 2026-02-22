@@ -162,7 +162,7 @@ export default function WorkspaceLayout() {
             <h1 className="text-xl sm:text-2xl font-semibold text-foreground" data-testid="text-welcome">
               {greeting}, {displayName || "there"}
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">Pick a workspace to jump back in, or start a new project.</p>
+            <p className="text-muted-foreground text-sm mt-1">Your creative workspace for creators and editors. Pick a project to jump back in.</p>
           </div>
 
           {wsListLoading ? (
@@ -200,7 +200,7 @@ export default function WorkspaceLayout() {
               </div>
               <h3 className="font-semibold text-foreground mb-1">Create your first workspace</h3>
               <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
-                A workspace is a project space where you organize clips, collaborate with your editor, and manage your content pipeline.
+                A workspace is where creators and editors collaborate - organize clips, share briefs, and manage your content pipeline together.
               </p>
               <Button onClick={() => setCreateOpen(true)} data-testid="button-create-workspace-empty">
                 <Plus className="w-4 h-4 mr-2" />
@@ -221,9 +221,9 @@ export default function WorkspaceLayout() {
               <h3 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">How it works</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { icon: FolderOpen, title: "Upload & organize", desc: "Drop in raw clips and sort them into folders" },
-                  { icon: Sparkles, title: "AI briefing", desc: "Let AI help you create a production brief" },
-                  { icon: LayoutGrid, title: "Track tasks", desc: "Turn briefs into tasks and track progress" },
+                  { icon: FolderOpen, title: "Upload & organize", desc: "Creators drop in raw clips, editors grab what they need" },
+                  { icon: Sparkles, title: "AI briefing", desc: "Creators brief editors with AI-powered production docs" },
+                  { icon: LayoutGrid, title: "Track tasks", desc: "Editors track revisions, creators review progress" },
                 ].map((step, i) => (
                   <div key={i} className="rounded-xl bg-card border p-4 text-center">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-2.5">

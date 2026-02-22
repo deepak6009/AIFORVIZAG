@@ -411,7 +411,7 @@ export default function LandingPage() {
                 variants={fadeUp}
                 className="mt-5 sm:mt-6 text-base sm:text-lg text-gray-500 max-w-md leading-[1.7] font-normal"
               >
-                The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts - without the DM chaos.
+                The workspace built for <span className="text-gray-900 font-medium">creators</span> and their <span className="text-gray-900 font-medium">editors</span> to upload raw clips, organize drafts, and ship final cuts - without the DM chaos.
               </motion.p>
               <motion.div
                 variants={fadeUp}
@@ -516,7 +516,7 @@ export default function LandingPage() {
                 .
               </h2>
               <p className="mt-4 sm:mt-6 text-[15px] sm:text-lg text-gray-400 leading-[1.7]">
-                thecrew gives creators and editors a single space to upload raw clips,
+                thecrew gives <span className="text-gray-600">creators</span> and their <span className="text-gray-600">editors</span> a single space to upload raw clips,
                 organize drafts, and deliver final cuts - all without leaving the platform.
               </p>
             </motion.div>
@@ -599,9 +599,9 @@ export default function LandingPage() {
 
           <RevealSection className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-5 lg:gap-6 relative">
             {[
-              { step: "01", title: "Create a workspace", desc: "Set up a workspace for your channel, brand, or project in seconds.", icon: Layers },
-              { step: "02", title: "Add your editors", desc: "Invite editors with the right access level - they see what you want them to see.", icon: Users },
-              { step: "03", title: "Upload & ship", desc: "Drop your raw clips, organize by stage, and let your editors get to work.", icon: Upload },
+              { step: "01", title: "Creator sets up", desc: "Create a workspace for your channel, brand, or project in seconds.", icon: Layers },
+              { step: "02", title: "Invite your editors", desc: "Add editors with the right access level - they see only what you share.", icon: Users },
+              { step: "03", title: "Create & edit together", desc: "Creators drop clips, editors pick up tasks, everyone stays in sync.", icon: Upload },
             ].map((item, i) => {
               const StepIcon = item.icon;
               return (
@@ -647,7 +647,7 @@ export default function LandingPage() {
                 Kind Words
               </p>
               <h2 className="text-2xl sm:text-[2.5rem] md:text-5xl font-semibold tracking-[-0.03em] text-gray-900 leading-[1.12]">
-                Trusted by creators who{" "}
+                Trusted by creators &amp; editors who{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">
                   ship daily
                 </span>
@@ -831,9 +831,12 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
-              <div className="flex items-center mb-1">
+              <div className="flex items-center mb-2">
                 <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-gray-900 text-[15px] tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity"><span className="font-light">the</span><span className="font-bold">crew</span></a>
               </div>
+              <p className="text-xs text-gray-400 leading-relaxed max-w-[180px]">
+                The workspace for creators and their editors.
+              </p>
             </div>
 
             <div className="col-span-1 sm:col-span-2">
