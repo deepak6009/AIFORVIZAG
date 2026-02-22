@@ -41,7 +41,7 @@ export default function FinalAgendaTab({ workspaceId }: { workspaceId: string })
           <Card className="border-destructive/30">
             <CardContent className="flex items-center gap-3 py-6">
               <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
-              <p className="text-sm text-destructive" data-testid="text-agenda-error">Failed to load final agendas. Please try again.</p>
+              <p className="text-sm text-destructive" data-testid="text-agenda-error">Failed to load briefs. Please try again.</p>
             </CardContent>
           </Card>
         </div>
@@ -57,9 +57,9 @@ export default function FinalAgendaTab({ workspaceId }: { workspaceId: string })
             <FileCheck className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold" data-testid="text-final-agenda-title">Final Agendas</h2>
+            <h2 className="text-lg font-semibold" data-testid="text-final-agenda-title">Briefs</h2>
             <p className="text-sm text-muted-foreground">
-              AI-generated production briefs from your Interrogator sessions
+              Saved production briefs from your AI briefing sessions
             </p>
           </div>
         </div>
@@ -70,9 +70,9 @@ export default function FinalAgendaTab({ workspaceId }: { workspaceId: string })
               <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
                 <FileText className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-medium text-base mb-1" data-testid="text-no-agendas">No final agendas yet</h3>
+              <h3 className="font-medium text-base mb-1" data-testid="text-no-agendas">No briefs yet</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Complete the Interrogator workflow to generate your first production brief. It will appear here automatically.
+                Go to the AI Brief tab and complete a briefing session. Your saved production briefs will appear here.
               </p>
             </CardContent>
           </Card>

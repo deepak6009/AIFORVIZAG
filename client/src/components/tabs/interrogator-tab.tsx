@@ -50,45 +50,43 @@ function formatSize(bytes: number): string {
 }
 
 const STEPS = [
-  { id: 1, label: "Base", icon: Upload, description: "Upload & Analyse" },
-  { id: 2, label: "AI Chat", icon: MessageSquare, description: "Refine with AI" },
-  { id: 3, label: "Final Document", icon: FileCheck, description: "Final Agenda" },
+  { id: 1, label: "Upload", icon: Upload, description: "Add files & context" },
+  { id: 2, label: "Briefing", icon: Sparkles, description: "AI-guided brief" },
+  { id: 3, label: "Brief", icon: FileCheck, description: "Production brief" },
 ];
 
 function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onStepClick: (step: number) => void }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-6" data-testid="step-indicator">
+    <div className="flex items-center justify-between mb-6 max-w-md mx-auto" data-testid="step-indicator">
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;
         const isClickable = step.id <= currentStep;
         const Icon = step.icon;
         return (
-          <div key={step.id} className="flex items-center">
+          <div key={step.id} className="flex items-center flex-1">
             <button
               onClick={() => isClickable && onStepClick(step.id)}
               disabled={!isClickable}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : isCompleted
-                    ? "bg-primary/10 text-primary cursor-pointer hover:bg-primary/20"
-                    : "bg-muted text-muted-foreground cursor-not-allowed"
-              }`}
+              className={`flex flex-col items-center gap-1.5 transition-all w-full ${isClickable ? "cursor-pointer" : "cursor-not-allowed"}`}
               data-testid={`step-${step.id}`}
             >
-              <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                isActive ? "bg-primary-foreground text-primary" : isCompleted ? "bg-primary text-primary-foreground" : "bg-muted-foreground/30 text-muted-foreground"
+              <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all ${
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                  : isCompleted
+                    ? "bg-primary/15 text-primary"
+                    : "bg-muted text-muted-foreground"
               }`}>
-                {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.id}
+                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
               </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-xs font-semibold leading-tight">{step.label}</p>
-                <p className={`text-[10px] leading-tight ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{step.description}</p>
+              <div className="text-center">
+                <p className={`text-xs font-semibold leading-tight ${isActive ? "text-foreground" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>{step.label}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5 hidden sm:block">{step.description}</p>
               </div>
             </button>
             {idx < STEPS.length - 1 && (
-              <ChevronRight className={`w-4 h-4 mx-1 shrink-0 ${currentStep > step.id ? "text-primary" : "text-muted-foreground/40"}`} />
+              <div className={`h-px flex-1 mx-2 mt-[-18px] ${currentStep > step.id ? "bg-primary/40" : "bg-border"}`} />
             )}
           </div>
         );
@@ -695,8 +693,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       setFinalDocument(doc);
       setEditableFinalText(doc);
     } catch (err: any) {
-      toast({ title: "Failed to generate final document", description: err.message, variant: "destructive" });
-      setFinalDocument("Error generating final document. Please try again.");
+      toast({ title: "Failed to generate brief", description: err.message, variant: "destructive" });
+      setFinalDocument("Error generating production brief. Please try again.");
     } finally {
       setGeneratingFinal(false);
     }
@@ -719,7 +717,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
       setEditingFinal(false);
       setFinalSaved(true);
       queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/interrogations`] });
-      toast({ title: "Saved!", description: "Final agenda saved successfully." });
+      toast({ title: "Saved!", description: "Production brief saved successfully." });
     } catch (err: any) {
       toast({ title: "Failed to save", description: err.message, variant: "destructive" });
     } finally {
@@ -738,12 +736,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         {currentStep === 1 && (
           <div className="space-y-5" data-testid="step-1-content">
             <div className="text-center pb-2">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <Upload className="w-6 h-6 text-primary" />
-              </div>
-              <h2 className="text-lg font-semibold" data-testid="text-interrogator-title">Upload Briefing Materials</h2>
+              <h2 className="text-lg font-semibold" data-testid="text-interrogator-title">What are we working with?</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Drop your documents, voice notes, or type your brief below.
+                Upload docs, record a voice note, or type your brief. AI will analyse everything automatically.
               </p>
             </div>
 
@@ -878,26 +873,32 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
         {currentStep === 2 && (
           <div className="space-y-4" data-testid="step-2-content">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">AI Briefing Assistant</h3>
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">AI Briefing</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Answer a few questions to shape your production brief</p>
+                </div>
+                <div className="text-[10px] text-muted-foreground font-medium">
+                  {briefingComplete ? "Complete" : `Layer ${currentLayer} of 4`}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {[1,2,3,4].map(layer => (
-                  <div
-                    key={layer}
-                    className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
-                      layer < currentLayer ? "bg-green-500 text-white" :
-                      layer === currentLayer ? "bg-primary text-primary-foreground" :
-                      "bg-muted text-muted-foreground"
-                    }`}
-                    title={["Goal & Audience","Style & Hook","Editing & Visuals","Audio & Format"][layer-1]}
-                    data-testid={`layer-indicator-${layer}`}
-                  >
-                    {layer < currentLayer ? <CheckCircle2 className="w-3.5 h-3.5" /> : layer}
-                  </div>
-                ))}
+              <div className="flex gap-1.5">
+                {["Goal & Audience","Style & Hook","Editing & Visuals","Audio & Format"].map((name, i) => {
+                  const layer = i + 1;
+                  return (
+                    <div key={layer} className="flex-1" title={name}>
+                      <div className={`h-1.5 rounded-full transition-all ${
+                        layer < currentLayer ? "bg-primary" :
+                        layer === currentLayer ? "bg-primary/50" :
+                        "bg-muted"
+                      }`} data-testid={`layer-indicator-${layer}`} />
+                      <p className={`text-[9px] mt-1 text-center truncate ${
+                        layer <= currentLayer ? "text-foreground/70" : "text-muted-foreground/50"
+                      }`}>{name}</p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -993,7 +994,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder={chatMicActive ? "Listening... speak now" : briefingComplete ? "Briefing complete! Generate your final document below." : "Type a custom answer or additional details..."}
+                    placeholder={chatMicActive ? "Listening... speak now" : briefingComplete ? "Briefing complete! Generate your production brief below." : "Type a custom answer or additional details..."}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     rows={1}
@@ -1198,10 +1199,10 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setCurrentStep(1)} className="flex-1" data-testid="button-back-to-base">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Base
+                Back to Upload
               </Button>
               <Button onClick={handleGenerateFinalDoc} disabled={!briefingComplete} className="flex-1" data-testid="button-generate-final">
-                Generate Final Document
+                Generate Brief
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
@@ -1211,12 +1212,9 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         {currentStep === 3 && (
           <div className="space-y-4" data-testid="step-3-content">
             <div className="text-center pb-2">
-              <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-3">
-                <FileCheck className="w-6 h-6 text-green-600" />
-              </div>
-              <h2 className="text-lg font-semibold">Final Agenda</h2>
+              <h2 className="text-lg font-semibold">Production Brief</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                AI-generated production brief combining your analysis and creative direction.
+                Your AI-generated brief combining uploaded materials, briefing answers, and creative direction.
               </p>
             </div>
 
@@ -1225,8 +1223,8 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 {generatingFinal ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-3">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-sm font-medium text-muted-foreground">Generating your final brief...</p>
-                    <p className="text-xs text-muted-foreground/60">Combining analysis, briefing answers, and file references</p>
+                    <p className="text-sm font-medium text-muted-foreground">Generating your production brief...</p>
+                    <p className="text-xs text-muted-foreground/60">Combining uploads, briefing answers, and creative direction</p>
                   </div>
                 ) : finalDocument ? (
                   <>
@@ -1282,7 +1280,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Chat
+                  Back to Briefing
                 </Button>
                 <Button
                   variant="outline"
@@ -1306,7 +1304,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   ) : (
                     <Save className="w-4 h-4 mr-2" />
                   )}
-                  {finalSaved ? "Saved" : "Save Final Agenda"}
+                  {finalSaved ? "Saved" : "Save Brief"}
                 </Button>
               </div>
             )}
@@ -1340,7 +1338,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                 className="w-full text-muted-foreground"
                 data-testid="button-start-new"
               >
-                Start New Interrogation
+                Start New Brief
               </Button>
             )}
           </div>
