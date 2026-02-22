@@ -1216,53 +1216,65 @@ INSTRUCTIONS:
       const videoBase64 = Buffer.from(videoBytes).toString("base64");
       const contentType = s3Response.ContentType || "video/mp4";
 
-      const prompt = `You are an expert short-form content analyst specializing in viral Instagram Reels, TikTok videos, and YouTube Shorts.
+      const prompt = `You are an expert short-form content analyst and video editor specializing in viral Instagram Reels, TikTok videos, and YouTube Shorts.
 
-Analyze this reference video and provide a detailed breakdown of what makes it work. Return your analysis as a JSON object with this exact structure:
+Analyze this reference video frame by frame and provide an extremely detailed, editor-ready breakdown. Focus on every visual and audio element an editor would need to replicate this style. Return your analysis as a JSON object with this exact structure:
 
 {
-  "summary": "A 2-3 sentence executive summary of the video and why it works",
+  "summary": "A 2-3 sentence executive summary of the video — what type of content it is, the overall style, and the #1 reason it works",
   "sections": {
     "hook": {
       "title": "Hook & Opening",
-      "observations": ["observation 1", "observation 2", ...],
-      "whyItWorks": "Brief explanation of why this hook is effective"
+      "observations": ["Exactly what happens in the first 1-3 seconds", "Visual or audio pattern interrupt used", "Text/title that appears and when", "Why a viewer would stop scrolling"],
+      "whyItWorks": "Brief explanation of why this hook grabs attention"
     },
     "pacing": {
       "title": "Pacing & Rhythm",
-      "observations": ["observation about cut frequency", "observation about scene durations", ...],
+      "observations": ["Average cut length (e.g. 0.5s, 1s, 2s cuts)", "How pacing changes throughout (fast start, slow middle, etc.)", "Beat-sync — are cuts timed to the music beat?", "Scene duration patterns"],
       "whyItWorks": "Why this pacing works for retention"
     },
     "transitions": {
       "title": "Transitions & Cuts",
-      "observations": ["transition types used", "notable transition moments", ...],
-      "whyItWorks": "What makes these transitions effective"
+      "observations": ["List each transition type used (e.g. hard cut, whip pan, zoom, match cut, swipe, dissolve, J-cut)", "Timestamps or moments where notable transitions occur", "Whether transitions follow a pattern or are varied"],
+      "whyItWorks": "What makes these transitions feel seamless or impactful"
+    },
+    "motionGraphics": {
+      "title": "Motion Graphics & Visual Effects",
+      "observations": ["Any animated elements (arrows, circles, highlights, callouts, stickers)", "Zoom effects (Ken Burns, punch-in zoom, smooth zoom)", "Screen shake or camera movement effects", "Color grading / filters applied", "Split screens, picture-in-picture, or overlays", "Any 3D or parallax effects"],
+      "whyItWorks": "How these visual elements enhance the content"
     },
     "textStyle": {
-      "title": "Text & Captions",
-      "observations": ["font style", "placement", "timing", "readability", ...],
-      "whyItWorks": "How text enhances the content"
+      "title": "Text & Animations",
+      "observations": ["Font style and weight (bold, handwritten, sans-serif, etc.)", "Text animation type (pop-in, typewriter, fade, bounce, slide, word-by-word)", "Text placement on screen (center, bottom third, etc.)", "Text timing — how long each text stays on screen", "Caption style if subtitles are used (word highlight, karaoke-style, etc.)", "Color and shadow/stroke on text"],
+      "whyItWorks": "How text and its animations enhance readability and engagement"
     },
     "audio": {
-      "title": "Audio & Music",
-      "observations": ["music choice", "sound effects", "voiceover style", "audio sync", ...],
-      "whyItWorks": "How audio drives engagement"
+      "title": "Audio, Music & SFX",
+      "observations": ["Background music genre/mood/energy", "Is it a trending sound or original audio?", "Sound effects used (whoosh, pop, ding, bass drop, riser, etc.) and when they appear", "Voiceover style (if any) — tone, speed, energy", "How audio is synced to visual cuts", "Volume ducking or layering techniques"],
+      "whyItWorks": "How audio choices drive engagement and set the mood"
     },
     "engagementTactics": {
       "title": "Engagement Tactics",
-      "observations": ["CTA placement", "pattern interrupts", "curiosity gaps", "emotional triggers", ...],
-      "whyItWorks": "Why viewers keep watching and interact"
+      "observations": ["CTA placement and wording", "Pattern interrupts (unexpected visual/audio changes)", "Curiosity gaps or open loops", "Emotional triggers used", "Replay value — what makes someone rewatch"],
+      "whyItWorks": "Why viewers keep watching, engage, and share"
     },
     "recommendations": {
-      "title": "Recommendations for Your Editor",
-      "observations": ["specific technique to replicate", "editing style to adopt", "timing to follow", ...],
-      "whyItWorks": "How to apply these insights to your content"
+      "title": "Editor Action Items",
+      "observations": ["Specific transition techniques to replicate with exact timing", "Text animation style to recreate (name the effect)", "Audio/SFX to source or match", "Pacing template (e.g. '0.8s cuts for first 5s, then 1.5s cuts')", "Motion graphics elements to add", "Color grading or filter to match"],
+      "whyItWorks": "Step-by-step guide for an editor to recreate this style"
     }
   },
-  "tags": ["fast-cuts", "trending-audio", "text-overlay", ...]
+  "tags": ["fast-cuts", "trending-audio", "text-overlay", "zoom-transitions", "motion-graphics", ...]
 }
 
-Be specific and actionable. Focus on techniques that an editor can directly replicate. Only respond with valid JSON, no markdown code blocks.`;
+IMPORTANT GUIDELINES:
+- Be extremely specific and actionable. An editor should be able to recreate the style from your analysis alone.
+- Name exact techniques (e.g. "whip pan transition" not just "cool transition").
+- Reference specific timestamps or moments when possible.
+- For text animations, describe the exact motion (e.g. "words pop in one at a time with a slight bounce, 0.2s per word").
+- For SFX, describe the type and when they hit (e.g. "bass drop whoosh on each transition at 0:03, 0:07, 0:11").
+- For motion graphics, describe size, position, and movement.
+- Only respond with valid JSON, no markdown code blocks.`;
 
       const result = await model.generateContent([
         {
@@ -1286,10 +1298,11 @@ Be specific and actionable. Focus on techniques that an editor can directly repl
             hook: { title: "Hook & Opening", observations: ["Analysis could not be fully structured"], whyItWorks: "N/A" },
             pacing: { title: "Pacing & Rhythm", observations: ["See summary"], whyItWorks: "N/A" },
             transitions: { title: "Transitions & Cuts", observations: ["See summary"], whyItWorks: "N/A" },
-            textStyle: { title: "Text & Captions", observations: ["See summary"], whyItWorks: "N/A" },
-            audio: { title: "Audio & Music", observations: ["See summary"], whyItWorks: "N/A" },
+            motionGraphics: { title: "Motion Graphics & Visual Effects", observations: ["See summary"], whyItWorks: "N/A" },
+            textStyle: { title: "Text & Animations", observations: ["See summary"], whyItWorks: "N/A" },
+            audio: { title: "Audio, Music & SFX", observations: ["See summary"], whyItWorks: "N/A" },
             engagementTactics: { title: "Engagement Tactics", observations: ["See summary"], whyItWorks: "N/A" },
-            recommendations: { title: "Recommendations", observations: ["See summary"], whyItWorks: "N/A" },
+            recommendations: { title: "Editor Action Items", observations: ["See summary"], whyItWorks: "N/A" },
           },
           tags: [],
         };

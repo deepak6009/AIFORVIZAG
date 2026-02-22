@@ -11,7 +11,8 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   Video, Plus, Link2, Sparkles, Loader2, Upload, ExternalLink,
   ChevronDown, ChevronUp, Trash2, AlertCircle, Eye, Clock,
-  Zap, Scissors, Type, Music, Target, Lightbulb, Tag, Play, X
+  Zap, Scissors, Type, Music, Target, Lightbulb, Tag, Play, X,
+  Layers, Wand2
 } from "lucide-react";
 import { useState, useRef } from "react";
 import type { ReferenceReel, ReferenceAnalysis, ReferenceAnalysisSection } from "@shared/schema";
@@ -41,6 +42,7 @@ const sectionIcons: Record<string, any> = {
   hook: Zap,
   pacing: Play,
   transitions: Scissors,
+  motionGraphics: Wand2,
   textStyle: Type,
   audio: Music,
   engagementTactics: Target,
@@ -51,6 +53,7 @@ const sectionColors: Record<string, string> = {
   hook: "text-amber-500",
   pacing: "text-blue-500",
   transitions: "text-purple-500",
+  motionGraphics: "text-cyan-500",
   textStyle: "text-emerald-500",
   audio: "text-pink-500",
   engagementTactics: "text-orange-500",
@@ -114,13 +117,18 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
       const res = await apiRequest("POST", `/api/workspaces/${workspaceId}/references`, data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: ReferenceReel) => {
       queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/references`] });
       setAddOpen(false);
       setTitle("");
       setSourceUrl("");
       setVideoFile(null);
-      toast({ title: "Reference added" });
+      if (data.videoObjectPath) {
+        toast({ title: "Reference added — AI analysis starting..." });
+        setTimeout(() => analyzeMutation.mutate(data.id), 500);
+      } else {
+        toast({ title: "Reference added" });
+      }
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
