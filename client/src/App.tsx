@@ -53,6 +53,7 @@ function AppContent() {
         </>
       ) : (
         <>
+          <Route path="/auth">{() => { window.location.replace("/"); return null; }}</Route>
           <Route path="/" component={WorkspaceLayout} />
           <Route path="/workspace/:id" component={WorkspaceLayout} />
           <Route path="/workspace/:id/:tab" component={WorkspaceLayout} />
