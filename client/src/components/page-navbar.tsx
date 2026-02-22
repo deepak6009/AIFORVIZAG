@@ -27,12 +27,14 @@ export default function PageNavbar() {
           Home
         </button>
         <div className="hidden sm:flex items-center gap-2.5">
-          <span
-            className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900 mr-4"
+          <a
+            href="/"
+            onClick={(e) => { e.preventDefault(); navigate("/"); }}
+            className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900 mr-4 cursor-pointer hover:opacity-70 transition-opacity"
             data-testid="text-app-name"
           >
             <span className="font-light">the</span><span className="font-bold">crew</span>
-          </span>
+          </a>
           <button
             onClick={() => navigate("/auth")}
             className="text-gray-500 hover:text-gray-900 font-medium text-sm px-4 h-9 rounded-full transition-colors duration-200"
@@ -49,9 +51,13 @@ export default function PageNavbar() {
           </SlideInButton>
         </div>
         <div className="sm:hidden flex items-center gap-3">
-          <span className="text-lg tracking-[0.02em] lowercase text-gray-900">
+          <a
+            href="/"
+            onClick={(e) => { e.preventDefault(); navigate("/"); }}
+            className="text-lg tracking-[0.02em] lowercase text-gray-900 cursor-pointer hover:opacity-70 transition-opacity"
+          >
             <span className="font-light">the</span><span className="font-bold">crew</span>
-          </span>
+          </a>
           <button
             className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-700"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

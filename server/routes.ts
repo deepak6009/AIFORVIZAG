@@ -34,9 +34,16 @@ import {
   deleteTask,
   createTaskComment,
   getTaskComments,
+  createReference,
+  getReferencesByWorkspace,
+  getReference,
+  updateReferenceAnalysis,
+  deleteReference,
   getOrgIdForWorkspace,
 } from "./aws/fileService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client, S3_BUCKET_NAME } from "./aws/config";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -474,45 +481,42 @@ export async function registerRoutes(
 
   // === Gemini Briefing Chat ===
 
-  const BRIEFING_SYSTEM_PROMPT = `You are a concise video editing briefing assistant. Your job is to quickly gather ONLY the missing details needed for a video editing brief.
+  const BRIEFING_SYSTEM_PROMPT = `You are a fast, friendly video editing briefing assistant. Your job is to quickly gather missing details for a production brief — and CELEBRATE progress along the way.
 
-IMPORTANT: Read the summary of uploaded materials carefully. Extract everything you can from it. NEVER re-ask what's already clear from the summary or from briefingAnswers. If the summary covers a layer, confirm it in one sentence and move on immediately.
+CRITICAL RULES:
+- Before asking ANY question, thoroughly scan the summary AND briefingAnswers. If info is already provided (goal, audience, CTA, style, hook, pacing, captions, transitions, music, duration, platform, color, audio, B-roll), DO NOT ask about it.
+- If the uploaded materials are detailed, skip covered layers entirely. Trust the creator's input.
+- Maximum 2 questions per layer. If a layer is mostly covered, ask 0-1 questions for that layer.
+- Maximum 6 questions total across all 4 layers. For detailed uploads, aim for 0-2 total.
+- If ALL layers are already covered by the summary, set isComplete=true immediately.
 
-The creator can also attach files/folders from their workspace to any answer. When they do, the attached file paths will appear as "[Attached: path/to/file]" in their message. Acknowledge attached files naturally.
+The creator can attach workspace files. Attached paths appear as "[Attached: path/to/file]".
 
-There are 4 layers. Ask ONE question per layer. Combine sub-topics into a single question where possible.
+LAYERS (check summary coverage for each):
+LAYER 1 — GOAL & AUDIENCE: Purpose, target audience, CTA
+LAYER 2 — STYLE & HOOK: Vibe, opening hook style, reference creators
+LAYER 3 — EDITING & VISUALS: Pacing, captions, transitions, color, B-roll
+LAYER 4 — AUDIO & FORMAT: Music, SFX, duration, platform
 
-LAYER 1 — GOAL & AUDIENCE
-What's the video's purpose and who's it for?
-Options: Grow followers / Sell / Build authority / Go viral / Educate / Entertain
-(Audience and CTA can be inferred or asked as a quick follow-up only if unclear)
+TRANSITIONS:
+When moving from one layer to the next, START your message with a short transition line:
+- After Layer 1: "Goal locked in. Moving to style..."
+- After Layer 2: "Style sorted. Let's talk editing..."
+- After Layer 3: "Editing dialed in. Final stretch — audio & format..."
+- After Layer 4: "All set! Your brief is ready to generate."
+- If skipping layers: "Great — your doc already covers [layers]. Just need [missing]..."
 
-LAYER 2 — STYLE & HOOK
-What vibe and opening style?
-Vibe options: Bold & punchy / Clean & educational / High-energy / Storytelling / Chaotic & expressive / Custom
-Hook options: Bold statement / Question / Controversy / Emotional / Statistic / Fast montage
+Keep transition lines SHORT (under 10 words) then ask your question. Do NOT use emojis.
 
-LAYER 3 — EDITING & VISUALS
-How should it be edited?
-Pace: Fast cuts / Medium / Slow cinematic
-Captions: Big bold / Minimal / Word-by-word / None
-(Only ask about transitions and B-roll if not obvious from the vibe choice)
+FLOW:
+1. First message: Scan summary. Acknowledge what's covered with a quick note. Ask about first gap (if any). If nothing is missing, complete immediately.
+2. Ask ONE question at a time. Keep it to 1-2 sentences max.
+3. When a layer is done, transition briefly and move to next gap.
+4. When everything is gathered, set isComplete=true with a clear completion message.
 
-LAYER 4 — AUDIO & FORMAT
-Music and final specs?
-Music: Energetic / Emotional / Corporate / Trap / Lofi / None
-Duration: Under 20s / 20-30s / 30-45s / 60s
-Platform: Reels / Shorts / TikTok / Multi-platform
-
-RULES:
-1. Extract and acknowledge info from the summary FIRST. Skip layers already covered.
-2. Ask only ONE question at a time. Keep messages short (2-3 sentences max).
-3. If a layer is covered by summary + answers, confirm briefly and jump to the next.
-4. After all 4 layers done, set isComplete=true and give a brief final summary.
-5. Check briefingAnswers — never re-ask answered questions.
-6. Respond ONLY in this JSON format:
+Respond ONLY in this JSON format:
 {
-  "message": "Short message to the creator",
+  "message": "Transition note + question (or completion message)",
   "currentLayer": 1,
   "options": [{"id": "opt1", "label": "Label", "value": "value"}],
   "multiSelect": false,
@@ -783,7 +787,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       const userId = req.userId;
       const orgId = await resolveOrgForWorkspace(userId, req.params.id);
       const wsId = req.params.id;
-      const { title, description, status, priority, sourceInterrogationId } = req.body;
+      const { title, description, status, priority, sourceInterrogationId, assignees } = req.body;
       if (!title) return res.status(400).json({ error: "Title is required" });
       const task = await createTask({
         orgId, workspaceId: wsId, title,
@@ -791,6 +795,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
         status: status || "todo",
         priority: priority || "medium",
         sourceInterrogationId,
+        assignees: Array.isArray(assignees) ? assignees : [],
         createdBy: userId,
       });
       res.json(task);
@@ -806,7 +811,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       const userId = req.userId;
       const orgId = await resolveOrgForWorkspace(userId, req.params.wsId);
       const { wsId, taskId } = req.params;
-      const { title, description, status, priority, assignee, videoUrl } = req.body;
+      const { title, description, status, priority, assignees, videoUrl } = req.body;
       const allowedStatuses = ["todo", "in_progress", "review", "done"];
       const allowedPriorities = ["high", "medium", "low"];
       const safeUpdates: Record<string, any> = {};
@@ -814,7 +819,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       if (description !== undefined) safeUpdates.description = String(description);
       if (status !== undefined && allowedStatuses.includes(status)) safeUpdates.status = status;
       if (priority !== undefined && allowedPriorities.includes(priority)) safeUpdates.priority = priority;
-      if (assignee !== undefined) safeUpdates.assignee = String(assignee);
+      if (assignees !== undefined) safeUpdates.assignees = Array.isArray(assignees) ? assignees : [];
       if (videoUrl !== undefined) safeUpdates.videoUrl = String(videoUrl);
       await updateTask(orgId, wsId, taskId, safeUpdates);
       res.json({ success: true });
@@ -870,13 +875,19 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
         return res.status(400).json({ error: "No completed final agenda found. Please complete the Interrogator first." });
       }
 
+      const existingTasks = await getTasksByWorkspace(orgId, wsId);
+      const existingTaskTitles = existingTasks.map((t: any) => t.title?.toLowerCase().trim()).filter(Boolean);
+      const existingContext = existingTasks.length > 0
+        ? `\n\nEXISTING TASKS (do NOT duplicate these — create only NEW tasks):\n${existingTasks.map((t: any) => `- ${t.title}`).join("\n")}`
+        : "";
+
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
       const prompt = `You are a video production project manager. Based on the following production brief, generate a list of actionable tasks for a video editor.
 
 PRODUCTION BRIEF:
-${finalDocument}
+${finalDocument}${existingContext}
 
 INSTRUCTIONS:
 - Break the brief into specific, actionable editing tasks
@@ -886,6 +897,7 @@ INSTRUCTIONS:
 - All tasks start with status "todo"
 - Generate 5-15 tasks depending on complexity
 - Task descriptions should be detailed enough for the editor to work independently
+- IMPORTANT: Do NOT create tasks that overlap with existing tasks listed above. Only generate NEW, unique tasks.
 
 Return ONLY valid JSON array, no markdown, no code fences. Each object must have:
 {"title": "string", "description": "string", "priority": "high|medium|low"}
@@ -909,8 +921,13 @@ Example:
         return res.status(500).json({ error: "AI did not return a task array. Please try again." });
       }
 
+      const filteredTasks = tasks.filter((t: any) => {
+        const title = (t.title || "").toLowerCase().trim();
+        return title && !existingTaskTitles.includes(title);
+      });
+
       const createdTasks = [];
-      for (const t of tasks) {
+      for (const t of filteredTasks) {
         const task = await createTask({
           orgId, workspaceId: wsId,
           title: t.title || "Untitled Task",
@@ -1152,6 +1169,211 @@ INSTRUCTIONS:
       if (error.message === "ACCESS_DENIED") return res.status(403).json({ message: "Access denied" });
       console.error("Error in task chat:", error);
       res.status(500).json({ error: error.message || "Failed to get AI response" });
+    }
+  });
+
+  // === Reference Reels ===
+
+  app.get("/api/workspaces/:id/references", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const refs = await getReferencesByWorkspace(orgId, req.params.id);
+      refs.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      res.json(refs);
+    } catch (error: any) {
+      console.error("Error listing references:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/workspaces/:id/references", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { title, sourceUrl, sourcePlatform, videoObjectPath, videoUrl } = req.body;
+      if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+      const ref = await createReference({
+        orgId,
+        workspaceId: req.params.id,
+        title,
+        sourceUrl,
+        sourcePlatform,
+        videoObjectPath,
+        videoUrl,
+        createdBy: userId,
+      });
+      res.json(ref);
+    } catch (error: any) {
+      console.error("Error creating reference:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/workspaces/:wsId/references/:refId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      await deleteReference(orgId, req.params.wsId, req.params.refId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting reference:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/workspaces/:wsId/references/:refId/analyze", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const ref = await getReference(orgId, req.params.wsId, req.params.refId);
+      if (!ref) {
+        return res.status(404).json({ error: "Reference not found" });
+      }
+
+      if (!ref.videoObjectPath) {
+        return res.status(400).json({ error: "No video uploaded for analysis. Please upload a video file." });
+      }
+
+      await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+        analysisStatus: "processing",
+      });
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      // Download the video from S3 to send to Gemini
+      const s3Key = ref.videoObjectPath.includes("cloudfront.net/")
+        ? ref.videoObjectPath.split("cloudfront.net/")[1]
+        : ref.videoObjectPath.includes(".amazonaws.com/")
+          ? ref.videoObjectPath.split(".amazonaws.com/")[1]
+          : ref.videoObjectPath;
+
+      const s3Response = await s3Client.send(new GetObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: s3Key,
+      }));
+
+      const videoBytes = await s3Response.Body?.transformToByteArray();
+      if (!videoBytes) {
+        throw new Error("Failed to download video from storage");
+      }
+
+      const videoBase64 = Buffer.from(videoBytes).toString("base64");
+      const contentType = s3Response.ContentType || "video/mp4";
+
+      const prompt = `You are an expert short-form content analyst and video editor specializing in viral Instagram Reels, TikTok videos, and YouTube Shorts.
+
+Analyze this reference video frame by frame and provide an extremely detailed, editor-ready breakdown. Focus on every visual and audio element an editor would need to replicate this style. Return your analysis as a JSON object with this exact structure:
+
+{
+  "summary": "A 2-3 sentence executive summary of the video — what type of content it is, the overall style, and the #1 reason it works",
+  "sections": {
+    "hook": {
+      "title": "Hook & Opening",
+      "observations": ["Exactly what happens in the first 1-3 seconds", "Visual or audio pattern interrupt used", "Text/title that appears and when", "Why a viewer would stop scrolling"],
+      "whyItWorks": "Brief explanation of why this hook grabs attention"
+    },
+    "pacing": {
+      "title": "Pacing & Rhythm",
+      "observations": ["Average cut length (e.g. 0.5s, 1s, 2s cuts)", "How pacing changes throughout (fast start, slow middle, etc.)", "Beat-sync — are cuts timed to the music beat?", "Scene duration patterns"],
+      "whyItWorks": "Why this pacing works for retention"
+    },
+    "transitions": {
+      "title": "Transitions & Cuts",
+      "observations": ["List each transition type used (e.g. hard cut, whip pan, zoom, match cut, swipe, dissolve, J-cut)", "Timestamps or moments where notable transitions occur", "Whether transitions follow a pattern or are varied"],
+      "whyItWorks": "What makes these transitions feel seamless or impactful"
+    },
+    "motionGraphics": {
+      "title": "Motion Graphics & Visual Effects",
+      "observations": ["Any animated elements (arrows, circles, highlights, callouts, stickers)", "Zoom effects (Ken Burns, punch-in zoom, smooth zoom)", "Screen shake or camera movement effects", "Color grading / filters applied", "Split screens, picture-in-picture, or overlays", "Any 3D or parallax effects"],
+      "whyItWorks": "How these visual elements enhance the content"
+    },
+    "textStyle": {
+      "title": "Text & Animations",
+      "observations": ["Font style and weight (bold, handwritten, sans-serif, etc.)", "Text animation type (pop-in, typewriter, fade, bounce, slide, word-by-word)", "Text placement on screen (center, bottom third, etc.)", "Text timing — how long each text stays on screen", "Caption style if subtitles are used (word highlight, karaoke-style, etc.)", "Color and shadow/stroke on text"],
+      "whyItWorks": "How text and its animations enhance readability and engagement"
+    },
+    "audio": {
+      "title": "Audio, Music & SFX",
+      "observations": ["Background music genre/mood/energy", "Is it a trending sound or original audio?", "Sound effects used (whoosh, pop, ding, bass drop, riser, etc.) and when they appear", "Voiceover style (if any) — tone, speed, energy", "How audio is synced to visual cuts", "Volume ducking or layering techniques"],
+      "whyItWorks": "How audio choices drive engagement and set the mood"
+    },
+    "engagementTactics": {
+      "title": "Engagement Tactics",
+      "observations": ["CTA placement and wording", "Pattern interrupts (unexpected visual/audio changes)", "Curiosity gaps or open loops", "Emotional triggers used", "Replay value — what makes someone rewatch"],
+      "whyItWorks": "Why viewers keep watching, engage, and share"
+    },
+    "recommendations": {
+      "title": "Editor Action Items",
+      "observations": ["Specific transition techniques to replicate with exact timing", "Text animation style to recreate (name the effect)", "Audio/SFX to source or match", "Pacing template (e.g. '0.8s cuts for first 5s, then 1.5s cuts')", "Motion graphics elements to add", "Color grading or filter to match"],
+      "whyItWorks": "Step-by-step guide for an editor to recreate this style"
+    }
+  },
+  "tags": ["fast-cuts", "trending-audio", "text-overlay", "zoom-transitions", "motion-graphics", ...]
+}
+
+IMPORTANT GUIDELINES:
+- Be extremely specific and actionable. An editor should be able to recreate the style from your analysis alone.
+- Name exact techniques (e.g. "whip pan transition" not just "cool transition").
+- Reference specific timestamps or moments when possible.
+- For text animations, describe the exact motion (e.g. "words pop in one at a time with a slight bounce, 0.2s per word").
+- For SFX, describe the type and when they hit (e.g. "bass drop whoosh on each transition at 0:03, 0:07, 0:11").
+- For motion graphics, describe size, position, and movement.
+- Only respond with valid JSON, no markdown code blocks.`;
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: contentType,
+            data: videoBase64,
+          },
+        },
+        { text: prompt },
+      ]);
+
+      const responseText = result.response.text();
+      let analysis;
+      try {
+        const cleaned = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        analysis = JSON.parse(cleaned);
+      } catch {
+        analysis = {
+          summary: responseText,
+          sections: {
+            hook: { title: "Hook & Opening", observations: ["Analysis could not be fully structured"], whyItWorks: "N/A" },
+            pacing: { title: "Pacing & Rhythm", observations: ["See summary"], whyItWorks: "N/A" },
+            transitions: { title: "Transitions & Cuts", observations: ["See summary"], whyItWorks: "N/A" },
+            motionGraphics: { title: "Motion Graphics & Visual Effects", observations: ["See summary"], whyItWorks: "N/A" },
+            textStyle: { title: "Text & Animations", observations: ["See summary"], whyItWorks: "N/A" },
+            audio: { title: "Audio, Music & SFX", observations: ["See summary"], whyItWorks: "N/A" },
+            engagementTactics: { title: "Engagement Tactics", observations: ["See summary"], whyItWorks: "N/A" },
+            recommendations: { title: "Editor Action Items", observations: ["See summary"], whyItWorks: "N/A" },
+          },
+          tags: [],
+        };
+      }
+
+      await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+        analysisStatus: "completed",
+        analysis,
+      });
+
+      const updated = await getReference(orgId, req.params.wsId, req.params.refId);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error analyzing reference:", error);
+      const userId = req.userId;
+      try {
+        const orgId = await getOrCreateDefaultOrg(userId);
+        await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+          analysisStatus: "failed",
+          errorMessage: error.message || "Analysis failed",
+        });
+      } catch {}
+      res.status(500).json({ error: error.message || "Failed to analyze reference" });
     }
   });
 

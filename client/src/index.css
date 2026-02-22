@@ -385,3 +385,12 @@
 .animate-subtle-scale {
   animation: subtle-scale-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@keyframes gradient-shimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.animate-gradient-shimmer {
+  animation: gradient-shimmer 6s ease-in-out infinite;
+}

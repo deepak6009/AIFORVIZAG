@@ -78,7 +78,7 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
           <div>
             <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              Team Members
+              Team
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage who has access to this workspace</p>
           </div>
@@ -138,10 +138,16 @@ export default function UsersTab({ workspaceId }: { workspaceId: string }) {
             })}
           </div>
         ) : (
-          <div className="text-center py-12 sm:py-16 border rounded-lg bg-card/50">
-            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-semibold mb-1">No members yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">Add team members to start collaborating</p>
+          <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 sm:p-12 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-7 h-7 text-primary" />
+            </div>
+            <h3 className="font-semibold text-foreground mb-1">Invite your team</h3>
+            <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">Add your editors and collaborators so they can access files, briefs, and tasks in this workspace.</p>
+            <Button size="sm" onClick={() => setAddOpen(true)} data-testid="button-add-first-member">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Member
+            </Button>
           </div>
         )}
       </div>

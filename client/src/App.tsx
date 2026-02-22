@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import AuthPage from "@/pages/auth";
 import LandingPage from "@/pages/landing";
 import WorkspaceLayout from "@/pages/workspace-layout";
+import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
 import AboutPage from "@/pages/about";
 import PricingPage from "@/pages/pricing";
@@ -57,6 +58,8 @@ function AppContent() {
           <Route path="/" component={WorkspaceLayout} />
           <Route path="/workspace/:id" component={WorkspaceLayout} />
           <Route path="/workspace/:id/:tab" component={WorkspaceLayout} />
+          <Route path="/profile" component={ProfilePage} />
+          <Route path="/auth"><Redirect to="/" /></Route>
           <Route component={NotFound} />
         </>
       )}

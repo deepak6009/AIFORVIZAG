@@ -63,7 +63,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   sourceInterrogationId?: string;
-  assignee?: string;
+  assignees?: string[];
   videoUrl?: string;
   createdBy: string;
   createdAt: string;
@@ -91,6 +91,45 @@ export interface Interrogation {
   briefingAnswers: Record<string, any>;
   finalDocument?: string;
   status: "analysed" | "briefing" | "completed";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ReferenceAnalysisStatus = "pending" | "processing" | "completed" | "failed";
+
+export interface ReferenceAnalysisSection {
+  title: string;
+  observations: string[];
+  whyItWorks?: string;
+}
+
+export interface ReferenceAnalysis {
+  summary: string;
+  sections: {
+    hook: ReferenceAnalysisSection;
+    pacing: ReferenceAnalysisSection;
+    transitions: ReferenceAnalysisSection;
+    textStyle: ReferenceAnalysisSection;
+    audio: ReferenceAnalysisSection;
+    engagementTactics: ReferenceAnalysisSection;
+    recommendations: ReferenceAnalysisSection;
+  };
+  tags: string[];
+}
+
+export interface ReferenceReel {
+  id: string;
+  orgId: string;
+  workspaceId: string;
+  title: string;
+  sourceUrl?: string;
+  sourcePlatform?: "instagram" | "tiktok" | "youtube" | "other";
+  videoObjectPath?: string;
+  videoUrl?: string;
+  analysisStatus: ReferenceAnalysisStatus;
+  analysis?: ReferenceAnalysis;
+  errorMessage?: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;

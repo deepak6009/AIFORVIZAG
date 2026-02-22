@@ -172,7 +172,7 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
             <FolderOpen className="w-5 h-5 text-primary" />
-            {currentFolderId ? crumbs[crumbs.length - 1]?.name || "Folder" : "All Folders"}
+            {currentFolderId ? crumbs[crumbs.length - 1]?.name || "Folder" : "Files"}
           </h2>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => setCreateOpen(true)} data-testid="button-create-folder">
@@ -309,10 +309,13 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-10 sm:py-12 border rounded-lg bg-card/50 mt-4">
-                    <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground mb-3">No files in this folder yet</p>
-                    <Button size="sm" className="h-10 sm:h-9" onClick={() => fileInputRef.current?.click()} data-testid="button-upload-empty">
+                  <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 sm:p-10 text-center mt-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Upload className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground text-sm mb-1">Drop your files here</h3>
+                    <p className="text-xs text-muted-foreground mb-4">Upload raw clips, images, or videos to this folder</p>
+                    <Button size="sm" onClick={() => fileInputRef.current?.click()} data-testid="button-upload-empty">
                       <Upload className="w-4 h-4 mr-1.5" />
                       Upload Files
                     </Button>
@@ -322,13 +325,13 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
             )}
 
             {!currentFolderId && currentFolders.length === 0 && (
-              <div className="text-center py-12 sm:py-16">
-                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                  <FolderOpen className="w-7 h-7 text-muted-foreground" />
+              <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 sm:p-12 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                  <FolderOpen className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-1">No folders yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">Create a folder to start organizing your files</p>
-                <Button size="sm" className="h-10 sm:h-9" onClick={() => setCreateOpen(true)} data-testid="button-create-first-folder">
+                <h3 className="font-semibold text-foreground mb-1">Organize your content</h3>
+                <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">Create folders like "Raw Clips", "Drafts", and "Finals" to keep your content pipeline organized.</p>
+                <Button size="sm" onClick={() => setCreateOpen(true)} data-testid="button-create-first-folder">
                   <FolderPlus className="w-4 h-4 mr-1.5" />
                   Create Folder
                 </Button>
@@ -336,8 +339,8 @@ export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
             )}
 
             {!currentFolderId && currentFolders.length > 0 && (
-              <div className="text-center py-6 sm:py-8 border rounded-lg bg-muted/30 mt-3">
-                <p className="text-sm text-muted-foreground">Select a folder to view and upload files</p>
+              <div className="rounded-xl border border-border bg-card/80 p-5 mt-3 text-center">
+                <p className="text-sm text-muted-foreground">Click a folder above to view and upload files</p>
               </div>
             )}
           </>
