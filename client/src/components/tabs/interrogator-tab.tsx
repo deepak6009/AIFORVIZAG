@@ -57,7 +57,7 @@ const STEPS = [
 
 function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onStepClick: (step: number) => void }) {
   return (
-    <div className="flex items-center justify-between mb-6 max-w-md mx-auto" data-testid="step-indicator">
+    <div className="flex items-center justify-between mb-8 max-w-lg mx-auto" data-testid="step-indicator">
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;
@@ -68,12 +68,12 @@ function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onSt
             <button
               onClick={() => isClickable && onStepClick(step.id)}
               disabled={!isClickable}
-              className={`flex flex-col items-center gap-1.5 transition-all w-full ${isClickable ? "cursor-pointer" : "cursor-not-allowed"}`}
+              className={`flex flex-col items-center gap-2 transition-all w-full ${isClickable ? "cursor-pointer" : "cursor-not-allowed"}`}
               data-testid={`step-${step.id}`}
             >
-              <div className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all ${
+              <div className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110"
                   : isCompleted
                     ? "bg-primary/15 text-primary"
                     : "bg-muted text-muted-foreground"
@@ -81,12 +81,12 @@ function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onSt
                 {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
               </div>
               <div className="text-center">
-                <p className={`text-xs font-semibold leading-tight ${isActive ? "text-foreground" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>{step.label}</p>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5 hidden sm:block">{step.description}</p>
+                <p className={`text-xs font-bold leading-tight ${isActive ? "text-foreground" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>{step.label}</p>
+                <p className={`text-[10px] leading-tight mt-0.5 hidden sm:block ${isActive ? "text-muted-foreground" : "text-muted-foreground/60"}`}>{step.description}</p>
               </div>
             </button>
             {idx < STEPS.length - 1 && (
-              <div className={`h-px flex-1 mx-2 mt-[-18px] ${currentStep > step.id ? "bg-primary/40" : "bg-border"}`} />
+              <div className={`h-0.5 flex-1 mx-3 mt-[-22px] rounded-full transition-all ${currentStep > step.id ? "bg-primary/40" : "bg-border"}`} />
             )}
           </div>
         );
@@ -731,6 +731,17 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
   return (
     <div className="h-full overflow-auto">
       <div className="max-w-3xl mx-auto p-6 space-y-4">
+        <div className="text-center mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-semibold text-primary">AI Brief</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">Create your production brief</h1>
+          <p className="text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
+            Upload your materials, answer a few creative questions, and get an AI-generated brief ready for your editors.
+          </p>
+        </div>
+
         <StepIndicator currentStep={currentStep} onStepClick={setCurrentStep} />
 
         {currentStep === 1 && (
@@ -875,11 +886,16 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
           <div className="space-y-4" data-testid="step-2-content">
             <div className="mb-2">
               <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">AI Briefing</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Answer a few questions to shape your production brief</p>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Bot className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">AI Briefing</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Shape your production brief with guided questions</p>
+                  </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground font-medium">
+                <div className={`text-[10px] font-semibold px-2 py-1 rounded-full ${briefingComplete ? "bg-green-500/10 text-green-600" : "bg-primary/10 text-primary"}`}>
                   {briefingComplete ? "Complete" : `Layer ${currentLayer} of 4`}
                 </div>
               </div>
@@ -1212,7 +1228,11 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
         {currentStep === 3 && (
           <div className="space-y-4" data-testid="step-3-content">
             <div className="text-center pb-2">
-              <h2 className="text-lg font-semibold">Production Brief</h2>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 mb-2">
+                <FileCheck className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-xs font-semibold text-green-600">Ready</span>
+              </div>
+              <h2 className="text-xl font-bold">Production Brief</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Your AI-generated brief combining uploaded materials, briefing answers, and creative direction.
               </p>

@@ -31,12 +31,12 @@ import TasksTab from "@/components/tabs/tasks-tab";
 import ResourcesTab from "@/components/tabs/resources-tab";
 
 const tabs = [
-  { id: "folders", label: "Files", icon: FolderOpen },
-  { id: "users", label: "Team", icon: Users },
-  { id: "interrogator", label: "AI Brief", icon: Sparkles },
-  { id: "final-agenda", label: "Briefs", icon: FileCheck },
-  { id: "tasks", label: "Tasks", icon: LayoutGrid },
-  { id: "resources", label: "Resources", icon: FileText },
+  { id: "folders", label: "Files", icon: FolderOpen, accent: false },
+  { id: "users", label: "Team", icon: Users, accent: false },
+  { id: "interrogator", label: "AI Brief", icon: Sparkles, accent: true },
+  { id: "final-agenda", label: "Briefs", icon: FileCheck, accent: true },
+  { id: "tasks", label: "Tasks", icon: LayoutGrid, accent: false },
+  { id: "resources", label: "Resources", icon: FileText, accent: false },
 ] as const;
 
 type TabId = typeof tabs[number]["id"];
@@ -366,12 +366,14 @@ export default function WorkspaceLayout() {
                 flex items-center gap-1.5 px-3.5 h-full text-[13px] font-medium transition-colors relative whitespace-nowrap
                 ${isActive
                   ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : tab.accent
+                    ? "text-primary/70 hover:text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 }
               `}
               data-testid={`tab-${tab.id}`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-primary" : ""}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-primary" : tab.accent ? "text-primary/70" : ""}`} />
               {tab.label}
               {isActive && (
                 <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-t-full" />
@@ -385,7 +387,7 @@ export default function WorkspaceLayout() {
         {activeTab === "users" && <UsersTab workspaceId={workspaceId} />}
         {activeTab === "folders" && <FoldersTab workspaceId={workspaceId} />}
         {activeTab === "interrogator" && <InterrogatorTab workspaceId={workspaceId} />}
-        {activeTab === "final-agenda" && <FinalAgendaTab workspaceId={workspaceId} />}
+        {activeTab === "final-agenda" && <FinalAgendaTab workspaceId={workspaceId} onNavigate={handleTabChange} />}
         {activeTab === "tasks" && <TasksTab workspaceId={workspaceId} />}
         {activeTab === "resources" && <ResourcesTab workspaceId={workspaceId} />}
       </main>
@@ -403,7 +405,9 @@ export default function WorkspaceLayout() {
                   flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors min-w-0 relative
                   ${isActive
                     ? "text-primary"
-                    : "text-muted-foreground active:text-foreground"
+                    : tab.accent
+                      ? "text-primary/60 active:text-primary"
+                      : "text-muted-foreground active:text-foreground"
                   }
                 `}
                 data-testid={`tab-mobile-${tab.id}`}

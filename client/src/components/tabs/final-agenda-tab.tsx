@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileCheck, Clock, ChevronDown, ChevronUp, FileText, AlertCircle } from "lucide-react";
+import { FileCheck, Clock, ChevronDown, ChevronUp, FileText, AlertCircle, Sparkles, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Interrogation } from "@shared/schema";
 
-export default function FinalAgendaTab({ workspaceId }: { workspaceId: string }) {
+export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceId: string; onNavigate?: (tab: string) => void }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: interrogations, isLoading, error } = useQuery<Interrogation[]>({
@@ -20,6 +21,11 @@ export default function FinalAgendaTab({ workspaceId }: { workspaceId: string })
     const d = new Date(dateStr);
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) +
       " at " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  };
+
+  const getPreviewText = (markdown: string) => {
+    const plain = markdown.replace(/[#*_`~\[\]()>|-]/g, "").replace(/\n+/g, " ").trim();
+    return plain.length > 140 ? plain.slice(0, 140) + "..." : plain;
   };
 
   if (isLoading) {
@@ -51,66 +57,95 @@ export default function FinalAgendaTab({ workspaceId }: { workspaceId: string })
 
   return (
     <div className="h-full overflow-auto p-6" data-testid="final-agenda-tab">
-      <div className="max-w-4xl mx-auto space-y-5">
-        <div className="flex items-center gap-3 pb-2">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <FileCheck className="w-5 h-5 text-primary" />
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <FileCheck className="w-5.5 h-5.5 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h2 className="text-xl font-bold tracking-tight" data-testid="text-final-agenda-title">Briefs</h2>
+                {completedDocs.length > 0 && (
+                  <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 bg-primary/10 text-primary border-0 font-bold">
+                    {completedDocs.length}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Your saved production briefs from AI briefing sessions
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold" data-testid="text-final-agenda-title">Briefs</h2>
-            <p className="text-sm text-muted-foreground">
-              Saved production briefs from your AI briefing sessions
-            </p>
-          </div>
+          {completedDocs.length > 0 && onNavigate && (
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onNavigate("interrogator")} data-testid="button-new-brief">
+              <Sparkles className="w-3.5 h-3.5" />
+              New Brief
+            </Button>
+          )}
         </div>
 
         {completedDocs.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                <FileText className="w-7 h-7 text-muted-foreground" />
+          <Card className="border-dashed border-2">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+                <Sparkles className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-medium text-base mb-1" data-testid="text-no-agendas">No briefs yet</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Go to the AI Brief tab and complete a briefing session. Your saved production briefs will appear here.
+              <h3 className="font-bold text-lg mb-2" data-testid="text-no-agendas">No production briefs yet</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-6">
+                Start an AI Brief session to upload your materials, answer creative questions, and generate a production brief for your editors.
               </p>
+              {onNavigate && (
+                <Button onClick={() => onNavigate("interrogator")} className="gap-2" data-testid="button-go-to-ai-brief">
+                  <Sparkles className="w-4 h-4" />
+                  Create your first brief
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
-            {completedDocs.map((doc) => {
+            {completedDocs.map((doc, index) => {
               const isExpanded = expandedId === doc.id;
               return (
-                <Card key={doc.id} className="overflow-hidden" data-testid={`card-agenda-${doc.id}`}>
+                <Card key={doc.id} className={`overflow-hidden transition-shadow ${isExpanded ? "shadow-md ring-1 ring-primary/10" : "hover:shadow-sm"}`} data-testid={`card-agenda-${doc.id}`}>
                   <button
-                    className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-muted/30 transition-colors"
+                    className="w-full px-5 py-4 flex items-start justify-between text-left hover:bg-muted/30 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : doc.id)}
                     data-testid={`button-toggle-agenda-${doc.id}`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                        <FileCheck className="w-4 h-4 text-green-600" />
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <FileCheck className="w-4.5 h-4.5 text-green-600" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          Production Brief
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-sm">
+                            Production Brief #{completedDocs.length - index}
+                          </p>
+                          <Badge variant="secondary" className="text-[10px] bg-green-500/10 text-green-700 dark:text-green-400 border-0 px-1.5 py-0">
+                            Completed
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="w-3 h-3" />
                           <span>{formatDate(doc.updatedAt)}</span>
                         </div>
+                        {!isExpanded && doc.finalDocument && (
+                          <p className="text-xs text-muted-foreground/70 mt-2 line-clamp-2 leading-relaxed">
+                            {getPreviewText(doc.finalDocument)}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-3">
-                      <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-700 border-0">
-                        Completed
-                      </Badge>
+                    <div className="shrink-0 ml-3 mt-1">
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                     </div>
                   </button>
                   {isExpanded && (
                     <CardContent className="pt-0 pb-5 px-5 border-t">
-                      <div className="prose prose-sm dark:prose-invert max-w-none mt-4" data-testid={`content-agenda-${doc.id}`}>
+                      <div className="prose prose-sm dark:prose-invert max-w-none mt-4 prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid={`content-agenda-${doc.id}`}>
                         <ReactMarkdown>{doc.finalDocument || ""}</ReactMarkdown>
                       </div>
                     </CardContent>
