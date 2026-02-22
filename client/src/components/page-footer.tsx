@@ -9,7 +9,7 @@ export default function PageFooter() {
         <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
           <div className="col-span-2 sm:col-span-3">
             <div className="flex items-center mb-1">
-              <span className="text-gray-900 text-[15px] tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></span>
+              <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-gray-900 text-[15px] tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity"><span className="font-light">the</span><span className="font-bold">crew</span></a>
             </div>
           </div>
 

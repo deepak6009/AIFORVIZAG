@@ -118,7 +118,7 @@ export default function WorkspaceLayout() {
     return (
       <div className="min-h-screen bg-background">
         <header className="h-14 border-b bg-background flex items-center justify-between px-4">
-          <span className="text-lg tracking-[0.02em] lowercase" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></span>
+          <a href="/" onClick={(e) => { e.preventDefault(); setLocation("/"); }} className="text-lg tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></a>
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -244,7 +244,7 @@ export default function WorkspaceLayout() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="h-12 sm:h-12 border-b bg-background shrink-0 flex items-center justify-between px-3 sm:px-4 z-50">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <span className="text-base sm:text-lg tracking-[0.02em] lowercase shrink-0" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></span>
+          <a href="/" onClick={(e) => { e.preventDefault(); setLocation("/"); }} className="text-base sm:text-lg tracking-[0.02em] lowercase shrink-0 cursor-pointer hover:opacity-70 transition-opacity" data-testid="text-app-name"><span className="font-light">the</span><span className="font-extrabold">crew</span></a>
 
           <div className="h-5 w-px bg-border mx-0.5 sm:mx-1" />
 

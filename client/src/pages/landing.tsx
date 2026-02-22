@@ -342,9 +342,9 @@ export default function LandingPage() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "nav-glass-scrolled border-b border-gray-200/40 shadow-sm" : "border-b border-gray-200/30"}`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between px-5 sm:px-8 lg:px-10 h-14 sm:h-16">
           <div className="flex items-center">
-            <span className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900" data-testid="text-app-name">
+            <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-lg sm:text-xl tracking-[0.02em] lowercase text-gray-900 cursor-pointer hover:opacity-70 transition-opacity" data-testid="text-app-name">
               <span className="font-light">the</span><span className="font-bold">crew</span>
-            </span>
+            </a>
           </div>
           <div className="hidden sm:flex items-center gap-2.5">
             <button
@@ -832,7 +832,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center mb-1">
-                <span className="text-gray-900 text-[15px] tracking-[0.02em] lowercase"><span className="font-light">the</span><span className="font-bold">crew</span></span>
+                <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-gray-900 text-[15px] tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity"><span className="font-light">the</span><span className="font-bold">crew</span></a>
               </div>
             </div>
 
