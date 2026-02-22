@@ -30,13 +30,13 @@ import FinalAgendaTab from "@/components/tabs/final-agenda-tab";
 import TasksTab from "@/components/tabs/tasks-tab";
 import ResourcesTab from "@/components/tabs/resources-tab";
 
-const tabs = [
-  { id: "folders", label: "Files", icon: FolderOpen, accent: false },
-  { id: "users", label: "Team", icon: Users, accent: false },
-  { id: "interrogator", label: "AI Brief", icon: Sparkles, accent: true },
-  { id: "final-agenda", label: "Briefs", icon: FileCheck, accent: true },
-  { id: "tasks", label: "Tasks", icon: LayoutGrid, accent: false },
-  { id: "resources", label: "References", icon: Video, accent: false },
+const allTabs = [
+  { id: "folders", label: "Files", icon: FolderOpen, accent: false, adminOnly: false },
+  { id: "users", label: "Team", icon: Users, accent: false, adminOnly: false },
+  { id: "interrogator", label: "AI Brief", icon: Sparkles, accent: true, adminOnly: true },
+  { id: "final-agenda", label: "Briefs", icon: FileCheck, accent: true, adminOnly: false },
+  { id: "tasks", label: "Tasks", icon: LayoutGrid, accent: false, adminOnly: false },
+  { id: "resources", label: "References", icon: Video, accent: false, adminOnly: false },
 ] as const;
 
 type TabId = typeof allTabs[number]["id"];

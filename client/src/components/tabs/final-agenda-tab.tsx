@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Interrogation } from "@shared/schema";
 
-export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceId: string; onNavigate?: (tab: string) => void }) {
+export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceId: string; onNavigate?: (tab: "folders" | "users" | "interrogator" | "final-agenda" | "tasks" | "resources") => void }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { toast } = useToast();
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
