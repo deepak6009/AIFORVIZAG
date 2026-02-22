@@ -1,15 +1,37 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileCheck, Clock, ChevronDown, ChevronUp, FileText, AlertCircle, Sparkles, ArrowRight } from "lucide-react";
+import { FileCheck, Clock, ChevronDown, ChevronUp, FileText, AlertCircle, Sparkles, ArrowRight, ListTodo, Loader2 } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Interrogation } from "@shared/schema";
 
 export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceId: string; onNavigate?: (tab: string) => void }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [generatingFor, setGeneratingFor] = useState<string | null>(null);
+
+  const generateTasksMut = useMutation({
+    mutationFn: async (interrogationId: string) => {
+      setGeneratingFor(interrogationId);
+      const res = await apiRequest("POST", `/api/workspaces/${workspaceId}/tasks/generate`, { interrogationId });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      setGeneratingFor(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces", workspaceId, "tasks"] });
+      toast({ title: `Generated ${Array.isArray(data) ? data.length : 0} tasks from this brief` });
+      if (onNavigate) onNavigate("tasks");
+    },
+    onError: (e: Error) => {
+      setGeneratingFor(null);
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    },
+  });
 
   const { data: interrogations, isLoading, error } = useQuery<Interrogation[]>({
     queryKey: [`/api/workspaces/${workspaceId}/interrogations`],
@@ -147,6 +169,21 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
                     <CardContent className="pt-0 pb-5 px-5 border-t">
                       <div className="prose prose-sm dark:prose-invert max-w-none mt-4 prose-headings:text-foreground prose-headings:font-semibold prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-1 prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-2 prose-strong:text-foreground prose-li:text-muted-foreground prose-li:my-0.5 prose-ul:my-1.5 prose-ol:my-1.5" data-testid={`content-agenda-${doc.id}`}>
                         <ReactMarkdown>{doc.finalDocument || ""}</ReactMarkdown>
+                      </div>
+                      <div className="mt-4 pt-4 border-t flex justify-end">
+                        <Button
+                          size="sm"
+                          className="gap-2"
+                          disabled={generatingFor === doc.id}
+                          onClick={(e) => { e.stopPropagation(); generateTasksMut.mutate(doc.id); }}
+                          data-testid={`button-generate-tasks-${doc.id}`}
+                        >
+                          {generatingFor === doc.id ? (
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Generating tasks...</>
+                          ) : (
+                            <><ListTodo className="w-3.5 h-3.5" />Generate Tasks</>
+                          )}
+                        </Button>
                       </div>
                     </CardContent>
                   )}
