@@ -49,6 +49,41 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const LAYER_SUGGESTIONS: Record<number, string[]> = {
+  1: [
+    "Promote a product or service",
+    "Grow followers and brand awareness",
+    "Educate or inform the audience",
+    "Entertain and go viral",
+    "Drive traffic to a website or link",
+    "Gen Z and millennials on social media",
+  ],
+  2: [
+    "Bold, high-energy, fast-paced",
+    "Minimal and aesthetic",
+    "Storytelling / narrative driven",
+    "Trending meme or remix style",
+    "Start with a shocking statement",
+    "Use a question hook to grab attention",
+  ],
+  3: [
+    "Fast cuts with jump edits",
+    "Smooth transitions and zooms",
+    "Text overlays with captions throughout",
+    "Split screen or side-by-side",
+    "Kinetic typography with motion",
+    "B-roll heavy with voiceover",
+  ],
+  4: [
+    "Trending audio / viral sound",
+    "Original voiceover with background music",
+    "Lo-fi or chill background beat",
+    "No music, just sound effects",
+    "9:16 vertical for Reels/TikTok/Shorts",
+    "Under 30 seconds, punchy and quick",
+  ],
+};
+
 const STEPS = [
   { id: 1, label: "Upload", icon: Upload, description: "Add files & context" },
   { id: 2, label: "Briefing", icon: Sparkles, description: "AI-guided brief" },
@@ -1017,6 +1052,26 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                         Confirm Selection
                       </Button>
                     )}
+                  </div>
+                )}
+
+                {!aiLoading && !briefingComplete && chatMessages.length > 0 && !(currentAiResponse?.options && currentAiResponse.options.length > 0) && (
+                  <div className="mb-2" data-testid="suggestion-chips">
+                    <p className="text-[10px] text-muted-foreground mb-1.5 font-medium">Quick replies</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(LAYER_SUGGESTIONS[currentLayer] || []).map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setChatInput(suggestion);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-muted/60 text-foreground/80 border border-border/50 transition-all hover:bg-primary/10 hover:border-primary/30 hover:text-primary"
+                          data-testid={`suggestion-chip-${idx}`}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
