@@ -1,40 +1,71 @@
-# theCREW — Creator Editor Workspace
+# theCREW
+
+### Creator Resource Editor Workspace
 
 > The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts — without the DM chaos.
 
 ---
 
+## Why theCREW Exists
+
+Every day, thousands of creators on TikTok, Instagram Reels, and YouTube Shorts share raw footage with editors through DMs, WeTransfer links, and messy shared drives. Feedback gets lost in chat threads. Briefs live in someone's head. Nobody knows which cut is final.
+
+**theCREW** solves this by giving creators and editors a single workspace where raw clips go in, organized content comes out, and AI handles the tedious parts in between.
+
+---
+
 ## Table of Contents
 
-- [Overview](#overview)
+- [The Problem](#the-problem)
+- [The Solution](#the-solution)
 - [Creator Flow Walkthrough](#creator-flow-walkthrough)
   - [1. Landing Page](#1-landing-page)
   - [2. Sign In / Sign Up](#2-sign-in--sign-up)
   - [3. Create a Workspace](#3-create-a-workspace)
   - [4. Organize Content — Create Folders](#4-organize-content--create-folders)
-  - [5. Folder View — Ready to Upload](#5-folder-view--ready-to-upload)
+  - [5. Upload Files to Folders](#5-upload-files-to-folders)
   - [6. AI Brief — Upload Materials](#6-ai-brief--upload-materials)
-  - [7. AI Briefing — Guided Q&A](#7-ai-briefing--guided-qa)
+  - [7. AI Briefing — Smart Q&A](#7-ai-briefing--smart-qa)
   - [8. Production Brief — Final Document](#8-production-brief--final-document)
-  - [9. Briefs — Saved Production Briefs](#9-briefs--saved-production-briefs)
+  - [9. Briefs Library — One-Click Task Generation](#9-briefs-library--one-click-task-generation)
   - [10. Tasks — Kanban Board](#10-tasks--kanban-board)
-- [Architecture](#architecture)
-  - [Tech Stack](#tech-stack)
-  - [System Architecture Diagram](#system-architecture-diagram)
-  - [Data Flow](#data-flow)
-  - [Database Design](#database-design)
+  - [11. Reference Reels — AI Video Analysis](#11-reference-reels--ai-video-analysis)
+- [System Architecture](#system-architecture)
+  - [High-Level Architecture](#high-level-architecture)
+  - [AI Pipeline Architecture (Lambda + Gemini)](#ai-pipeline-architecture-lambda--gemini)
+  - [File Upload Pipeline](#file-upload-pipeline)
   - [Authentication Flow](#authentication-flow)
-  - [File Storage Pipeline](#file-storage-pipeline)
+  - [DynamoDB Single-Table Design](#dynamodb-single-table-design)
+  - [Request Flow Diagrams](#request-flow-diagrams)
+- [Tech Stack](#tech-stack)
+- [Key Differentiators](#key-differentiators)
 - [Project Structure](#project-structure)
+- [API Reference](#api-reference)
 - [Running Locally](#running-locally)
 
 ---
 
-## Overview
+## The Problem
 
-**theCREW** (Creator Resource Editor Workspace) is an AI-powered creative workspace built for short-form content creators and their editing teams. It replaces the chaos of DMs, shared drives, and scattered feedback with a single organized hub.
+| Pain Point | What happens today |
+|---|---|
+| **Scattered assets** | Raw clips in Google Drive, finals in Dropbox, references in DMs |
+| **No brief = no direction** | Editors guess what the creator wants, leading to endless revision cycles |
+| **Feedback chaos** | "Go to 0:14 and change the transition" buried in a WhatsApp thread |
+| **No task tracking** | Nobody knows what's done, what's in progress, or what's blocking |
+| **Reference confusion** | "Edit it like that viral reel" — which one? what specifically about it? |
 
-Creators can set up workspaces, invite editors, organize raw footage into folders, and manage their entire content pipeline from upload to final cut.
+## The Solution
+
+**theCREW** is a unified workspace that replaces 5+ tools with one:
+
+| Feature | Replaces |
+|---|---|
+| **File Manager** with folders and CDN delivery | Google Drive / Dropbox |
+| **AI Brief Generator** with smart questioning | Manual briefs in Google Docs |
+| **Kanban Task Board** with AI task generation | Trello / Notion |
+| **Timestamped Video Feedback** | WhatsApp voice notes |
+| **Reference Reel Analyzer** with AI breakdowns | "Just copy that vibe" conversations |
 
 ---
 
@@ -44,11 +75,12 @@ Creators can set up workspaces, invite editors, organize raw footage into folder
 
 ![Landing Page](attached_assets/image_1771732450747.png)
 
-The landing page introduces theCREW with a clear value proposition: **"Your content, finally organized."** It's built specifically for short-form creators and editors who need to move fast without losing track of assets.
+The landing page introduces theCREW with a clear value proposition: **"Your content, finally organized."** Built specifically for short-form creators and editors who need to move fast without losing track of assets.
 
-- **"Start for free"** button takes new users to sign up
-- **"Sign in"** links existing users to the auth page
+- **"Start for free"** takes new users to sign up
+- **"Sign in"** links existing users to authentication
 - Frosted glass navbar with the typographic **thecrew** wordmark (light "the" + bold "crew")
+- Split hero layout: tagline left, product preview right
 
 ---
 
@@ -56,12 +88,13 @@ The landing page introduces theCREW with a clear value proposition: **"Your cont
 
 ![Sign In / Sign Up](attached_assets/image_1771732481340.png)
 
-A clean authentication page with tabbed Sign In and Sign Up forms. The **thecrew** wordmark sits above the subtitle "CREATOR EDITOR WORKSPACE."
+Clean authentication with tabbed Sign In and Sign Up forms. The **thecrew** wordmark sits above the subtitle "CREATOR EDITOR WORKSPACE."
 
-- **Sign In** — email and password with a visibility toggle
-- **Sign Up** — creates a new account (email, password, display name)
-- Passwords are hashed with bcrypt before storage
-- Sessions are managed server-side with express-session stored in PostgreSQL
+- **Sign In** — email and password with visibility toggle
+- **Sign Up** — creates a new account with email, password, and display name
+- Passwords hashed with bcrypt before storage
+- Server-side sessions managed with express-session stored in PostgreSQL
+- Password strength indicator on registration
 
 ---
 
@@ -69,12 +102,13 @@ A clean authentication page with tabbed Sign In and Sign Up forms. The **thecrew
 
 ![Create Workspace](attached_assets/image_1771732525948.png)
 
-After signing in, the creator lands on the workspace selection page. A personalized greeting and a prompt to create their first workspace.
+After signing in, the creator lands on the workspace selection screen with a personalized greeting.
 
-- Each workspace represents a content project (e.g., "Insta reel", "YouTube Short")
-- The creator who makes the workspace becomes its **admin**
-- An organization is auto-created behind the scenes to group workspaces and members
-- The workspace switcher in the top bar lets users jump between projects
+- Each workspace represents a content project (e.g., "project - ai", "Insta reel")
+- The workspace creator becomes its **admin** with full access
+- An organization is auto-created behind the scenes to group workspaces and team members
+- Workspace switcher in the top bar for jumping between projects
+- Admin controls: invite members, manage roles, delete workspace
 
 ---
 
@@ -85,22 +119,24 @@ After signing in, the creator lands on the workspace selection page. A personali
 Inside a workspace, the **Files** tab is the content hub. Creators organize their pipeline with folders like "Raw Clips", "Drafts", and "Finals."
 
 - **Horizontal tab navigation**: Files, Team, AI Brief, Briefs, Tasks, References
-- **Breadcrumb** shows current location (Root)
-- **"New Folder"** button and empty-state prompt with **"Create Folder"** CTA
-- Folders are stored in DynamoDB under the workspace's organization
+- **Breadcrumb navigation** shows current location
+- **"New Folder"** button with empty-state guidance
+- Folders stored in DynamoDB under the workspace's organization
+- Nested folder support for complex content pipelines
 
 ---
 
-### 5. Folder View — Ready to Upload
+### 5. Upload Files to Folders
 
 ![Folders Added](attached_assets/image_1771732854629.png)
 
-With folders created (e.g., "raw footage" and "logos"), the workspace is ready for file uploads. Clicking a folder opens it for drag-and-drop uploads to AWS S3.
+With folders created (e.g., "raw footage" and "logos"), the workspace is ready for file uploads.
 
-- Folder cards show folder names with icons
-- **"Click a folder above to view and upload files"** guides the user
-- Files uploaded inside folders are stored in S3 and served via CloudFront CDN
+- Click a folder to open it for drag-and-drop uploads
+- **Direct-to-S3 uploads** via presigned URLs (no server bottleneck)
+- Files served globally via **CloudFront CDN** for instant previews
 - Supports images, videos, PDFs, audio, and other media formats
+- In-browser preview for images and video playback
 
 ---
 
@@ -108,23 +144,24 @@ With folders created (e.g., "raw footage" and "logos"), the workspace is ready f
 
 ![AI Brief Upload](attached_assets/image_1771733158375.png)
 
-The **AI Brief** tab is where the magic begins. A 3-step wizard guides creators through building a production brief that their editors can actually follow.
+The **AI Brief** tab is where the magic begins. A 3-step wizard guides creators through building a production brief.
 
-**Step 1: Upload** — The creator provides context for the project:
+**Step 1: Upload & Analyse** — Provide context for the project:
 
-- **Drag & drop files** — PDFs, Word docs, audio (.mp3, .wav, .ogg, .webm, .m4a), and text files
-- **Voice to Text** — Speak directly into the mic; browser speech-to-text transcribes it into a text file
-- **Text input** — Type or paste project notes, goals, and references directly
-- All uploaded materials are stored in S3 and sent to an AI summarization service (AWS Lambda) for analysis
+- **Drag & drop files** — PDFs, Word docs, audio (.mp3, .wav, .ogg, .webm, .m4a), text files
+- **Voice to Text** — Speak directly into the mic; browser speech-to-text transcribes it
+- **Text input** — Type or paste project notes, goals, and references
+- All materials uploaded to S3, then sent to **AWS Lambda** for AI summarization
+- Lambda extracts key information from PDFs, documents, and text files
 - Hit **"Analyse"** to process everything and move to the briefing step
 
 ---
 
-### 7. AI Briefing — Guided Q&A
+### 7. AI Briefing — Smart Q&A
 
 ![AI Briefing Chat](attached_assets/image_1771733345404.png)
 
-**Step 2: Briefing** — Gemini AI conducts a conversational interview to fill in the gaps. It uses a 4-layer briefing framework:
+**Step 2: AI Briefing** — Gemini AI conducts a conversational interview using a 4-layer briefing framework:
 
 | Layer | What it covers |
 |-------|---------------|
@@ -133,11 +170,13 @@ The **AI Brief** tab is where the magic begins. A 3-step wizard guides creators 
 | **Editing & Visuals** | Cut style, transitions, captions, B-roll needs |
 | **Audio & Format** | Background music, sound effects, voiceover, pacing |
 
-- Progress bar shows which layers have been covered (2/4 in the screenshot)
-- **Selectable chip options** let creators answer quickly (e.g., "promotional" in one tap)
-- Creators can also type custom answers or attach additional files mid-conversation
-- The AI only asks about what's missing — if the uploaded materials already cover a topic, it skips ahead
-- **"Generate Brief"** compiles everything into a final production document
+Key UX innovations:
+- **Progress bar** shows which layers have been covered (e.g., 2/4 completed)
+- **Context-aware quick-reply chips** change based on the current layer (e.g., "promotional", "educational" for Goal layer; "fast cuts", "slow cinematic" for Editing layer)
+- **Smart question reduction** — AI skips questions already answered by uploaded materials
+- **Skip & Generate** — creators can generate the brief anytime without answering every question
+- **File attachments** can be added mid-conversation for additional context
+- **Voice input** supported during the chat
 
 ---
 
@@ -145,35 +184,36 @@ The **AI Brief** tab is where the magic begins. A 3-step wizard guides creators 
 
 ![Production Brief](attached_assets/image_1771733470944.png)
 
-**Step 3: Brief** — Gemini generates a comprehensive production brief by combining:
+**Step 3: Production Brief** — Gemini generates a comprehensive document by combining three sources:
 
-1. The AI summary of uploaded materials (from the Lambda service)
-2. All briefing answers from the conversational Q&A
-3. Any file attachments shared during the chat
+1. The **Lambda-generated summary** of uploaded materials
+2. All **briefing answers** from the conversational Q&A
+3. Any **file attachments** shared during the chat
 
 The final document includes structured sections:
-
 - **Project Overview** — What the video is about and its goals
 - **Target Audience & Platform** — Who it's for and format specs (e.g., Instagram Reels, 25-30 sec)
 - **Resources & References** — Links to uploaded reference materials on CloudFront
 - **Style & Tone** — Visual direction, color grading, pacing references
 - **Hook & Opening** — Specific opening strategy for the first few seconds
-- Editable with the **"Edit"** button if the creator wants to tweak anything
+- **Editing Instructions** — Transitions, captions, B-roll directions
+- Editable with the **"Edit"** button for manual tweaks
 - Saved to DynamoDB as a completed interrogation record
 
 ---
 
-### 9. Briefs — Saved Production Briefs
+### 9. Briefs Library — One-Click Task Generation
 
 ![Briefs Tab](attached_assets/image_1771733530462.png)
 
-The **Briefs** tab is the library of all completed production briefs for a workspace. Each brief is an expandable card showing:
+The **Briefs** tab is the library of all completed production briefs.
 
-- **Brief title** with completion status badge ("Completed")
-- **Timestamp** — when it was generated (e.g., "Feb 22, 2026 at 9:40 AM")
-- **Full document** — expandable to show Project Overview, Target Audience, Style & Tone, Hook & Opening, and all other sections
+- Each brief is an expandable card showing title, status badge, timestamp, and a 2-line preview
+- **"Generate Tasks"** button directly on each brief card — one click to auto-create editing tasks
+- **Conflict-aware task generation** — AI checks existing tasks before generating new ones to prevent duplicates across multiple briefs
+- If all tasks already exist, shows "No new tasks needed" instead of creating duplicates
 - **"New Brief"** button to start a fresh AI briefing session
-- Briefs serve as the single source of truth that editors reference when cutting content
+- Briefs serve as the single source of truth that editors reference when cutting
 
 ---
 
@@ -181,297 +221,615 @@ The **Briefs** tab is the library of all completed production briefs for a works
 
 ![Tasks Kanban](attached_assets/image_1771733635384.png)
 
-The **Tasks** tab is a full Kanban board where creators and editors manage the production workflow. Tasks can be auto-generated from a production brief or created manually.
+The **Tasks** tab is a full Kanban board for managing the production workflow.
 
 - **Four columns**: To Do, In Progress, Review, Done — drag and drop to update status
-- **"From Brief"** button — Gemini AI reads a completed production brief and auto-generates actionable editing tasks (e.g., "Import and Organize Footage", "Rough Cut Assembly", "Add Bold Center Captions")
-- **"+ Create"** — manually add tasks with title, description, priority, and status
-- **"AI Checklist"** — generates a revision checklist from all task comments across the board
+- **"Generate from Brief"** — Gemini AI reads a completed production brief and auto-generates actionable editing tasks (e.g., "Import and Organize Footage", "Rough Cut Assembly", "Add Bold Center Captions")
+- **"Create Task"** — manually add tasks with title, description, priority, and status
+- **"AI Revision Checklist"** — generates a checklist from all task comments across the board
 - **Search** — filter tasks by keyword
 - Each task card shows title, description preview, and priority badge (High, Medium, Low)
 - Task count per column shown in the header
-- Clicking a task opens a detail drawer with tabs for Details, Feedback (timestamped video comments), AI Summary, and Ask AI (task-aware chatbot)
+
+**Task Detail Drawer** — clicking any task opens a full detail panel with:
+- **Details tab** — title, description, status, priority, multi-member assignment
+- **Feedback tab** — upload video, add timestamped comments with clickable playback badges (click "0:14" to seek)
+- **AI Summary tab** — Gemini summarizes all timestamped feedback into actionable bullet points
+- **Ask AI tab** — context-aware chatbot that knows the task, its comments, and video context
 
 ---
 
-## Architecture
+### 11. Reference Reels — AI Video Analysis
 
-### Tech Stack
+![Reference Reels](attached_assets/image_1771733676248.png)
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React + TypeScript, Vite, TanStack Query, wouter, shadcn/ui, Tailwind CSS |
-| **Backend** | Express.js + TypeScript |
-| **Auth Database** | PostgreSQL (Neon) — users and sessions only |
-| **Business Database** | AWS DynamoDB — workspaces, members, folders, files, tasks |
-| **File Storage** | AWS S3 + CloudFront CDN |
-| **AI Engine** | Google Gemini 2.0 Flash |
+The **References** tab lets creators share viral Reels, TikToks, and Shorts with their editors, with AI breaking down exactly what makes them work.
 
-### System Architecture Diagram
+- **Add Reference** — paste a URL from Instagram, TikTok, or YouTube + upload the video file
+- **AI Analysis** — Gemini 2.0 Flash watches the video and produces a structured breakdown:
+  - **Hook** — how the first 1-3 seconds grab attention
+  - **Pacing & Rhythm** — beat timing, cut frequency, energy flow
+  - **Transitions** — types of transitions used and when
+  - **Text & Captions** — text animation style, placement, timing
+  - **Audio & Music** — sound design, music selection, SFX usage
+  - **Motion Graphics** — animated elements, overlays, visual effects
+- Analysis summary and section chips visible directly on the card (no need to expand)
+- **Editor-ready recommendations** — specific, actionable suggestions editors can apply immediately
+- Platform badge (Instagram, TikTok, YouTube) and "Original" link to the source
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Client (React)                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────┐  │
-│  │ Landing  │ │   Auth   │ │Workspace │ │  Workspace    │  │
-│  │  Page    │ │  Page    │ │ Selector │ │  Layout       │  │
-│  └──────────┘ └──────────┘ └──────────┘ │ ┌───────────┐ │  │
-│                                         │ │Files Tab  │ │  │
-│                                         │ │Team Tab   │ │  │
-│                                         │ │AI Brief   │ │  │
-│                                         │ │Briefs     │ │  │
-│                                         │ │Tasks      │ │  │
-│                                         │ │References │ │  │
-│                                         │ └───────────┘ │  │
-│                                         └───────────────┘  │
-└────────────────────────┬────────────────────────────────────┘
-                         │ HTTP / REST API
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Express.js Backend                        │
-│                                                             │
-│  ┌────────────┐  ┌──────────────┐  ┌─────────────────────┐ │
-│  │ Auth       │  │ Workspace    │  │ AWS Services        │ │
-│  │ Routes     │  │ Routes       │  │ ┌─────────────────┐ │ │
-│  │ (register, │  │ (workspaces, │  │ │ S3 Client       │ │ │
-│  │  login,    │  │  folders,    │  │ │ DynamoDB Client  │ │ │
-│  │  logout)   │  │  files,      │  │ │ CloudFront      │ │ │
-│  └─────┬──────┘  │  members)    │  │ └─────────────────┘ │ │
-│        │         └──────┬───────┘  └──────────┬──────────┘ │
-└────────┼────────────────┼─────────────────────┼────────────┘
-         │                │                     │
-         ▼                ▼                     ▼
-┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐
-│  PostgreSQL  │  │   DynamoDB   │  │      AWS S3 Bucket     │
-│   (Neon)     │  │  Single      │  │  aiforvizag21022026-   │
-│              │  │  Table       │  │  workvault             │
-│ ┌──────────┐ │  │  Design      │  │                        │
-│ │  users   │ │  │              │  │  ┌──────────────────┐  │
-│ │ sessions │ │  │ Orgs         │  │  │  CloudFront CDN  │  │
-│ └──────────┘ │  │ Workspaces   │  │  │  (global edge    │  │
-│              │  │ Members      │  │  │   delivery)      │  │
-│              │  │ Folders      │  │  └──────────────────┘  │
-│              │  │ Files        │  │                        │
-└──────────────┘  └──────────────┘  └────────────────────────┘
-```
+---
 
-### Data Flow
+## System Architecture
 
-**Creator creates a workspace and adds folders:**
+### High-Level Architecture
 
 ```
-Creator signs up
-    → POST /api/auth/register
-    → Password hashed with bcrypt
-    → User stored in PostgreSQL
+                              ┌─────────────────────────────┐
+                              │       USERS (Browser)       │
+                              │   React + TypeScript + Vite │
+                              │   TanStack Query | wouter   │
+                              │   shadcn/ui | Tailwind CSS  │
+                              └──────────────┬──────────────┘
+                                             │
+                            HTTPS (REST API) │ Port 5000
+                                             │
+                              ┌──────────────▼──────────────┐
+                              │     EXPRESS.JS BACKEND      │
+                              │       (TypeScript)          │
+                              │                             │
+                              │  ┌───────┐  ┌────────────┐ │
+                              │  │ Auth  │  │ Workspace  │ │
+                              │  │Routes │  │  Routes    │ │
+                              │  └───┬───┘  └─────┬──────┘ │
+                              │      │            │        │
+                              │  ┌───▼────────────▼──────┐ │
+                              │  │    AWS Service Layer   │ │
+                              │  │  S3 | DynamoDB | CF   │ │
+                              │  └───┬───────┬───────┬───┘ │
+                              └──────┼───────┼───────┼─────┘
+                                     │       │       │
+                     ┌───────────────┘       │       └───────────────┐
+                     │                       │                       │
+          ┌──────────▼──────────┐ ┌──────────▼──────────┐ ┌─────────▼──────────┐
+          │    PostgreSQL       │ │     DynamoDB         │ │     AWS S3         │
+          │    (Neon)           │ │  Single-Table Design │ │  + CloudFront CDN  │
+          │                    │ │                      │ │                    │
+          │  ┌──────────────┐  │ │  Organisations       │ │  Raw clips         │
+          │  │    users     │  │ │  Workspaces          │ │  Edited videos     │
+          │  │   sessions   │  │ │  Members             │ │  PDFs, docs        │
+          │  └──────────────┘  │ │  Folders & Files     │ │  Audio files       │
+          │                    │ │  Interrogations      │ │  Brief attachments │
+          │  Auth only.        │ │  Tasks & Comments    │ │                    │
+          │  bcrypt + sessions │ │  References          │ │  Presigned uploads │
+          └────────────────────┘ │                      │ │  CDN delivery      │
+                                 │  GSIs for queries    │ └────────────────────┘
+                                 └──────────────────────┘
 
-Creator creates workspace
-    → POST /api/workspaces
-    → Auto-creates Organisation in DynamoDB (if first workspace)
-    → Workspace record stored in DynamoDB: pk=ORG#<orgId>, sk=WS#<wsId>
-    → Creator added as admin member
-
-Creator creates folders
-    → POST /api/workspaces/:id/folders
-    → Folder stored in DynamoDB: pk=ORG#<orgId>, sk=WS#<wsId>#FOLDER#<folderId>
-    → Folder appears in Files tab instantly via TanStack Query cache invalidation
-
-Creator uploads files to folder
-    → POST /api/uploads/request-url → S3 presigned URL
-    → Client uploads directly to S3 (no server bottleneck)
-    → File record stored in DynamoDB with CloudFront URL
-    → Files served globally via CloudFront CDN
+                     ┌───────────────────────────────────────────┐
+                     │            EXTERNAL AI SERVICES           │
+                     │                                           │
+                     │  ┌─────────────────┐  ┌────────────────┐ │
+                     │  │  AWS Lambda      │  │  Gemini 2.0    │ │
+                     │  │  (ap-south-1)    │  │  Flash         │ │
+                     │  │                  │  │                │ │
+                     │  │  Summarizes      │  │  Briefing chat │ │
+                     │  │  uploaded docs   │  │  Brief gen     │ │
+                     │  │  (PDF, text,     │  │  Task gen      │ │
+                     │  │   audio)         │  │  Summaries     │ │
+                     │  │                  │  │  Video analysis│ │
+                     │  │  Returns         │  │  Task chatbot  │ │
+                     │  │  structured JSON │  │                │ │
+                     │  └─────────────────┘  └────────────────┘ │
+                     └───────────────────────────────────────────┘
 ```
 
-**AI Briefing pipeline (Interrogator):**
+### AI Pipeline Architecture (Lambda + Gemini)
+
+This is the core innovation. Two AI systems work together to turn raw creator thoughts into structured production documents.
 
 ```
-Creator opens AI Brief tab
-    → Step 1: Upload files + text + voice notes
-    → Files uploaded to S3 via presigned URLs
-    → Text converted to .txt on S3 via POST /api/interrogator/upload-text
-    → "Analyse" sends file URLs to AWS Lambda summarization service
-    → Lambda returns structured summary → stored as Interrogation in DynamoDB
+ STEP 1: UPLOAD & ANALYSE
+ ─────────────────────────────────────────────────────────────────
 
-    → Step 2: AI Briefing chat
-    → POST /api/interrogator/chat sends summary + chat history to Gemini 2.0 Flash
-    → Gemini uses 4-layer framework (Goal, Style, Editing, Audio)
-    → Asks only about missing information, skips what's already covered
-    → Briefing answers accumulated across the conversation
+ Creator uploads files          Express Backend              AWS Lambda
+ (PDF, audio, text,       ──►  Stores files in S3    ──►   (ap-south-1)
+  voice recordings)             via presigned URLs          uhqp6goc12.execute-api
+                                                            .amazonaws.com/summary
+        │                              │                          │
+        │  Files go to S3              │  POST with file URLs     │
+        │  directly from               │  (with retry: 3x,       │
+        │  browser                     │   30s/45s timeout)       │
+        │                              │                          │
+        │                              │                    ┌─────▼─────┐
+        │                              │                    │  Lambda   │
+        │                              │                    │  reads    │
+        │                              │                    │  files    │
+        │                              │                    │  from S3  │
+        │                              │                    │           │
+        │                              │                    │  Extracts │
+        │                              │                    │  text from│
+        │                              │                    │  PDFs,    │
+        │                              │                    │  docs,    │
+        │                              │                    │  audio    │
+        │                              │                    │           │
+        │                              │  ◄─── JSON ────── │  Returns  │
+        │                              │  { summary }      │  summary  │
+        │                              │                    └───────────┘
+        │                              │
+        │                     Stores Interrogation
+        │                     record in DynamoDB
+        │                     (status: "analysed")
+        │
+        ▼
+ STEP 2: AI BRIEFING CHAT
+ ─────────────────────────────────────────────────────────────────
 
-    → Step 3: Generate final brief
-    → POST /api/interrogator/generate-final combines:
-       • Lambda summary of uploaded materials
-       • All briefing answers from the chat
-       • File attachments shared during conversation
-    → Gemini produces structured production brief
-    → Saved to DynamoDB as completed Interrogation record
+ Creator answers                Express Backend              Gemini 2.0 Flash
+ questions via chat       ──►  Sends to Gemini:       ──►  (Google AI)
+ or quick-reply chips          • Lambda summary
+                               • Chat history                    │
+        │                      • Briefing answers                │
+        │                      • 4-layer framework               │
+        │                        instructions            ┌───────▼───────┐
+        │                                                │    Gemini     │
+        │                              │                 │  evaluates    │
+        │                              │                 │  what's       │
+        │                              │                 │  already      │
+        │                              │                 │  covered      │
+        │                              │                 │               │
+        │                              │                 │  Asks only    │
+        │                              │                 │  about        │
+        │                              │                 │  missing      │
+        │                              │                 │  info         │
+        │                              │                 │               │
+        │                              │  ◄── response ──│  Returns      │
+        │                              │  + layer tag    │  question +   │
+        │                              │  + suggestions  │  suggestions  │
+        │                              │                 └───────────────┘
+        │                     Updates briefingAnswers
+        │                     in DynamoDB
+        │
+        ▼
+ STEP 3: GENERATE FINAL BRIEF
+ ─────────────────────────────────────────────────────────────────
+
+ Creator clicks              Express Backend              Gemini 2.0 Flash
+ "Generate Brief"      ──►  Combines 3 sources:     ──►  (Google AI)
+                             1. Lambda summary
+                             2. All briefing answers          │
+                             3. File attachments              │
+                                                       ┌─────▼─────────┐
+                                                       │   Gemini      │
+                              │                        │  generates    │
+                              │                        │  structured   │
+                              │                        │  production   │
+                              │                        │  brief with   │
+                              │                        │  all sections │
+                              │  ◄── final document ── │               │
+                              │                        └───────────────┘
+                     Saves finalDocument to
+                     DynamoDB Interrogation
+                     (status: "completed")
+
+ ─────────────────────────────────────────────────────────────────
+ DOWNSTREAM: TASK GENERATION
+ ─────────────────────────────────────────────────────────────────
+
+ Creator clicks              Express Backend              Gemini 2.0 Flash
+ "Generate Tasks"      ──►  Fetches:                ──►
+ on any brief                • Final brief content
+                             • Existing tasks (for          │
+                               dedup)                       │
+                                                     ┌──────▼──────────┐
+                              │                      │  Gemini reads   │
+                              │                      │  the brief,     │
+                              │                      │  generates      │
+                              │                      │  actionable     │
+                              │                      │  editing tasks  │
+                              │                      │  with title,    │
+                              │                      │  description,   │
+                              │  ◄── tasks[] ─────── │  priority       │
+                              │                      └─────────────────┘
+                     Filters out duplicates
+                     (normalized title matching
+                      against existing tasks)
+                     Saves new tasks to DynamoDB
 ```
 
-**Task management from briefs:**
+### File Upload Pipeline
 
 ```
-Creator clicks "From Brief" on Tasks tab
-    → POST /api/workspaces/:id/tasks/generate
-    → Sends final brief content to Gemini AI
-    → Gemini breaks it into actionable editing tasks
-    → Tasks auto-created in DynamoDB with title, description, priority
-    → Kanban board populates instantly
-
-Editor drags task between columns
-    → PATCH /api/workspaces/:wsId/tasks/:taskId
-    → Status updated in DynamoDB (todo → in-progress → review → done)
-
-Editor adds timestamped comment on task
-    → POST /api/workspaces/:wsId/tasks/:taskId/comments
-    → Comment stored with timestampSec for video seeking
-    → Clicking timestamp badge seeks video player to that moment
-
-Creator requests AI summary
-    → POST /api/workspaces/:wsId/tasks/:taskId/summarize
-    → Gemini reads all timestamped comments and produces summary
+  Browser                    Express Backend                    AWS S3
+    │                              │                              │
+    │  1. Request presigned URL    │                              │
+    │  POST /api/uploads/          │                              │
+    │  request-url                 │                              │
+    │  { fileName, fileType }      │                              │
+    │ ─────────────────────────►   │                              │
+    │                              │  2. Generate presigned       │
+    │                              │     PUT URL for S3           │
+    │                              │     (key: orgId/path/file)   │
+    │  ◄─────────────────────────  │                              │
+    │  { uploadUrl, key,           │                              │
+    │    cloudfrontUrl }           │                              │
+    │                              │                              │
+    │  3. Direct upload to S3      │                              │
+    │     (browser → S3, no        │                              │
+    │      server bottleneck)      │                              │
+    │ ─────────────────────────────────────────────────────────►  │
+    │                              │                              │
+    │  4. Save file record         │                              │
+    │  POST /api/workspaces/       │                              │
+    │  :id/files                   │                              │
+    │ ─────────────────────────►   │                              │
+    │                              │  5. Store metadata           │
+    │                              │     in DynamoDB              │
+    │  ◄─────────────────────────  │     (pk, sk, URL, type)      │
+    │  { file record }             │                              │
+    │                              │                              │
+    │  6. Access via CloudFront    │                              │
+    │     CDN (global edge cache)  │                              │
+    │ ◄──────────────── https://d645yzu9m78ar.cloudfront.net ──  │
 ```
 
-### Database Design
-
-**PostgreSQL** handles authentication only:
-
-| Table | Fields |
-|-------|--------|
-| `users` | id, email, password (bcrypt), display_name |
-| `sessions` | sid, sess (JSON), expire |
-
-**DynamoDB** uses a single-table design for all business data:
-
-| Entity | Partition Key (pk) | Sort Key (sk) |
-|--------|-------------------|---------------|
-| Organisation | `ORG#<orgId>` | `METADATA` |
-| Workspace | `ORG#<orgId>` | `WS#<workspaceId>` |
-| Member | `ORG#<orgId>` | `WS#<wsId>#MEMBER#<userId>` |
-| Folder | `ORG#<orgId>` | `WS#<wsId>#FOLDER#<folderId>` |
-| File | `ORG#<orgId>` | `WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>` |
-| Interrogation | `ORG#<orgId>` | `WS#<wsId>#INTERROGATION#<id>` |
-| Task | `ORG#<orgId>` | `WS#<wsId>#TASK#<taskId>` |
-| TaskComment | `ORG#<orgId>` | `WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` |
-
-This hierarchical key structure allows efficient queries — fetching all folders in a workspace is a single DynamoDB query with a sort key prefix of `WS#<wsId>#FOLDER#`. The same pattern applies to tasks (`WS#<wsId>#TASK#`) and interrogations (`WS#<wsId>#INTERROGATION#`).
+**Why presigned URLs?** The server never touches file bytes. A 500MB video uploads directly from the browser to S3 in one request. The server only generates the signed permission token and stores metadata.
 
 ### Authentication Flow
 
 ```
-┌──────────┐     POST /api/auth/register      ┌──────────────┐
-│  Client  │ ──────────────────────────────▶   │   Express    │
-│  (React) │     { email, password, name }     │   Backend    │
-│          │                                   │              │
-│          │  ◀──────────────────────────────  │  bcrypt hash │
-│          │     Set-Cookie: session_id        │  → PostgreSQL│
-└──────────┘                                   └──────────────┘
-     │
-     │  Subsequent requests include session cookie
-     │  GET /api/auth/user → returns user profile
-     ▼
-  Authenticated routes check session
-  before accessing workspace data
+ ┌────────────┐                    ┌────────────────┐              ┌──────────────┐
+ │  Browser   │                    │  Express.js    │              │  PostgreSQL  │
+ │  (React)   │                    │  Backend       │              │  (Neon)      │
+ └─────┬──────┘                    └───────┬────────┘              └──────┬───────┘
+       │                                   │                              │
+       │  POST /api/auth/register          │                              │
+       │  { email, password, name }        │                              │
+       │ ─────────────────────────────►    │                              │
+       │                                   │  bcrypt.hash(password, 10)   │
+       │                                   │  INSERT INTO users           │
+       │                                   │ ────────────────────────►    │
+       │                                   │  ◄────────────────────────   │
+       │                                   │  Create session              │
+       │                                   │  INSERT INTO sessions        │
+       │                                   │ ────────────────────────►    │
+       │  ◄─────────────────────────────   │                              │
+       │  Set-Cookie: connect.sid=...      │                              │
+       │                                   │                              │
+       │  GET /api/auth/user               │                              │
+       │  Cookie: connect.sid=...          │                              │
+       │ ─────────────────────────────►    │                              │
+       │                                   │  Lookup session              │
+       │                                   │ ────────────────────────►    │
+       │                                   │  ◄────────────────────────   │
+       │  ◄─────────────────────────────   │                              │
+       │  { id, email, firstName, ... }    │                              │
+       │                                   │                              │
+       │  All subsequent API calls         │                              │
+       │  include session cookie           │                              │
+       │  automatically                    │                              │
+       │                                   │                              │
+       │  Middleware: isAuthenticated       │                              │
+       │  checks session before every      │                              │
+       │  workspace/task/file route        │                              │
 ```
 
-### File Storage Pipeline
+### DynamoDB Single-Table Design
+
+All business data lives in one DynamoDB table (`AIFORVIZAG_file_structure`) using a hierarchical key pattern:
 
 ```
-Client                    Backend                 AWS S3
-  │                         │                       │
-  │  POST /api/uploads/     │                       │
-  │  request-url            │                       │
-  │ ───────────────────▶    │                       │
-  │                         │  Generate presigned   │
-  │                         │  upload URL           │
-  │  ◀─────────────────     │                       │
-  │  { uploadUrl, key }     │                       │
-  │                         │                       │
-  │  PUT (direct upload)    │                       │
-  │ ────────────────────────────────────────────▶   │
-  │                         │                       │
-  │  POST /api/workspaces/  │                       │
-  │  :id/files              │                       │
-  │ ───────────────────▶    │                       │
-  │                         │  Store file record    │
-  │                         │  in DynamoDB          │
-  │  ◀─────────────────     │                       │
-  │  { cloudfrontUrl }      │                       │
-  │                         │                       │
-  │  GET via CloudFront CDN │                       │
-  │ ◀───────────────────────────────────────────    │
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  Table: AIFORVIZAG_file_structure                                           │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Partition Key (pk)    │  Sort Key (sk)                                 │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  METADATA                                     │ │
+│  │                       │  → Organisation name, owner, createdAt        │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<workspaceId>                             │ │
+│  │                       │  → Workspace name, description, creator       │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#MEMBER#<userId>                    │ │
+│  │                       │  → Role (admin/member/viewer), joinedAt       │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#FOLDER#<folderId>                  │ │
+│  │                       │  → Folder name, parentId (nesting)            │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>    │ │
+│  │                       │  → File name, S3 key, CloudFront URL, type    │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#INTERROGATION#<id>                 │ │
+│  │                       │  → summary, fileUrls, briefingAnswers,        │ │
+│  │                       │    finalDocument, status                       │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#TASK#<taskId>                      │ │
+│  │                       │  → title, description, status, priority,      │ │
+│  │                       │    assignees[], sourceInterrogationId          │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>  │ │
+│  │                       │  → text, timestampSec, authorId               │ │
+│  ├───────────────────────┼───────────────────────────────────────────────┤ │
+│  │ ORG#<orgId>           │  WS#<wsId>#REFERENCE#<refId>                  │ │
+│  │                       │  → title, sourceUrl, sourcePlatform,          │ │
+│  │                       │    videoObjectPath, analysis, analysisStatus   │ │
+│  └───────────────────────┴───────────────────────────────────────────────┘ │
+│                                                                              │
+│  GSIs:                                                                       │
+│  ├── orgId-index  (orgId → sk)  — Query all entities for an org             │
+│  └── createdBy-index (createdBy) — Query entities by creator                │
+│                                                                              │
+│  Query patterns:                                                             │
+│  ├── All workspaces in org: pk=ORG#<orgId>, sk BEGINS_WITH "WS#"           │
+│  ├── All folders in workspace: pk=ORG#<orgId>, sk BEGINS_WITH "WS#x#FOLDER"│
+│  ├── All tasks in workspace: pk=ORG#<orgId>, sk BEGINS_WITH "WS#x#TASK#"   │
+│  └── All comments on task: pk=ORG#<orgId>, sk BEGINS_WITH "WS#x#TASK#y#C"  │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Files are uploaded directly from the browser to S3 using presigned URLs, keeping the server lightweight. The CloudFront CDN ensures fast delivery worldwide.
+**Why single-table?** One table means one provisioning config, one backup policy, and one set of GSIs. The hierarchical sort key pattern (`WS#x#FOLDER#y#FILE#z`) enables efficient queries at every level of the hierarchy using `BEGINS_WITH` conditions.
 
-### AI Pipeline
+### Request Flow Diagrams
+
+**AI Brief: End-to-End (Creator uploads files to final brief)**
 
 ```
-┌──────────────┐     Upload files      ┌──────────────┐     Summarize     ┌──────────────┐
-│   Creator    │ ──────────────────▶   │   AWS S3     │ ─────────────▶   │  AWS Lambda  │
-│  (Browser)   │   presigned URLs      │   Bucket     │   file URLs      │  Summary API │
-└──────┬───────┘                       └──────────────┘                  └──────┬───────┘
-       │                                                                        │
-       │  Briefing Q&A                                              summary JSON│
-       │                                                                        │
-       ▼                                                                        ▼
-┌──────────────┐     chat + summary    ┌──────────────┐              ┌──────────────┐
-│   Express    │ ──────────────────▶   │  Gemini 2.0  │              │   DynamoDB   │
-│   Backend    │                       │    Flash     │              │ Interrogation│
-│              │  ◀──────────────────  │              │              │   record     │
-│              │   AI responses        │  • Briefing  │              └──────────────┘
-│              │                       │  • Final doc │
-│              │                       │  • Tasks gen │
-│              │                       │  • Summaries │
-│              │                       │  • Chat bot  │
-└──────────────┘                       └──────────────┘
+Creator          React App          Express          Lambda          S3          DynamoDB       Gemini
+  │                 │                  │                │             │              │             │
+  │  Upload files   │                  │                │             │              │             │
+  ├────────────────►│                  │                │             │              │             │
+  │                 │  Get presigned   │                │             │              │             │
+  │                 ├─────────────────►│                │             │              │             │
+  │                 │  { uploadUrl }   │                │             │              │             │
+  │                 │◄─────────────────┤                │             │              │             │
+  │                 │                  │                │             │              │             │
+  │                 │  PUT file directly to S3          │             │              │             │
+  │                 ├──────────────────────────────────────────────►  │              │             │
+  │                 │                  │                │             │              │             │
+  │  Click Analyse  │                  │                │             │              │             │
+  ├────────────────►│                  │                │             │              │             │
+  │                 │  POST /summarize │                │             │              │             │
+  │                 ├─────────────────►│                │             │              │             │
+  │                 │                  │  POST file URLs│             │              │             │
+  │                 │                  ├───────────────►│             │              │             │
+  │                 │                  │                │  Read files │              │             │
+  │                 │                  │                ├────────────►│              │             │
+  │                 │                  │                │◄────────────┤              │             │
+  │                 │                  │  { summary }   │             │              │             │
+  │                 │                  │◄───────────────┤             │              │             │
+  │                 │                  │                │             │   Save        │             │
+  │                 │                  ├────────────────────────────────────────────►│             │
+  │                 │  { interrogation}│                │             │              │             │
+  │                 │◄─────────────────┤                │             │              │             │
+  │                 │                  │                │             │              │             │
+  │  Answer Q&A     │                  │                │             │              │             │
+  ├────────────────►│  POST /chat      │                │             │              │             │
+  │                 ├─────────────────►│                │             │              │             │
+  │                 │                  ├──────────────────────────────────────────────────────────►│
+  │                 │                  │                │             │              │  AI response│
+  │                 │                  │◄──────────────────────────────────────────────────────────┤
+  │                 │  { response,     │                │             │              │             │
+  │                 │    suggestions } │                │             │              │             │
+  │                 │◄─────────────────┤                │             │              │             │
+  │                 │                  │                │             │              │             │
+  │  Generate Brief │                  │                │             │              │             │
+  ├────────────────►│  POST /gen-final │                │             │              │             │
+  │                 ├─────────────────►│                │             │              │             │
+  │                 │                  ├──────────────────────────────────────────────────────────►│
+  │                 │                  │                │             │              │  Final doc  │
+  │                 │                  │◄──────────────────────────────────────────────────────────┤
+  │                 │                  ├────────────────────────────────────────────►│             │
+  │                 │  { finalDoc }    │                │             │              │             │
+  │                 │◄─────────────────┤                │             │              │             │
+  │  View brief     │                  │                │             │              │             │
+  │◄────────────────┤                  │                │             │              │             │
 ```
 
-Gemini AI powers five features:
-1. **Briefing chat** — Guided Q&A with 4-layer framework to gather missing creative direction
-2. **Final brief generation** — Combines uploaded material summaries + briefing answers into a structured production document
-3. **Task auto-generation** — Reads a completed brief and creates actionable editing tasks for the Kanban board
-4. **Comment summarization** — Reads all timestamped feedback comments on a task and produces an AI summary
-5. **Task chatbot** — Context-aware AI assistant that knows the task details, comments, and video context
+**Reference Reel Analysis Flow**
+
+```
+Creator          React App          Express          S3              Gemini
+  │                 │                  │               │                │
+  │  Add reference  │                  │               │                │
+  │  (URL + video)  │                  │               │                │
+  ├────────────────►│                  │               │                │
+  │                 │  Upload video    │               │                │
+  │                 ├─────────────────────────────────►│                │
+  │                 │                  │               │                │
+  │                 │  POST /references│               │                │
+  │                 ├─────────────────►│               │                │
+  │                 │                  │  Save to DB   │                │
+  │                 │  { reference }   │               │                │
+  │                 │◄─────────────────┤               │                │
+  │                 │                  │               │                │
+  │  Click Analyse  │                  │               │                │
+  ├────────────────►│                  │               │                │
+  │                 │  POST /analyze   │               │                │
+  │                 ├─────────────────►│               │                │
+  │                 │                  │  Download     │                │
+  │                 │                  │  video from S3│                │
+  │                 │                  │◄──────────────┤                │
+  │                 │                  │               │                │
+  │                 │                  │  Send video   │                │
+  │                 │                  │  to Gemini    │                │
+  │                 │                  ├───────────────────────────────►│
+  │                 │                  │               │   Structured   │
+  │                 │                  │               │   analysis:    │
+  │                 │                  │               │   Hook, Pacing │
+  │                 │                  │               │   Transitions  │
+  │                 │                  │               │   Text, Audio  │
+  │                 │                  │               │   Motion GFX   │
+  │                 │                  │◄───────────────────────────────┤
+  │                 │                  │  Save analysis│                │
+  │                 │                  │  to DynamoDB  │                │
+  │                 │  { analysis }    │               │                │
+  │                 │◄─────────────────┤               │                │
+  │  View breakdown │                  │               │                │
+  │◄────────────────┤                  │               │                │
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| **Frontend** | React + TypeScript, Vite | Fast builds, type safety, HMR |
+| **UI Library** | shadcn/ui + Tailwind CSS | Accessible components, rapid styling |
+| **State Management** | TanStack Query v5 | Server state caching, auto-invalidation |
+| **Routing** | wouter | Lightweight, hooks-based routing |
+| **Backend** | Express.js + TypeScript | Simple, battle-tested, full TypeScript |
+| **Auth Database** | PostgreSQL (Neon) | Reliable relational store for users/sessions |
+| **Business Database** | AWS DynamoDB | Single-table design, infinite scale, sub-10ms reads |
+| **File Storage** | AWS S3 + CloudFront CDN | Presigned uploads, global edge delivery |
+| **AI Summarization** | AWS Lambda (ap-south-1) | Serverless document extraction, auto-scaling |
+| **AI Engine** | Google Gemini 2.0 Flash | Fast multimodal AI for text and video analysis |
+| **Auth** | bcrypt + express-session | Industry-standard password hashing, server sessions |
+
+---
+
+## Key Differentiators
+
+| Feature | theCREW | Typical Tools |
+|---------|---------|---------------|
+| **AI Brief from raw notes** | Upload anything, AI interviews you, generates structured brief | Manual Google Doc |
+| **Smart question reduction** | AI skips what's already covered in uploads | N/A |
+| **Context-aware quick replies** | Chips change per briefing layer | Static forms |
+| **One-click task generation** | Brief to Kanban tasks in one click | Manual task creation |
+| **Conflict-aware task gen** | Checks existing tasks, prevents duplicates | N/A |
+| **Timestamped video feedback** | Click "0:14" to seek to that moment | "Go to around 14 seconds" |
+| **AI reference analysis** | Upload a viral reel, get structured breakdown of what makes it work | "Edit it like that one" |
+| **Presigned S3 uploads** | Files go browser-to-S3 directly (no server bottleneck) | Server-proxied uploads |
 
 ---
 
 ## Project Structure
 
 ```
+theCREW/
 ├── client/
 │   └── src/
 │       ├── pages/
-│       │   ├── auth.tsx              # Sign In / Sign Up page
-│       │   ├── home.tsx              # Landing page
-│       │   └── workspace-layout.tsx  # Main app shell with tabs
+│       │   ├── landing.tsx             # Landing page with hero section
+│       │   ├── auth.tsx                # Sign In / Sign Up with password strength
+│       │   ├── workspace-layout.tsx    # Main app shell with tab routing
+│       │   ├── profile.tsx             # Profile settings (name, password)
+│       │   ├── about.tsx               # About page
+│       │   ├── pricing.tsx             # Pricing page
+│       │   ├── blog.tsx                # Blog page
+│       │   ├── changelog.tsx           # Changelog page
+│       │   ├── contact.tsx             # Contact page
+│       │   ├── help-center.tsx         # Help center
+│       │   ├── support.tsx             # Support page
+│       │   ├── privacy-policy.tsx      # Privacy policy
+│       │   └── request-feature.tsx     # Feature request page
 │       ├── components/
 │       │   ├── tabs/
-│       │   │   ├── folders-tab.tsx   # Files & folders management
-│       │   │   ├── users-tab.tsx     # Team members management
+│       │   │   ├── folders-tab.tsx     # File & folder management with uploads
+│       │   │   ├── users-tab.tsx       # Team member management (invite, roles)
 │       │   │   ├── interrogator-tab.tsx # 3-step AI briefing wizard
-│       │   │   ├── final-agenda-tab.tsx # Saved production briefs
-│       │   │   ├── tasks-tab.tsx     # Kanban board + task drawer
-│       │   │   ├── resources-tab.tsx # Shared resources
-│       │   │   └── ...
-│       │   ├── page-navbar.tsx       # Shared navigation bar
-│       │   └── page-footer.tsx       # Shared footer
-│       └── App.tsx                   # Route definitions
+│       │   │   ├── final-agenda-tab.tsx # Briefs library with task generation
+│       │   │   ├── tasks-tab.tsx       # Kanban board + task detail drawer
+│       │   │   └── resources-tab.tsx   # Reference reels + AI video analysis
+│       │   ├── page-navbar.tsx         # Shared frosted glass navigation bar
+│       │   ├── page-footer.tsx         # Shared footer
+│       │   ├── crew-logo.tsx           # Typographic wordmark component
+│       │   └── slide-in-button.tsx     # Animated CTA button
+│       ├── hooks/
+│       │   ├── use-auth.ts             # Auth context and user state
+│       │   ├── use-toast.ts            # Toast notification hook
+│       │   └── use-in-view.ts          # Intersection observer hook
+│       ├── lib/
+│       │   ├── queryClient.ts          # TanStack Query config + apiRequest
+│       │   └── auth-utils.ts           # Auth error handling utilities
+│       └── App.tsx                     # Route definitions
 ├── server/
-│   ├── routes.ts                     # All API endpoints
-│   ├── storage.ts                    # Auth storage (PostgreSQL)
+│   ├── routes.ts                       # All REST API endpoints (50+ routes)
+│   ├── storage.ts                      # Auth storage interface (PostgreSQL)
+│   ├── db.ts                           # PostgreSQL connection (Neon)
+│   ├── index.ts                        # Server entry point
+│   ├── vite.ts                         # Vite dev server integration
 │   ├── aws/
-│   │   ├── config.ts                 # AWS SDK clients
-│   │   ├── setup.ts                  # Auto-creates S3, DynamoDB, CloudFront
-│   │   └── fileService.ts           # DynamoDB CRUD operations
+│   │   ├── config.ts                   # AWS SDK clients (S3, DynamoDB, CloudFront)
+│   │   ├── setup.ts                    # Auto-provisions S3 bucket, DynamoDB table,
+│   │   │                               #   CloudFront distribution + GSIs on startup
+│   │   └── fileService.ts             # All DynamoDB CRUD operations
 │   └── replit_integrations/
-│       └── auth/                     # Email/password auth handlers
+│       ├── auth/                       # Email/password auth handlers
+│       └── object_storage/             # Legacy object storage (Replit)
 ├── shared/
-│   ├── schema.ts                     # TypeScript interfaces
+│   ├── schema.ts                       # TypeScript interfaces for all entities
 │   └── models/
-│       └── auth.ts                   # Drizzle auth models
+│       └── auth.ts                     # Drizzle ORM models (users, sessions)
 └── package.json
 ```
+
+---
+
+## API Reference
+
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register with email + password |
+| POST | `/api/auth/login` | Sign in |
+| POST | `/api/auth/logout` | Sign out (destroy session) |
+| GET | `/api/auth/user` | Get current user profile |
+| PATCH | `/api/auth/user` | Update profile (firstName, lastName) |
+| POST | `/api/auth/change-password` | Change password |
+
+### Workspaces & Organization
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces` | List user's workspaces |
+| POST | `/api/workspaces` | Create workspace (auto-creates org) |
+| GET | `/api/workspaces/:id` | Get workspace details |
+| DELETE | `/api/workspaces/:id` | Delete workspace |
+| GET | `/api/workspaces/:id/members` | List workspace members |
+| POST | `/api/workspaces/:id/members` | Add member (email + role) |
+| DELETE | `/api/workspaces/:wsId/members/:memberId` | Remove member |
+
+### Files & Folders
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces/:id/folders` | List folders in workspace |
+| POST | `/api/workspaces/:id/folders` | Create folder |
+| DELETE | `/api/workspaces/:wsId/folders/:folderId` | Delete folder + S3 files |
+| GET | `/api/workspaces/:wsId/folders/:folderId/files` | List files in folder |
+| POST | `/api/workspaces/:id/files` | Create file record |
+| DELETE | `/api/workspaces/:wsId/files/:fileId` | Delete file + S3 object |
+| POST | `/api/uploads/request-url` | Get presigned S3 upload URL |
+
+### AI Briefing (Interrogator)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/interrogator/upload-text` | Convert text input to .txt on S3 |
+| POST | `/api/interrogator/summarize` | Send files to Lambda for summarization |
+| GET | `/api/workspaces/:id/interrogations` | List all interrogations |
+| POST | `/api/interrogator/chat` | Gemini AI briefing chat (4-layer framework) |
+| POST | `/api/interrogator/generate-final` | Generate final production brief |
+
+### Tasks
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces/:id/tasks` | List tasks |
+| POST | `/api/workspaces/:id/tasks` | Create task manually |
+| PATCH | `/api/workspaces/:wsId/tasks/:taskId` | Update task (status, priority, assignees) |
+| DELETE | `/api/workspaces/:wsId/tasks/:taskId` | Delete task |
+| POST | `/api/workspaces/:id/tasks/generate` | AI auto-generate tasks from brief |
+| GET | `/api/workspaces/:wsId/tasks/:taskId/comments` | List task comments |
+| POST | `/api/workspaces/:wsId/tasks/:taskId/comments` | Add timestamped comment |
+| POST | `/api/workspaces/:wsId/tasks/revision-checklist` | AI revision checklist from all comments |
+| POST | `/api/workspaces/:wsId/tasks/:taskId/summarize` | AI summary of task comments |
+| POST | `/api/workspaces/:wsId/tasks/:taskId/chat` | Task-aware AI chatbot |
+
+### Reference Reels
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces/:id/references` | List references |
+| POST | `/api/workspaces/:id/references` | Add reference (URL + platform) |
+| DELETE | `/api/workspaces/:wsId/references/:refId` | Delete reference |
+| POST | `/api/workspaces/:wsId/references/:refId/analyze` | AI video analysis (Gemini) |
 
 ---
 
@@ -481,13 +839,24 @@ Gemini AI powers five features:
 npm run dev
 ```
 
-This starts both the Express backend and Vite frontend on **port 5000**.
-
-To push auth schema changes to PostgreSQL:
+Starts both the Express backend and Vite frontend on **port 5000**.
 
 ```bash
 npm run db:push
 ```
+
+Pushes auth schema changes to PostgreSQL.
+
+### Environment Variables Required
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string (Neon) |
+| `GEMINI_API_KEY` | Google Gemini 2.0 Flash API key |
+| `AWS_ACCESS_KEY_ID` | AWS credentials for S3/DynamoDB/CloudFront |
+| `AWS_SECRET_ACCESS_KEY` | AWS credentials |
+| `AWS_REGION` | AWS region (default: ap-south-1) |
+| `SESSION_SECRET` | Express session encryption key |
 
 ---
 
