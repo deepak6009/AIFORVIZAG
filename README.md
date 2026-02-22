@@ -13,6 +13,11 @@
   - [3. Create a Workspace](#3-create-a-workspace)
   - [4. Organize Content — Create Folders](#4-organize-content--create-folders)
   - [5. Folder View — Ready to Upload](#5-folder-view--ready-to-upload)
+  - [6. AI Brief — Upload Materials](#6-ai-brief--upload-materials)
+  - [7. AI Briefing — Guided Q&A](#7-ai-briefing--guided-qa)
+  - [8. Production Brief — Final Document](#8-production-brief--final-document)
+  - [9. Briefs — Saved Production Briefs](#9-briefs--saved-production-briefs)
+  - [10. Tasks — Kanban Board](#10-tasks--kanban-board)
 - [Architecture](#architecture)
   - [Tech Stack](#tech-stack)
   - [System Architecture Diagram](#system-architecture-diagram)
@@ -96,6 +101,96 @@ With folders created (e.g., "raw footage" and "logos"), the workspace is ready f
 - **"Click a folder above to view and upload files"** guides the user
 - Files uploaded inside folders are stored in S3 and served via CloudFront CDN
 - Supports images, videos, PDFs, audio, and other media formats
+
+---
+
+### 6. AI Brief — Upload Materials
+
+![AI Brief Upload](attached_assets/image_1771733158375.png)
+
+The **AI Brief** tab is where the magic begins. A 3-step wizard guides creators through building a production brief that their editors can actually follow.
+
+**Step 1: Upload** — The creator provides context for the project:
+
+- **Drag & drop files** — PDFs, Word docs, audio (.mp3, .wav, .ogg, .webm, .m4a), and text files
+- **Voice to Text** — Speak directly into the mic; browser speech-to-text transcribes it into a text file
+- **Text input** — Type or paste project notes, goals, and references directly
+- All uploaded materials are stored in S3 and sent to an AI summarization service (AWS Lambda) for analysis
+- Hit **"Analyse"** to process everything and move to the briefing step
+
+---
+
+### 7. AI Briefing — Guided Q&A
+
+![AI Briefing Chat](attached_assets/image_1771733345404.png)
+
+**Step 2: Briefing** — Gemini AI conducts a conversational interview to fill in the gaps. It uses a 4-layer briefing framework:
+
+| Layer | What it covers |
+|-------|---------------|
+| **Goal & Audience** | Primary goal, target viewers, platform, duration |
+| **Style & Hook** | Visual vibe, color grade, opening hook strategy |
+| **Editing & Visuals** | Cut style, transitions, captions, B-roll needs |
+| **Audio & Format** | Background music, sound effects, voiceover, pacing |
+
+- Progress bar shows which layers have been covered (2/4 in the screenshot)
+- **Selectable chip options** let creators answer quickly (e.g., "promotional" in one tap)
+- Creators can also type custom answers or attach additional files mid-conversation
+- The AI only asks about what's missing — if the uploaded materials already cover a topic, it skips ahead
+- **"Generate Brief"** compiles everything into a final production document
+
+---
+
+### 8. Production Brief — Final Document
+
+![Production Brief](attached_assets/image_1771733470944.png)
+
+**Step 3: Brief** — Gemini generates a comprehensive production brief by combining:
+
+1. The AI summary of uploaded materials (from the Lambda service)
+2. All briefing answers from the conversational Q&A
+3. Any file attachments shared during the chat
+
+The final document includes structured sections:
+
+- **Project Overview** — What the video is about and its goals
+- **Target Audience & Platform** — Who it's for and format specs (e.g., Instagram Reels, 25-30 sec)
+- **Resources & References** — Links to uploaded reference materials on CloudFront
+- **Style & Tone** — Visual direction, color grading, pacing references
+- **Hook & Opening** — Specific opening strategy for the first few seconds
+- Editable with the **"Edit"** button if the creator wants to tweak anything
+- Saved to DynamoDB as a completed interrogation record
+
+---
+
+### 9. Briefs — Saved Production Briefs
+
+![Briefs Tab](attached_assets/image_1771733530462.png)
+
+The **Briefs** tab is the library of all completed production briefs for a workspace. Each brief is an expandable card showing:
+
+- **Brief title** with completion status badge ("Completed")
+- **Timestamp** — when it was generated (e.g., "Feb 22, 2026 at 9:40 AM")
+- **Full document** — expandable to show Project Overview, Target Audience, Style & Tone, Hook & Opening, and all other sections
+- **"New Brief"** button to start a fresh AI briefing session
+- Briefs serve as the single source of truth that editors reference when cutting content
+
+---
+
+### 10. Tasks — Kanban Board
+
+![Tasks Kanban](attached_assets/image_1771733635384.png)
+
+The **Tasks** tab is a full Kanban board where creators and editors manage the production workflow. Tasks can be auto-generated from a production brief or created manually.
+
+- **Four columns**: To Do, In Progress, Review, Done — drag and drop to update status
+- **"From Brief"** button — Gemini AI reads a completed production brief and auto-generates actionable editing tasks (e.g., "Import and Organize Footage", "Rough Cut Assembly", "Add Bold Center Captions")
+- **"+ Create"** — manually add tasks with title, description, priority, and status
+- **"AI Checklist"** — generates a revision checklist from all task comments across the board
+- **Search** — filter tasks by keyword
+- Each task card shows title, description preview, and priority badge (High, Medium, Low)
+- Task count per column shown in the header
+- Clicking a task opens a detail drawer with tabs for Details, Feedback (timestamped video comments), AI Summary, and Ask AI (task-aware chatbot)
 
 ---
 
@@ -188,6 +283,55 @@ Creator uploads files to folder
     → Files served globally via CloudFront CDN
 ```
 
+**AI Briefing pipeline (Interrogator):**
+
+```
+Creator opens AI Brief tab
+    → Step 1: Upload files + text + voice notes
+    → Files uploaded to S3 via presigned URLs
+    → Text converted to .txt on S3 via POST /api/interrogator/upload-text
+    → "Analyse" sends file URLs to AWS Lambda summarization service
+    → Lambda returns structured summary → stored as Interrogation in DynamoDB
+
+    → Step 2: AI Briefing chat
+    → POST /api/interrogator/chat sends summary + chat history to Gemini 2.0 Flash
+    → Gemini uses 4-layer framework (Goal, Style, Editing, Audio)
+    → Asks only about missing information, skips what's already covered
+    → Briefing answers accumulated across the conversation
+
+    → Step 3: Generate final brief
+    → POST /api/interrogator/generate-final combines:
+       • Lambda summary of uploaded materials
+       • All briefing answers from the chat
+       • File attachments shared during conversation
+    → Gemini produces structured production brief
+    → Saved to DynamoDB as completed Interrogation record
+```
+
+**Task management from briefs:**
+
+```
+Creator clicks "From Brief" on Tasks tab
+    → POST /api/workspaces/:id/tasks/generate
+    → Sends final brief content to Gemini AI
+    → Gemini breaks it into actionable editing tasks
+    → Tasks auto-created in DynamoDB with title, description, priority
+    → Kanban board populates instantly
+
+Editor drags task between columns
+    → PATCH /api/workspaces/:wsId/tasks/:taskId
+    → Status updated in DynamoDB (todo → in-progress → review → done)
+
+Editor adds timestamped comment on task
+    → POST /api/workspaces/:wsId/tasks/:taskId/comments
+    → Comment stored with timestampSec for video seeking
+    → Clicking timestamp badge seeks video player to that moment
+
+Creator requests AI summary
+    → POST /api/workspaces/:wsId/tasks/:taskId/summarize
+    → Gemini reads all timestamped comments and produces summary
+```
+
 ### Database Design
 
 **PostgreSQL** handles authentication only:
@@ -206,8 +350,11 @@ Creator uploads files to folder
 | Member | `ORG#<orgId>` | `WS#<wsId>#MEMBER#<userId>` |
 | Folder | `ORG#<orgId>` | `WS#<wsId>#FOLDER#<folderId>` |
 | File | `ORG#<orgId>` | `WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>` |
+| Interrogation | `ORG#<orgId>` | `WS#<wsId>#INTERROGATION#<id>` |
+| Task | `ORG#<orgId>` | `WS#<wsId>#TASK#<taskId>` |
+| TaskComment | `ORG#<orgId>` | `WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` |
 
-This hierarchical key structure allows efficient queries — fetching all folders in a workspace is a single DynamoDB query with a sort key prefix of `WS#<wsId>#FOLDER#`.
+This hierarchical key structure allows efficient queries — fetching all folders in a workspace is a single DynamoDB query with a sort key prefix of `WS#<wsId>#FOLDER#`. The same pattern applies to tasks (`WS#<wsId>#TASK#`) and interrogations (`WS#<wsId>#INTERROGATION#`).
 
 ### Authentication Flow
 
@@ -257,6 +404,36 @@ Client                    Backend                 AWS S3
 
 Files are uploaded directly from the browser to S3 using presigned URLs, keeping the server lightweight. The CloudFront CDN ensures fast delivery worldwide.
 
+### AI Pipeline
+
+```
+┌──────────────┐     Upload files      ┌──────────────┐     Summarize     ┌──────────────┐
+│   Creator    │ ──────────────────▶   │   AWS S3     │ ─────────────▶   │  AWS Lambda  │
+│  (Browser)   │   presigned URLs      │   Bucket     │   file URLs      │  Summary API │
+└──────┬───────┘                       └──────────────┘                  └──────┬───────┘
+       │                                                                        │
+       │  Briefing Q&A                                              summary JSON│
+       │                                                                        │
+       ▼                                                                        ▼
+┌──────────────┐     chat + summary    ┌──────────────┐              ┌──────────────┐
+│   Express    │ ──────────────────▶   │  Gemini 2.0  │              │   DynamoDB   │
+│   Backend    │                       │    Flash     │              │ Interrogation│
+│              │  ◀──────────────────  │              │              │   record     │
+│              │   AI responses        │  • Briefing  │              └──────────────┘
+│              │                       │  • Final doc │
+│              │                       │  • Tasks gen │
+│              │                       │  • Summaries │
+│              │                       │  • Chat bot  │
+└──────────────┘                       └──────────────┘
+```
+
+Gemini AI powers five features:
+1. **Briefing chat** — Guided Q&A with 4-layer framework to gather missing creative direction
+2. **Final brief generation** — Combines uploaded material summaries + briefing answers into a structured production document
+3. **Task auto-generation** — Reads a completed brief and creates actionable editing tasks for the Kanban board
+4. **Comment summarization** — Reads all timestamped feedback comments on a task and produces an AI summary
+5. **Task chatbot** — Context-aware AI assistant that knows the task details, comments, and video context
+
 ---
 
 ## Project Structure
@@ -272,7 +449,10 @@ Files are uploaded directly from the browser to S3 using presigned URLs, keeping
 │       │   ├── tabs/
 │       │   │   ├── folders-tab.tsx   # Files & folders management
 │       │   │   ├── users-tab.tsx     # Team members management
-│       │   │   ├── tasks-tab.tsx     # Kanban task board
+│       │   │   ├── interrogator-tab.tsx # 3-step AI briefing wizard
+│       │   │   ├── final-agenda-tab.tsx # Saved production briefs
+│       │   │   ├── tasks-tab.tsx     # Kanban board + task drawer
+│       │   │   ├── resources-tab.tsx # Shared resources
 │       │   │   └── ...
 │       │   ├── page-navbar.tsx       # Shared navigation bar
 │       │   └── page-footer.tsx       # Shared footer
