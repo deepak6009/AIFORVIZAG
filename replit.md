@@ -51,7 +51,7 @@ Table: `AIFORVIZAG_file_structure`
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
 - Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
-- Nav tabs: Users, Folders, Interrogator, Final Agenda, Tasks, Resources
+- Nav tabs: Files, Team, AI Brief, Briefs, Tasks, Resources
 - Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure

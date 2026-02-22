@@ -1,51 +1,5 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { FileText, Plus, Search, Link2, Image, Video, Music, ExternalLink } from "lucide-react";
-
-const sampleResources = [
-  {
-    id: "1",
-    title: "Brand Style Guide",
-    type: "document",
-    description: "Colors, fonts, and logo usage guidelines",
-    icon: FileText,
-    iconColor: "text-primary",
-  },
-  {
-    id: "2",
-    title: "Viral Reel Reference",
-    type: "link",
-    description: "https://instagram.com/reel/example",
-    icon: Link2,
-    iconColor: "text-chart-5",
-  },
-  {
-    id: "3",
-    title: "Intro Music Track",
-    type: "audio",
-    description: "Upbeat background music for intros",
-    icon: Music,
-    iconColor: "text-chart-4",
-  },
-  {
-    id: "4",
-    title: "Logo Pack",
-    type: "image",
-    description: "All logo variations in PNG and SVG",
-    icon: Image,
-    iconColor: "text-chart-2",
-  },
-  {
-    id: "5",
-    title: "B-Roll Collection",
-    type: "video",
-    description: "Stock footage for transitions",
-    icon: Video,
-    iconColor: "text-chart-3",
-  },
-];
+import { FileText, Plus, Link2, Bookmark } from "lucide-react";
 
 export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
   return (
@@ -53,55 +7,23 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 sm:mb-6">
           <div>
-            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2" data-testid="text-resources-title">
+              <Bookmark className="w-5 h-5 text-primary" />
               Resources
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               Shared links, references, and assets for the team
             </p>
           </div>
-          <Button size="sm" className="h-10 sm:h-9 w-full sm:w-auto" disabled data-testid="button-add-resource">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Add Resource
-          </Button>
         </div>
 
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search resources..." className="pl-9 h-10 sm:h-9" disabled data-testid="input-search-resources" />
+        <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 sm:p-12 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Link2 className="w-7 h-7 text-primary" />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          {sampleResources.map(resource => {
-            const Icon = resource.icon;
-            return (
-              <Card key={resource.id} className="border hover:bg-accent/30 active:bg-accent/50 transition-colors cursor-pointer" data-testid={`resource-${resource.id}`}>
-                <CardContent className="p-3.5 sm:p-4 flex items-center gap-3 sm:gap-4">
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${resource.iconColor}`} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{resource.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{resource.description}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs capitalize shrink-0 hidden sm:flex">
-                    {resource.type}
-                  </Badge>
-                  {resource.type === "link" && (
-                    <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="border-t mt-6 sm:mt-8 pt-4">
-          <p className="text-xs text-muted-foreground text-center">
-            Resources section is a placeholder. Add links, references, and shared assets here.
+          <h3 className="font-semibold text-foreground mb-1" data-testid="text-no-resources">Coming soon</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            This is where you'll save reference links, brand guides, music tracks, and other shared assets for your team.
           </p>
         </div>
       </div>
