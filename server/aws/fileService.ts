@@ -612,3 +612,92 @@ export async function getTaskComments(orgId: string, workspaceId: string, taskId
   }));
   return (result.Items || []) as any[];
 }
+
+// === Reference Reels ===
+
+export async function createReference(params: {
+  orgId: string;
+  workspaceId: string;
+  title: string;
+  sourceUrl?: string;
+  sourcePlatform?: string;
+  videoObjectPath?: string;
+  videoUrl?: string;
+  createdBy: string;
+}) {
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  const item = {
+    pk: `ORG#${params.orgId}`,
+    sk: `WS#${params.workspaceId}#REFERENCE#${id}`,
+    id,
+    orgId: params.orgId,
+    workspaceId: params.workspaceId,
+    title: params.title,
+    sourceUrl: params.sourceUrl || null,
+    sourcePlatform: params.sourcePlatform || null,
+    videoObjectPath: params.videoObjectPath || null,
+    videoUrl: params.videoUrl || null,
+    analysisStatus: "pending",
+    analysis: null,
+    errorMessage: null,
+    createdBy: params.createdBy,
+    createdAt: now,
+    updatedAt: now,
+    itemType: "reference",
+  };
+  await docClient.send(new PutCommand({ TableName: DYNAMODB_TABLE_NAME, Item: item }));
+  return item;
+}
+
+export async function getReferencesByWorkspace(orgId: string, workspaceId: string) {
+  const result = await docClient.send(new QueryCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
+    ExpressionAttributeValues: {
+      ":pk": `ORG#${orgId}`,
+      ":skPrefix": `WS#${workspaceId}#REFERENCE#`,
+    },
+  }));
+  return (result.Items || []) as any[];
+}
+
+export async function getReference(orgId: string, workspaceId: string, referenceId: string) {
+  const result = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#REFERENCE#${referenceId}` },
+  }));
+  return result.Item || null;
+}
+
+export async function updateReferenceAnalysis(orgId: string, workspaceId: string, referenceId: string, updates: {
+  analysisStatus?: string;
+  analysis?: any;
+  errorMessage?: string;
+}) {
+  const expressions: string[] = [];
+  const names: Record<string, string> = {};
+  const values: Record<string, any> = {};
+
+  if (updates.analysisStatus !== undefined) { expressions.push("#as = :as"); names["#as"] = "analysisStatus"; values[":as"] = updates.analysisStatus; }
+  if (updates.analysis !== undefined) { expressions.push("#an = :an"); names["#an"] = "analysis"; values[":an"] = updates.analysis; }
+  if (updates.errorMessage !== undefined) { expressions.push("#em = :em"); names["#em"] = "errorMessage"; values[":em"] = updates.errorMessage; }
+  expressions.push("#ua = :ua"); names["#ua"] = "updatedAt"; values[":ua"] = new Date().toISOString();
+
+  if (expressions.length === 1) return;
+
+  await docClient.send(new UpdateCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#REFERENCE#${referenceId}` },
+    UpdateExpression: `SET ${expressions.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  }));
+}
+
+export async function deleteReference(orgId: string, workspaceId: string, referenceId: string) {
+  await docClient.send(new DeleteCommand({
+    TableName: DYNAMODB_TABLE_NAME,
+    Key: { pk: `ORG#${orgId}`, sk: `WS#${workspaceId}#REFERENCE#${referenceId}` },
+  }));
+}

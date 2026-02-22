@@ -21,6 +21,7 @@ Table: `AIFORVIZAG_file_structure`
 - **Interrogation**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#INTERROGATION#<id>` (stores summary, fileUrls, briefingAnswers, status)
 - **Task**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>` (title, description, status, priority, sourceInterrogationId, assignees[])
 - **TaskComment**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` (text, timestampSec, authorId)
+- **Reference**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#REFERENCE#<referenceId>` (title, sourceUrl, sourcePlatform, videoObjectPath, analysisStatus, analysis)
 - GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
 - Each user gets a default org auto-created on first workspace creation
 
@@ -46,12 +47,12 @@ Table: `AIFORVIZAG_file_structure`
   - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
 - Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), multi-member assignment per task, AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
 - Task video review: upload video to task, add timestamped comments with clickable playback, AI summary of all comments, task-specific AI chat bot for editors
-- Resources section (placeholder - shared links and references)
+- Reference Reels: share viral Reels/TikToks/Shorts, upload video, AI (Gemini) analyses pacing, transitions, text style, audio, hooks, engagement tactics, and gives editor-ready recommendations
 
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs
 - Top bar: WorkVault logo | Workspace switcher dropdown | User avatar + logout
-- Nav tabs: Files, Team, AI Brief, Briefs, Tasks, Resources
+- Nav tabs: Files, Team, AI Brief, Briefs, Tasks, References
 - Routes: / (workspace selection), /workspace/:id/:tab (workspace view)
 
 ## Project Structure
@@ -73,7 +74,7 @@ Table: `AIFORVIZAG_file_structure`
 - `client/src/components/tabs/interrogator-tab.tsx` - 3-step Interrogator wizard with Gemini AI briefing chat
 - `client/src/components/tabs/final-agenda-tab.tsx` - Final Agenda listing (saved production briefs from Interrogator)
 - `client/src/components/tabs/tasks-tab.tsx` - Kanban board with drag-and-drop, task detail drawer, comments, AI generation
-- `client/src/components/tabs/resources-tab.tsx` - Shared resources (placeholder)
+- `client/src/components/tabs/resources-tab.tsx` - Reference Reels (add reference, upload video, AI analysis with Gemini)
 
 ## API Routes
 - `POST /api/auth/register` - Register with email/password
@@ -108,6 +109,9 @@ Table: `AIFORVIZAG_file_structure`
 - `POST /api/workspaces/:wsId/tasks/revision-checklist` - Gemini AI revision checklist from all task comments
 - `POST /api/workspaces/:wsId/tasks/:taskId/summarize` - AI summary of all timestamped comments for one task
 - `POST /api/workspaces/:wsId/tasks/:taskId/chat` - Task-aware AI chatbot for editors (knows task context + comments)
+- `GET/POST /api/workspaces/:id/references` - List/create reference reels (DynamoDB)
+- `DELETE /api/workspaces/:wsId/references/:refId` - Delete reference (DynamoDB)
+- `POST /api/workspaces/:wsId/references/:refId/analyze` - Gemini AI video analysis (downloads from S3, sends to Gemini, stores structured analysis)
 
 ## Running
 - `npm run dev` starts both frontend and backend on port 5000

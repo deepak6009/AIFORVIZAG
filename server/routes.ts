@@ -34,8 +34,15 @@ import {
   deleteTask,
   createTaskComment,
   getTaskComments,
+  createReference,
+  getReferencesByWorkspace,
+  getReference,
+  updateReferenceAnalysis,
+  deleteReference,
 } from "./aws/fileService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client, S3_BUCKET_NAME } from "./aws/config";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -1114,6 +1121,198 @@ INSTRUCTIONS:
     } catch (error: any) {
       console.error("Error in task chat:", error);
       res.status(500).json({ error: error.message || "Failed to get AI response" });
+    }
+  });
+
+  // === Reference Reels ===
+
+  app.get("/api/workspaces/:id/references", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const refs = await getReferencesByWorkspace(orgId, req.params.id);
+      refs.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      res.json(refs);
+    } catch (error: any) {
+      console.error("Error listing references:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/workspaces/:id/references", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const { title, sourceUrl, sourcePlatform, videoObjectPath, videoUrl } = req.body;
+      if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+      const ref = await createReference({
+        orgId,
+        workspaceId: req.params.id,
+        title,
+        sourceUrl,
+        sourcePlatform,
+        videoObjectPath,
+        videoUrl,
+        createdBy: userId,
+      });
+      res.json(ref);
+    } catch (error: any) {
+      console.error("Error creating reference:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/workspaces/:wsId/references/:refId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      await deleteReference(orgId, req.params.wsId, req.params.refId);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting reference:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/workspaces/:wsId/references/:refId/analyze", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const orgId = await getOrCreateDefaultOrg(userId);
+      const ref = await getReference(orgId, req.params.wsId, req.params.refId);
+      if (!ref) {
+        return res.status(404).json({ error: "Reference not found" });
+      }
+
+      if (!ref.videoObjectPath) {
+        return res.status(400).json({ error: "No video uploaded for analysis. Please upload a video file." });
+      }
+
+      await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+        analysisStatus: "processing",
+      });
+
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      // Download the video from S3 to send to Gemini
+      const s3Key = ref.videoObjectPath.includes("cloudfront.net/")
+        ? ref.videoObjectPath.split("cloudfront.net/")[1]
+        : ref.videoObjectPath.includes(".amazonaws.com/")
+          ? ref.videoObjectPath.split(".amazonaws.com/")[1]
+          : ref.videoObjectPath;
+
+      const s3Response = await s3Client.send(new GetObjectCommand({
+        Bucket: S3_BUCKET_NAME,
+        Key: s3Key,
+      }));
+
+      const videoBytes = await s3Response.Body?.transformToByteArray();
+      if (!videoBytes) {
+        throw new Error("Failed to download video from storage");
+      }
+
+      const videoBase64 = Buffer.from(videoBytes).toString("base64");
+      const contentType = s3Response.ContentType || "video/mp4";
+
+      const prompt = `You are an expert short-form content analyst specializing in viral Instagram Reels, TikTok videos, and YouTube Shorts.
+
+Analyze this reference video and provide a detailed breakdown of what makes it work. Return your analysis as a JSON object with this exact structure:
+
+{
+  "summary": "A 2-3 sentence executive summary of the video and why it works",
+  "sections": {
+    "hook": {
+      "title": "Hook & Opening",
+      "observations": ["observation 1", "observation 2", ...],
+      "whyItWorks": "Brief explanation of why this hook is effective"
+    },
+    "pacing": {
+      "title": "Pacing & Rhythm",
+      "observations": ["observation about cut frequency", "observation about scene durations", ...],
+      "whyItWorks": "Why this pacing works for retention"
+    },
+    "transitions": {
+      "title": "Transitions & Cuts",
+      "observations": ["transition types used", "notable transition moments", ...],
+      "whyItWorks": "What makes these transitions effective"
+    },
+    "textStyle": {
+      "title": "Text & Captions",
+      "observations": ["font style", "placement", "timing", "readability", ...],
+      "whyItWorks": "How text enhances the content"
+    },
+    "audio": {
+      "title": "Audio & Music",
+      "observations": ["music choice", "sound effects", "voiceover style", "audio sync", ...],
+      "whyItWorks": "How audio drives engagement"
+    },
+    "engagementTactics": {
+      "title": "Engagement Tactics",
+      "observations": ["CTA placement", "pattern interrupts", "curiosity gaps", "emotional triggers", ...],
+      "whyItWorks": "Why viewers keep watching and interact"
+    },
+    "recommendations": {
+      "title": "Recommendations for Your Editor",
+      "observations": ["specific technique to replicate", "editing style to adopt", "timing to follow", ...],
+      "whyItWorks": "How to apply these insights to your content"
+    }
+  },
+  "tags": ["fast-cuts", "trending-audio", "text-overlay", ...]
+}
+
+Be specific and actionable. Focus on techniques that an editor can directly replicate. Only respond with valid JSON, no markdown code blocks.`;
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: contentType,
+            data: videoBase64,
+          },
+        },
+        { text: prompt },
+      ]);
+
+      const responseText = result.response.text();
+      let analysis;
+      try {
+        const cleaned = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        analysis = JSON.parse(cleaned);
+      } catch {
+        analysis = {
+          summary: responseText,
+          sections: {
+            hook: { title: "Hook & Opening", observations: ["Analysis could not be fully structured"], whyItWorks: "N/A" },
+            pacing: { title: "Pacing & Rhythm", observations: ["See summary"], whyItWorks: "N/A" },
+            transitions: { title: "Transitions & Cuts", observations: ["See summary"], whyItWorks: "N/A" },
+            textStyle: { title: "Text & Captions", observations: ["See summary"], whyItWorks: "N/A" },
+            audio: { title: "Audio & Music", observations: ["See summary"], whyItWorks: "N/A" },
+            engagementTactics: { title: "Engagement Tactics", observations: ["See summary"], whyItWorks: "N/A" },
+            recommendations: { title: "Recommendations", observations: ["See summary"], whyItWorks: "N/A" },
+          },
+          tags: [],
+        };
+      }
+
+      await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+        analysisStatus: "completed",
+        analysis,
+      });
+
+      const updated = await getReference(orgId, req.params.wsId, req.params.refId);
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error analyzing reference:", error);
+      const userId = req.userId;
+      try {
+        const orgId = await getOrCreateDefaultOrg(userId);
+        await updateReferenceAnalysis(orgId, req.params.wsId, req.params.refId, {
+          analysisStatus: "failed",
+          errorMessage: error.message || "Analysis failed",
+        });
+      } catch {}
+      res.status(500).json({ error: error.message || "Failed to analyze reference" });
     }
   });
 

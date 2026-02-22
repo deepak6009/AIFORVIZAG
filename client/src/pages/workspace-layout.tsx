@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Layers, Plus, Users, FolderOpen, MessageSquare, FileCheck, LayoutGrid,
-  FileText, LogOut, ChevronDown, Settings, ChevronsUpDown, Sparkles
+  FileText, LogOut, ChevronDown, Settings, ChevronsUpDown, Sparkles, Video
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { isUnauthorizedError } from "@/lib/auth-utils";
@@ -36,7 +36,7 @@ const tabs = [
   { id: "interrogator", label: "AI Brief", icon: Sparkles, accent: true },
   { id: "final-agenda", label: "Briefs", icon: FileCheck, accent: true },
   { id: "tasks", label: "Tasks", icon: LayoutGrid, accent: false },
-  { id: "resources", label: "Resources", icon: FileText, accent: false },
+  { id: "resources", label: "References", icon: Video, accent: false },
 ] as const;
 
 type TabId = typeof tabs[number]["id"];
