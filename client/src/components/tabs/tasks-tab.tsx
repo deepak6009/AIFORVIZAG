@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   LayoutGrid, Plus, Search, Filter, Sparkles, Trash2, GripVertical, MessageSquare, Clock, Send, Bot, Loader2,
-  Upload, Video, FileText, Play
+  Upload, Video, FileText, Play, Users, X, Check
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,8 +18,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { Task, TaskComment, TaskStatus, TaskPriority } from "@shared/schema";
+import type { Task, TaskComment, TaskStatus, TaskPriority, WorkspaceMember } from "@shared/schema";
+import type { User } from "@shared/schema";
 import ReactMarkdown from "react-markdown";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+type MemberWithUser = WorkspaceMember & { user: User };
 
 const COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: "todo", title: "To Do", color: "bg-blue-500" },
@@ -47,6 +51,12 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
   const [newDescription, setNewDescription] = useState("");
   const [newPriority, setNewPriority] = useState<TaskPriority>("medium");
   const [newStatus, setNewStatus] = useState<TaskStatus>("todo");
+  const [newAssignees, setNewAssignees] = useState<string[]>([]);
+
+  const { data: members = [] } = useQuery<MemberWithUser[]>({
+    queryKey: ["/api/workspaces", workspaceId, "members"],
+    enabled: !!workspaceId,
+  });
 
   const { data: tasks = [], isLoading } = useQuery<Task[]>({
     queryKey: ["/api/workspaces", workspaceId, "tasks"],
@@ -58,7 +68,7 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
   });
 
   const createTaskMut = useMutation({
-    mutationFn: async (data: { title: string; description: string; priority: string; status: string }) => {
+    mutationFn: async (data: { title: string; description: string; priority: string; status: string; assignees: string[] }) => {
       const res = await apiRequest("POST", `/api/workspaces/${workspaceId}/tasks`, data);
       return res.json();
     },
@@ -69,6 +79,7 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
       setNewDescription("");
       setNewPriority("medium");
       setNewStatus("todo");
+      setNewAssignees([]);
       toast({ title: "Task created" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
@@ -227,6 +238,25 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
                                 <span className="text-xs text-blue-500">Video attached</span>
                               </div>
                             )}
+                            {task.assignees && task.assignees.length > 0 && (
+                              <div className="flex items-center gap-1 mb-1.5">
+                                <div className="flex -space-x-1.5">
+                                  {task.assignees.slice(0, 3).map((uid) => {
+                                    const m = members.find(m => m.userId === uid);
+                                    const email = m?.user?.email || "?";
+                                    const initials = email.substring(0, 2).toUpperCase();
+                                    return (
+                                      <Avatar key={uid} className="w-5 h-5 border-2 border-background" title={email}>
+                                        <AvatarFallback className="text-[8px] bg-primary/10 text-primary">{initials}</AvatarFallback>
+                                      </Avatar>
+                                    );
+                                  })}
+                                  {task.assignees.length > 3 && (
+                                    <span className="text-[10px] text-muted-foreground ml-1">+{task.assignees.length - 3}</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             <div className="flex items-center justify-between">
                               <Badge variant="outline" className={`text-xs ${priorityColors[task.priority]}`}>{task.priority}</Badge>
                               {task.sourceInterrogationId && (
@@ -284,10 +314,14 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
                 </Select>
               </div>
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Assign To</label>
+              <MemberPicker members={members} selected={newAssignees} onChange={setNewAssignees} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={() => createTaskMut.mutate({ title: newTitle, description: newDescription, priority: newPriority, status: newStatus })} disabled={!newTitle.trim() || createTaskMut.isPending} data-testid="button-submit-task">
+            <Button onClick={() => createTaskMut.mutate({ title: newTitle, description: newDescription, priority: newPriority, status: newStatus, assignees: newAssignees })} disabled={!newTitle.trim() || createTaskMut.isPending} data-testid="button-submit-task">
               {createTaskMut.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
               Create
             </Button>
@@ -299,6 +333,7 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
         <TaskDetailDrawer
           task={selectedTask}
           workspaceId={workspaceId}
+          members={members}
           onClose={() => setSelectedTask(null)}
           onUpdate={(updates) => {
             updateTaskMut.mutate({ taskId: selectedTask.id, updates });
@@ -325,12 +360,14 @@ export default function TasksTab({ workspaceId }: { workspaceId: string }) {
 function TaskDetailDrawer({
   task,
   workspaceId,
+  members,
   onClose,
   onUpdate,
   onDelete,
 }: {
   task: Task;
   workspaceId: string;
+  members: MemberWithUser[];
   onClose: () => void;
   onUpdate: (updates: Partial<Task>) => void;
   onDelete: () => void;
@@ -586,6 +623,14 @@ function TaskDetailDrawer({
                 </Select>
               </div>
             </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Assigned To</label>
+              <MemberPicker
+                members={members}
+                selected={task.assignees || []}
+                onChange={(assignees) => onUpdate({ assignees })}
+              />
+            </div>
             {task.sourceInterrogationId && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-amber-500/5 px-3 py-2 rounded-lg border border-amber-500/10">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -780,5 +825,92 @@ function TaskDetailDrawer({
         </Tabs>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function MemberPicker({
+  members,
+  selected,
+  onChange,
+}: {
+  members: MemberWithUser[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const toggle = (userId: string) => {
+    if (selected.includes(userId)) {
+      onChange(selected.filter(id => id !== userId));
+    } else {
+      onChange([...selected, userId]);
+    }
+  };
+
+  const selectedMembers = members.filter(m => selected.includes(m.userId));
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full justify-start h-auto min-h-[36px] py-1.5 px-3 font-normal"
+          data-testid="button-assign-members"
+        >
+          {selectedMembers.length === 0 ? (
+            <span className="text-muted-foreground flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
+              Select team members...
+            </span>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {selectedMembers.map(m => (
+                <Badge
+                  key={m.userId}
+                  variant="secondary"
+                  className="text-xs gap-1 pr-1"
+                >
+                  {m.user?.email || "Unknown"}
+                  <button
+                    className="ml-0.5 hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); toggle(m.userId); }}
+                    data-testid={`button-remove-assignee-${m.userId}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-1" align="start">
+        {members.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-3">No team members yet. Add members in the Team tab.</p>
+        ) : (
+          <div className="max-h-48 overflow-y-auto">
+            {members.map(m => {
+              const isSelected = selected.includes(m.userId);
+              const email = m.user?.email || "Unknown";
+              const initials = email.substring(0, 2).toUpperCase();
+              return (
+                <button
+                  key={m.userId}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors ${isSelected ? "bg-accent/50" : ""}`}
+                  onClick={() => toggle(m.userId)}
+                  data-testid={`button-toggle-member-${m.userId}`}
+                >
+                  <Avatar className="w-6 h-6">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="flex-1 text-left truncate">{email}</span>
+                  {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }

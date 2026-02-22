@@ -753,7 +753,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       const userId = req.userId;
       const orgId = await getOrCreateDefaultOrg(userId);
       const wsId = req.params.id;
-      const { title, description, status, priority, sourceInterrogationId } = req.body;
+      const { title, description, status, priority, sourceInterrogationId, assignees } = req.body;
       if (!title) return res.status(400).json({ error: "Title is required" });
       const task = await createTask({
         orgId, workspaceId: wsId, title,
@@ -761,6 +761,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
         status: status || "todo",
         priority: priority || "medium",
         sourceInterrogationId,
+        assignees: Array.isArray(assignees) ? assignees : [],
         createdBy: userId,
       });
       res.json(task);
@@ -775,7 +776,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       const userId = req.userId;
       const orgId = await getOrCreateDefaultOrg(userId);
       const { wsId, taskId } = req.params;
-      const { title, description, status, priority, assignee, videoUrl } = req.body;
+      const { title, description, status, priority, assignees, videoUrl } = req.body;
       const allowedStatuses = ["todo", "in_progress", "review", "done"];
       const allowedPriorities = ["high", "medium", "low"];
       const safeUpdates: Record<string, any> = {};
@@ -783,7 +784,7 @@ Remember: Be direct. No fluff. Every sentence should tell the editor exactly wha
       if (description !== undefined) safeUpdates.description = String(description);
       if (status !== undefined && allowedStatuses.includes(status)) safeUpdates.status = status;
       if (priority !== undefined && allowedPriorities.includes(priority)) safeUpdates.priority = priority;
-      if (assignee !== undefined) safeUpdates.assignee = String(assignee);
+      if (assignees !== undefined) safeUpdates.assignees = Array.isArray(assignees) ? assignees : [];
       if (videoUrl !== undefined) safeUpdates.videoUrl = String(videoUrl);
       await updateTask(orgId, wsId, taskId, safeUpdates);
       res.json({ success: true });

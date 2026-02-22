@@ -63,7 +63,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   sourceInterrogationId?: string;
-  assignee?: string;
+  assignees?: string[];
   videoUrl?: string;
   createdBy: string;
   createdAt: string;

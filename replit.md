@@ -19,7 +19,7 @@ Table: `AIFORVIZAG_file_structure`
 - **Folder**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>`
 - **File**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#FOLDER#<folderId>#FILE#<fileId>`
 - **Interrogation**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#INTERROGATION#<id>` (stores summary, fileUrls, briefingAnswers, status)
-- **Task**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>` (title, description, status, priority, sourceInterrogationId)
+- **Task**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>` (title, description, status, priority, sourceInterrogationId, assignees[])
 - **TaskComment**: pk=`ORG#<orgId>`, sk=`WS#<wsId>#TASK#<taskId>#COMMENT#<commentId>` (text, timestampSec, authorId)
 - GSIs: `orgId-index` (orgId → sk), `createdBy-index` (createdBy)
 - Each user gets a default org auto-created on first workspace creation
@@ -44,7 +44,7 @@ Table: `AIFORVIZAG_file_structure`
   - Step 1: Upload files (PDF, Word, audio, text), voice-to-text recording (browser STT), text input
   - Step 2: Gemini AI chat agent with 4-layer briefing framework (Goal & Audience, Style & Hook, Editing & Visuals, Audio & Format) with selectable chip options and file attachments
   - Step 3: Gemini-generated final production brief (combines lambda summary + briefing answers + file attachments)
-- Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
+- Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), multi-member assignment per task, AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
 - Task video review: upload video to task, add timestamped comments with clickable playback, AI summary of all comments, task-specific AI chat bot for editors
 - Resources section (placeholder - shared links and references)
 

@@ -493,6 +493,7 @@ export async function createTask(params: {
   status: string;
   priority: string;
   sourceInterrogationId?: string;
+  assignees?: string[];
   createdBy: string;
 }) {
   const id = uuidv4();
@@ -508,6 +509,7 @@ export async function createTask(params: {
     status: params.status || "todo",
     priority: params.priority || "medium",
     sourceInterrogationId: params.sourceInterrogationId || null,
+    assignees: params.assignees || [],
     createdBy: params.createdBy,
     createdAt: now,
     updatedAt: now,
@@ -535,7 +537,7 @@ export async function updateTask(orgId: string, workspaceId: string, taskId: str
   description?: string;
   status?: string;
   priority?: string;
-  assignee?: string;
+  assignees?: string[];
   videoUrl?: string;
 }) {
   const expressions: string[] = [];
@@ -546,7 +548,7 @@ export async function updateTask(orgId: string, workspaceId: string, taskId: str
   if (updates.description !== undefined) { expressions.push("#d = :d"); names["#d"] = "description"; values[":d"] = updates.description; }
   if (updates.status !== undefined) { expressions.push("#s = :s"); names["#s"] = "status"; values[":s"] = updates.status; }
   if (updates.priority !== undefined) { expressions.push("#p = :p"); names["#p"] = "priority"; values[":p"] = updates.priority; }
-  if (updates.assignee !== undefined) { expressions.push("#a = :a"); names["#a"] = "assignee"; values[":a"] = updates.assignee; }
+  if (updates.assignees !== undefined) { expressions.push("#a = :a"); names["#a"] = "assignees"; values[":a"] = updates.assignees; }
   if (updates.videoUrl !== undefined) { expressions.push("#vu = :vu"); names["#vu"] = "videoUrl"; values[":vu"] = updates.videoUrl; }
   expressions.push("#ua = :ua"); names["#ua"] = "updatedAt"; values[":ua"] = new Date().toISOString();
 
