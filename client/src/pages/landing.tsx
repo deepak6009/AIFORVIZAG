@@ -399,7 +399,7 @@ export default function LandingPage() {
               </motion.p>
               <motion.h1
                 variants={fadeUp}
-                className="text-[2.8rem] leading-[1.02] sm:text-[3.8rem] md:text-[4.5rem] lg:text-[5rem] font-bold tracking-[-0.035em] text-gray-950"
+                className="text-[2.2rem] leading-[1.05] sm:text-[3.8rem] md:text-[4.5rem] lg:text-[5rem] font-bold tracking-[-0.035em] text-gray-950"
                 data-testid="text-hero-heading"
               >
                 Your content,{" "}
@@ -829,7 +829,7 @@ export default function LandingPage() {
 
       <footer className="py-12 sm:py-16 px-5 sm:px-8 lg:px-10 border-t border-gray-200/60 bg-[#fafafa]">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-12 gap-8 sm:gap-6 lg:gap-10">
+          <div className="grid grid-cols-2 sm:grid-cols-12 gap-6 sm:gap-6 lg:gap-10">
             <div className="col-span-2 sm:col-span-3">
               <div className="flex items-center mb-2">
                 <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }} className="text-gray-900 text-[15px] tracking-[0.02em] lowercase cursor-pointer hover:opacity-70 transition-opacity"><span className="font-light">the</span><span className="font-bold">crew</span></a>

@@ -92,7 +92,7 @@ const STEPS = [
 
 function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onStepClick: (step: number) => void }) {
   return (
-    <div className="flex items-center justify-between mb-8 max-w-lg mx-auto" data-testid="step-indicator">
+    <div className="flex items-center justify-between mb-6 sm:mb-8 max-w-lg mx-auto" data-testid="step-indicator">
       {STEPS.map((step, idx) => {
         const isActive = currentStep === step.id;
         const isCompleted = currentStep > step.id;
@@ -103,25 +103,25 @@ function StepIndicator({ currentStep, onStepClick }: { currentStep: number; onSt
             <button
               onClick={() => isClickable && onStepClick(step.id)}
               disabled={!isClickable}
-              className={`flex flex-col items-center gap-2 transition-all w-full ${isClickable ? "cursor-pointer" : "cursor-not-allowed"}`}
+              className={`flex flex-col items-center gap-1.5 sm:gap-2 transition-all w-full ${isClickable ? "cursor-pointer" : "cursor-not-allowed"}`}
               data-testid={`step-${step.id}`}
             >
-              <div className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${
+              <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl transition-all ${
                 isActive
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110"
                   : isCompleted
                     ? "bg-primary/15 text-primary"
                     : "bg-muted text-muted-foreground"
               }`}>
-                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                {isCompleted ? <CheckCircle2 className="w-4.5 h-4.5 sm:w-5 sm:h-5" /> : <Icon className="w-4.5 h-4.5 sm:w-5 sm:h-5" />}
               </div>
               <div className="text-center">
-                <p className={`text-xs font-bold leading-tight ${isActive ? "text-foreground" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>{step.label}</p>
+                <p className={`text-[10px] sm:text-xs font-bold leading-tight ${isActive ? "text-foreground" : isCompleted ? "text-primary" : "text-muted-foreground"}`}>{step.label}</p>
                 <p className={`text-[10px] leading-tight mt-0.5 hidden sm:block ${isActive ? "text-muted-foreground" : "text-muted-foreground/60"}`}>{step.description}</p>
               </div>
             </button>
             {idx < STEPS.length - 1 && (
-              <div className={`h-0.5 flex-1 mx-3 mt-[-22px] rounded-full transition-all ${currentStep > step.id ? "bg-primary/40" : "bg-border"}`} />
+              <div className={`h-0.5 flex-1 mx-1.5 sm:mx-3 mt-[-18px] sm:mt-[-22px] rounded-full transition-all ${currentStep > step.id ? "bg-primary/40" : "bg-border"}`} />
             )}
           </div>
         );
@@ -765,14 +765,14 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
 
   return (
     <div className="h-full overflow-auto">
-      <div className="max-w-3xl mx-auto p-6 space-y-4">
+      <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4">
         <div className="text-center mb-2">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 mb-3">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-semibold text-primary">AI Brief</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Create your production brief</h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Create your production brief</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
             Upload your materials, answer a few creative questions, and get an AI-generated brief ready for your editors.
           </p>
         </div>
@@ -974,7 +974,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
             </div>
 
             <Card className="flex-1">
-              <CardContent className="p-4 flex flex-col" style={{ height: "460px" }}>
+              <CardContent className="p-3 sm:p-4 flex flex-col" style={{ height: "min(460px, calc(100vh - 340px))" }}>
                 <div className="flex-1 overflow-auto space-y-3 mb-3 pr-1">
                   {chatMessages.length === 0 && !aiLoading && (
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
@@ -1114,7 +1114,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                       data-testid="input-device-file"
                     />
                     {showFilePicker && (
-                      <div className="absolute bottom-12 right-0 w-80 bg-popover border rounded-lg shadow-lg z-50" data-testid="file-picker-dropdown">
+                      <div className="absolute bottom-12 right-0 w-[calc(100vw-2rem)] sm:w-80 max-w-80 bg-popover border rounded-lg shadow-lg z-50" data-testid="file-picker-dropdown">
                         <div className="flex border-b">
                           <button
                             onClick={() => setPickerTab("workspace")}
@@ -1324,7 +1324,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
             </div>
 
             <Card>
-              <CardContent className="p-5">
+              <CardContent className="p-4 sm:p-5">
                 {generatingFinal ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-3">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -1382,7 +1382,7 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
             </Card>
 
             {finalDocument && !generatingFinal && (
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <Button variant="outline" onClick={() => setCurrentStep(2)} className="flex-1" data-testid="button-back-to-chat">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Briefing

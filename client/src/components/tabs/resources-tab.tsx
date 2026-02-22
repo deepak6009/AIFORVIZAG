@@ -222,28 +222,28 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
   const refs = references || [];
 
   return (
-    <div className="h-full overflow-auto p-6" data-testid="resources-tab">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-start justify-between">
+    <div className="h-full overflow-auto p-4 sm:p-6" data-testid="resources-tab">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Video className="w-5.5 h-5.5 text-primary" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Video className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-primary" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold tracking-tight" data-testid="text-resources-title">Reference Reels</h2>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight" data-testid="text-resources-title">Reference Reels</h2>
                 {refs.length > 0 && (
                   <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 bg-primary/10 text-primary border-0 font-bold">
                     {refs.length}
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 Share viral reels with your editors — AI breaks down what makes them work
               </p>
             </div>
           </div>
-          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setAddOpen(true)} data-testid="button-add-reference">
+          <Button size="sm" className="gap-1.5 text-xs w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-reference">
             <Plus className="w-3.5 h-3.5" />
             Add Reference
           </Button>
@@ -272,13 +272,13 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
               const isAnalyzing = analyzeMutation.isPending && analyzeMutation.variables === ref.id;
               return (
                 <Card key={ref.id} className={`overflow-hidden transition-shadow ${isExpanded ? "shadow-md ring-1 ring-primary/10" : "hover:shadow-sm"}`} data-testid={`card-reference-${ref.id}`}>
-                  <div className="px-5 py-4">
+                  <div className="px-4 sm:px-5 py-3.5 sm:py-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Video className="w-5 h-5 text-primary" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Video className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <p className="font-semibold text-sm truncate">{ref.title}</p>
                           {ref.sourcePlatform && (
                             <Badge variant="secondary" className={`text-[10px] border-0 px-1.5 py-0 ${platformColor(ref.sourcePlatform)}`}>
@@ -336,7 +336,7 @@ export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0 mt-2 sm:mt-0">
                         {ref.analysisStatus === "completed" && ref.analysis && (
                           <Button
                             variant="outline"

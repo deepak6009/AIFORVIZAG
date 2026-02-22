@@ -718,7 +718,7 @@ function TaskDetailDrawer({
 
   return (
     <Sheet open onOpenChange={v => { if (!v) onClose(); }}>
-      <SheetContent className="w-[560px] sm:max-w-[560px] p-0 flex flex-col">
+      <SheetContent className="w-full sm:w-[560px] sm:max-w-[560px] p-0 flex flex-col">
         <SheetHeader className="px-5 pt-5 pb-4 border-b shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">

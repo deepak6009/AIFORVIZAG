@@ -83,16 +83,16 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
   }
 
   return (
-    <div className="h-full overflow-auto p-6" data-testid="final-agenda-tab">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-start justify-between">
+    <div className="h-full overflow-auto p-4 sm:p-6" data-testid="final-agenda-tab">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <FileCheck className="w-5.5 h-5.5 text-primary" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <FileCheck className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-primary" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h2 className="text-xl font-bold tracking-tight" data-testid="text-final-agenda-title">Briefs</h2>
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight" data-testid="text-final-agenda-title">Briefs</h2>
                 {completedDocs.length > 0 && (
                   <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 bg-primary/10 text-primary border-0 font-bold">
                     {completedDocs.length}
@@ -105,7 +105,7 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
             </div>
           </div>
           {completedDocs.length > 0 && onNavigate && (
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => onNavigate("interrogator")} data-testid="button-new-brief">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs w-full sm:w-auto" onClick={() => onNavigate("interrogator")} data-testid="button-new-brief">
               <Sparkles className="w-3.5 h-3.5" />
               New Brief
             </Button>
@@ -138,7 +138,7 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
               return (
                 <Card key={doc.id} className={`overflow-hidden transition-shadow ${isExpanded ? "shadow-md ring-1 ring-primary/10" : "hover:shadow-sm"}`} data-testid={`card-agenda-${doc.id}`}>
                   <div
-                    className="px-5 py-4 flex items-start justify-between cursor-pointer hover:bg-muted/30 transition-colors"
+                    className="px-4 sm:px-5 py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between cursor-pointer hover:bg-muted/30 transition-colors"
                     onClick={() => setExpandedId(isExpanded ? null : doc.id)}
                     role="button"
                     tabIndex={0}
@@ -169,7 +169,7 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-3 mt-0.5">
+                    <div className="flex items-center gap-2 shrink-0 ml-0 sm:ml-3 mt-2 sm:mt-0.5">
                       <Button
                         size="sm"
                         variant="outline"
@@ -181,7 +181,7 @@ export default function FinalAgendaTab({ workspaceId, onNavigate }: { workspaceI
                         {generatingFor === doc.id ? (
                           <><Loader2 className="w-3.5 h-3.5 animate-spin" />Generating...</>
                         ) : (
-                          <><ListTodo className="w-3.5 h-3.5" />Generate Tasks</>
+                          <><ListTodo className="w-3.5 h-3.5" /><span className="hidden sm:inline">Generate Tasks</span><span className="sm:hidden">Tasks</span></>
                         )}
                       </Button>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
