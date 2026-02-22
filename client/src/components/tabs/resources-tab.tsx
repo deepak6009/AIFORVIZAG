@@ -97,7 +97,8 @@ function AnalysisSection({ sectionKey, section }: { sectionKey: string; section:
   );
 }
 
-export default function ResourcesTab({ workspaceId }: { workspaceId: string }) {
+export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
+  const isAdmin = userRole === "admin";
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [addOpen, setAddOpen] = useState(false);

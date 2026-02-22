@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { useState, useCallback, useRef } from "react";
 
-export default function FoldersTab({ workspaceId }: { workspaceId: string }) {
+export default function FoldersTab({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
+  const isAdmin = userRole === "admin";
   const { toast } = useToast();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);

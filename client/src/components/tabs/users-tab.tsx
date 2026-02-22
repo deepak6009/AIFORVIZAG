@@ -22,7 +22,8 @@ const roleConfig = {
   viewer: { label: "Viewer", icon: Eye, color: "bg-chart-4/10 text-chart-4" },
 };
 
-export default function UsersTab({ workspaceId }: { workspaceId: string }) {
+export default function UsersTab({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
+  const isAdmin = userRole === "admin";
   const { toast } = useToast();
   const [addOpen, setAddOpen] = useState(false);
   const [email, setEmail] = useState("");

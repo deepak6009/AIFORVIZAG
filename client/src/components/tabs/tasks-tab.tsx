@@ -38,7 +38,8 @@ const priorityConfig: Record<TaskPriority, { label: string; dot: string; badge: 
   low: { label: "Low", dot: "bg-emerald-500", badge: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
 };
 
-export default function TasksTab({ workspaceId }: { workspaceId: string }) {
+export default function TasksTab({ workspaceId, userRole }: { workspaceId: string; userRole?: string }) {
+  const isAdmin = userRole === "admin";
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [createOpen, setCreateOpen] = useState(false);

@@ -399,12 +399,12 @@ export default function WorkspaceLayout() {
       </nav>
 
       <main className="flex-1 overflow-hidden pb-16 sm:pb-0">
-        {activeTab === "users" && <UsersTab workspaceId={workspaceId} />}
-        {activeTab === "folders" && <FoldersTab workspaceId={workspaceId} />}
+        {activeTab === "users" && <UsersTab workspaceId={workspaceId} userRole={currentUserRole} />}
+        {activeTab === "folders" && <FoldersTab workspaceId={workspaceId} userRole={currentUserRole} />}
         {activeTab === "interrogator" && <InterrogatorTab workspaceId={workspaceId} />}
         {activeTab === "final-agenda" && <FinalAgendaTab workspaceId={workspaceId} onNavigate={handleTabChange} />}
-        {activeTab === "tasks" && <TasksTab workspaceId={workspaceId} />}
-        {activeTab === "resources" && <ResourcesTab workspaceId={workspaceId} />}
+        {activeTab === "tasks" && <TasksTab workspaceId={workspaceId} userRole={currentUserRole} />}
+        {activeTab === "resources" && <ResourcesTab workspaceId={workspaceId} userRole={currentUserRole} />}
       </main>
 
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t safe-area-bottom" data-testid="nav-tabs-mobile">
