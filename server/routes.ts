@@ -147,11 +147,18 @@ export async function registerRoutes(
       const adminMember = await getMemberByUserAndWorkspace(orgId, req.params.id, userId);
       if (!adminMember || adminMember.role !== "admin") return res.status(403).json({ message: "Only admins can add members" });
 
-      const { email, role } = req.body;
+      const { email, password, role } = req.body;
       if (!email) return res.status(400).json({ message: "Email is required" });
 
-      const targetUser = await storage.getUserByEmail(email);
-      if (!targetUser) return res.status(404).json({ message: "User not found. They need to sign in first." });
+      let targetUser = await storage.getUserByEmail(email);
+      if (!targetUser) {
+        if (!password) return res.status(400).json({ message: "Password is required for new users" });
+        if (password.length < 6) return res.status(400).json({ message: "Password must be at least 6 characters" });
+        const bcrypt = await import("bcrypt");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const { authStorage } = await import("./replit_integrations/auth/storage");
+        targetUser = await authStorage.createUser({ email, password: hashedPassword });
+      }
 
       const existing = await getMemberByUserAndWorkspace(orgId, req.params.id, targetUser.id);
       if (existing) return res.status(400).json({ message: "User is already a member" });

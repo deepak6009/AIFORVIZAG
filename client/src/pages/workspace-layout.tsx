@@ -4,7 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useRoute, useLocation } from "wouter";
 
-import type { Workspace } from "@shared/schema";
+import type { Workspace, WorkspaceMember } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import {
   Layers, Plus, Users, FolderOpen, MessageSquare, FileCheck, LayoutGrid,
   FileText, LogOut, ChevronDown, Settings, ChevronsUpDown
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { isUnauthorizedError } from "@/lib/auth-utils";
 
 import UsersTab from "@/components/tabs/users-tab";
@@ -30,16 +30,16 @@ import FinalAgendaTab from "@/components/tabs/final-agenda-tab";
 import TasksTab from "@/components/tabs/tasks-tab";
 import ResourcesTab from "@/components/tabs/resources-tab";
 
-const tabs = [
-  { id: "users", label: "Users", icon: Users },
-  { id: "folders", label: "Folders", icon: FolderOpen },
-  { id: "interrogator", label: "Interrogator", icon: MessageSquare },
-  { id: "final-agenda", label: "Final Agenda", icon: FileCheck },
-  { id: "tasks", label: "Tasks", icon: LayoutGrid },
-  { id: "resources", label: "Resources", icon: FileText },
-] as const;
+const allTabs = [
+  { id: "users" as const, label: "Users", icon: Users, adminOnly: false },
+  { id: "folders" as const, label: "Folders", icon: FolderOpen, adminOnly: false },
+  { id: "interrogator" as const, label: "Interrogator", icon: MessageSquare, adminOnly: true },
+  { id: "final-agenda" as const, label: "Final Agenda", icon: FileCheck, adminOnly: false },
+  { id: "tasks" as const, label: "Tasks", icon: LayoutGrid, adminOnly: false },
+  { id: "resources" as const, label: "Resources", icon: FileText, adminOnly: false },
+];
 
-type TabId = typeof tabs[number]["id"];
+type TabId = typeof allTabs[number]["id"];
 
 export default function WorkspaceLayout() {
   const { user, logout } = useAuth();
@@ -56,7 +56,7 @@ export default function WorkspaceLayout() {
   const [description, setDescription] = useState("");
 
   useEffect(() => {
-    if (urlTab && tabs.some(t => t.id === urlTab)) {
+    if (urlTab && allTabs.some(t => t.id === urlTab)) {
       setActiveTab(urlTab);
     }
   }, [urlTab]);
@@ -69,6 +69,21 @@ export default function WorkspaceLayout() {
     queryKey: ["/api/workspaces", workspaceId],
     enabled: !!workspaceId,
   });
+
+  type MemberWithUser = WorkspaceMember & { user: { id: string; email: string } };
+  const { data: members } = useQuery<MemberWithUser[]>({
+    queryKey: ["/api/workspaces", workspaceId, "members"],
+    enabled: !!workspaceId,
+  });
+  const currentUserRole = members?.find(m => m.userId === user?.id)?.role;
+  const isAdmin = currentUserRole === "admin";
+  const tabs = useMemo(() => allTabs.filter(t => !t.adminOnly || isAdmin), [isAdmin]);
+
+  useEffect(() => {
+    if (members && !isAdmin && activeTab === "interrogator") {
+      setActiveTab("folders");
+    }
+  }, [members, isAdmin, activeTab]);
 
   const createMutation = useMutation({
     mutationFn: async (data: { name: string; description?: string }) => {
@@ -307,7 +322,7 @@ export default function WorkspaceLayout() {
       <main className="flex-1 overflow-hidden pb-16 sm:pb-0">
         {activeTab === "users" && <UsersTab workspaceId={workspaceId} />}
         {activeTab === "folders" && <FoldersTab workspaceId={workspaceId} />}
-        {activeTab === "interrogator" && <InterrogatorTab workspaceId={workspaceId} />}
+        {activeTab === "interrogator" && isAdmin && <InterrogatorTab workspaceId={workspaceId} />}
         {activeTab === "final-agenda" && <FinalAgendaTab workspaceId={workspaceId} />}
         {activeTab === "tasks" && <TasksTab workspaceId={workspaceId} />}
         {activeTab === "resources" && <ResourcesTab workspaceId={workspaceId} />}
