@@ -892,26 +892,52 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-foreground">AI Briefing</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Shape your production brief with guided questions</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Quick guided questions — only what's missing</p>
                   </div>
                 </div>
-                <div className={`text-[10px] font-semibold px-2 py-1 rounded-full ${briefingComplete ? "bg-green-500/10 text-green-600" : "bg-primary/10 text-primary"}`}>
-                  {briefingComplete ? "Complete" : `Layer ${currentLayer} of 4`}
+                <div className={`text-[10px] font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${briefingComplete ? "bg-green-500/10 text-green-600" : "bg-primary/10 text-primary"}`}>
+                  {briefingComplete ? (
+                    <><span>🚀</span> Ready!</>
+                  ) : (
+                    <><span>{["🎯","🎨","✂️","🎵"][currentLayer - 1]}</span> {currentLayer}/4</>
+                  )}
                 </div>
               </div>
-              <div className="flex gap-1.5">
-                {["Goal & Audience","Style & Hook","Editing & Visuals","Audio & Format"].map((name, i) => {
+              <div className="flex gap-1">
+                {[
+                  { name: "Goal & Audience", emoji: "🎯" },
+                  { name: "Style & Hook", emoji: "🎨" },
+                  { name: "Editing & Visuals", emoji: "✂️" },
+                  { name: "Audio & Format", emoji: "🎵" },
+                ].map((item, i) => {
                   const layer = i + 1;
+                  const isDone = layer < currentLayer || briefingComplete;
+                  const isActive = layer === currentLayer && !briefingComplete;
                   return (
-                    <div key={layer} className="flex-1" title={name}>
-                      <div className={`h-1.5 rounded-full transition-all ${
-                        layer < currentLayer ? "bg-primary" :
-                        layer === currentLayer ? "bg-primary/50" :
-                        "bg-muted"
-                      }`} data-testid={`layer-indicator-${layer}`} />
-                      <p className={`text-[9px] mt-1 text-center truncate ${
-                        layer <= currentLayer ? "text-foreground/70" : "text-muted-foreground/50"
-                      }`}>{name}</p>
+                    <div key={layer} className="flex-1" title={item.name}>
+                      <div className="relative">
+                        <div className={`h-2 rounded-full transition-all duration-500 ${
+                          isDone ? "bg-primary" :
+                          isActive ? "bg-primary/40" :
+                          "bg-muted"
+                        }`} data-testid={`layer-indicator-${layer}`}>
+                          {isActive && (
+                            <div className="absolute inset-0 rounded-full overflow-hidden">
+                              <div className="h-full bg-primary/60 rounded-full animate-pulse" style={{ width: "60%" }} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center gap-0.5 mt-1.5">
+                        <span className={`text-[10px] ${isDone ? "opacity-100" : isActive ? "opacity-80" : "opacity-30"}`}>
+                          {isDone ? "✅" : item.emoji}
+                        </span>
+                        <p className={`text-[9px] truncate font-medium ${
+                          isDone ? "text-primary" :
+                          isActive ? "text-foreground/80" :
+                          "text-muted-foreground/40"
+                        }`}>{item.name}</p>
+                      </div>
                     </div>
                   );
                 })}
@@ -1212,13 +1238,21 @@ export default function InterrogatorTab({ workspaceId }: { workspaceId: string }
               </CardContent>
             </Card>
 
+            {briefingComplete && (
+              <div className="rounded-lg border-2 border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20 p-4 text-center" data-testid="briefing-complete-banner">
+                <p className="text-lg mb-1">🎉</p>
+                <p className="text-sm font-semibold text-green-700 dark:text-green-400">Briefing complete!</p>
+                <p className="text-xs text-green-600/70 dark:text-green-500/60 mt-0.5">All creative direction captured. Generate your production brief below.</p>
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setCurrentStep(1)} className="flex-1" data-testid="button-back-to-base">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Upload
               </Button>
               <Button onClick={handleGenerateFinalDoc} disabled={!briefingComplete} className="flex-1" data-testid="button-generate-final">
-                Generate Brief
+                {briefingComplete ? "🚀 " : ""}Generate Brief
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
