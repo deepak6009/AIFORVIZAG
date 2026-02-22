@@ -83,10 +83,12 @@ export default function UsersTab({ workspaceId, userRole }: { workspaceId: strin
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage who has access to this workspace</p>
           </div>
-          <Button size="sm" className="h-10 sm:h-9 w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-member">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Add Member
-          </Button>
+          {isAdmin && (
+            <Button size="sm" className="h-10 sm:h-9 w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-member">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Member
+            </Button>
+          )}
         </div>
 
         {isLoading ? (
@@ -123,7 +125,7 @@ export default function UsersTab({ workspaceId, userRole }: { workspaceId: strin
                       </div>
                     </div>
                   </div>
-                  {member.role !== "admin" && (
+                  {isAdmin && member.role !== "admin" && (
                     <Button
                       variant="ghost"
                       size="icon"
@@ -145,10 +147,12 @@ export default function UsersTab({ workspaceId, userRole }: { workspaceId: strin
             </div>
             <h3 className="font-semibold text-foreground mb-1">Invite your team</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">Add your editors and collaborators so they can access files, briefs, and tasks in this workspace.</p>
-            <Button size="sm" onClick={() => setAddOpen(true)} data-testid="button-add-first-member">
-              <Plus className="w-4 h-4 mr-1.5" />
-              Add Member
-            </Button>
+            {isAdmin && (
+              <Button size="sm" onClick={() => setAddOpen(true)} data-testid="button-add-first-member">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Add Member
+              </Button>
+            )}
           </div>
         )}
       </div>

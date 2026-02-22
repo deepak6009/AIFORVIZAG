@@ -36,6 +36,13 @@ Table: `AIFORVIZAG_file_structure`
 - Favicon: "cw" initials on dark rounded square
 - Shared components: PageNavbar (client/src/components/page-navbar.tsx) and PageFooter (client/src/components/page-footer.tsx) used across all static pages
 
+## Role-Based Access Control (RBAC)
+- **Admin (Creator)**: Full access — create/delete folders, upload files, manage team, add/delete references, create/delete tasks, run AI features
+- **Member (Editor)**: Can view all files/references/briefs/tasks, upload files, create/edit/move tasks, add comments. Cannot: delete folders/files, manage team members, add/delete references, delete tasks
+- **Viewer**: Read-only — can view everything but cannot modify anything
+- Role is determined per-workspace via the members table
+- `userRole` prop is passed from workspace-layout to all tab components
+
 ## Key Features
 - Workspace creation and management with workspace switcher
 - Team member management with role-based access (admin, member, viewer)
@@ -48,6 +55,8 @@ Table: `AIFORVIZAG_file_structure`
 - Kanban task board with drag-and-drop columns (To Do/In Progress/Review/Done), multi-member assignment per task, AI auto-generation from Final Agenda, task detail drawer with timestamped comments, AI revision checklist
 - Task video review: upload video to task, add timestamped comments with clickable playback, AI summary of all comments, task-specific AI chat bot for editors
 - Reference Reels: share viral Reels/TikToks/Shorts, upload video, AI (Gemini) analyses pacing, transitions, text style, audio, hooks, engagement tactics, and gives editor-ready recommendations
+- Reference video preview: inline looping video player with play/pause and mute/unmute controls on reference cards
+- Dummy analysis display: when no AI analysis exists, shows placeholder analysis categories (Hook, Pacing, Transitions, Text, Audio, SFX, Engagement) in faded style
 
 ## UI Layout
 - ClickUp-style workspace layout with top bar and horizontal nav tabs

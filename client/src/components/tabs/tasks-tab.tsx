@@ -493,6 +493,7 @@ export default function TasksTab({ workspaceId, userRole }: { workspaceId: strin
             setSelectedTask({ ...selectedTask, ...updates } as Task);
           }}
           onDelete={() => deleteTaskMut.mutate(selectedTask.id)}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -563,6 +564,7 @@ function TaskDetailDrawer({
   onClose,
   onUpdate,
   onDelete,
+  isAdmin,
 }: {
   task: Task;
   workspaceId: string;
@@ -570,6 +572,7 @@ function TaskDetailDrawer({
   onClose: () => void;
   onUpdate: (updates: Partial<Task>) => void;
   onDelete: () => void;
+  isAdmin: boolean;
 }) {
   const { toast } = useToast();
   const [editTitle, setEditTitle] = useState(task.title);
@@ -736,9 +739,11 @@ function TaskDetailDrawer({
               </div>
               <SheetTitle className="text-lg font-bold leading-snug">{task.title}</SheetTitle>
             </div>
-            <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0" data-testid="button-delete-task">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive h-8 w-8 shrink-0" data-testid="button-delete-task">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </SheetHeader>
 

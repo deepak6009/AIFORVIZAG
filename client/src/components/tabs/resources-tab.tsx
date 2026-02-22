@@ -12,9 +12,9 @@ import {
   Video, Plus, Link2, Sparkles, Loader2, Upload, ExternalLink,
   ChevronDown, ChevronUp, Trash2, AlertCircle, Eye, Clock,
   Zap, Scissors, Type, Music, Target, Lightbulb, Tag, Play, X,
-  Layers, Wand2
+  Layers, Wand2, Pause, Volume2, VolumeX
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import type { ReferenceReel, ReferenceAnalysis, ReferenceAnalysisSection } from "@shared/schema";
 
 function detectPlatform(url: string): "instagram" | "tiktok" | "youtube" | "other" {
@@ -58,6 +58,103 @@ const sectionColors: Record<string, string> = {
   audio: "text-pink-500",
   engagementTactics: "text-orange-500",
   recommendations: "text-primary",
+};
+
+function VideoPreview({ src }: { src: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
+
+  const togglePlay = useCallback(() => {
+    if (!videoRef.current) return;
+    if (playing) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setPlaying(!playing);
+  }, [playing]);
+
+  const toggleMute = useCallback(() => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !muted;
+    setMuted(!muted);
+  }, [muted]);
+
+  return (
+    <div className="relative aspect-[9/16] max-h-[200px] w-auto rounded-lg overflow-hidden bg-black group cursor-pointer shrink-0" onClick={togglePlay} data-testid="video-preview">
+      <video
+        ref={videoRef}
+        src={src}
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        className="w-full h-full object-cover"
+        onLoadedData={(e) => { e.currentTarget.currentTime = 0.1; }}
+      />
+      <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
+        <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          {playing ? (
+            <Pause className="w-4 h-4 text-white" />
+          ) : (
+            <Play className="w-4 h-4 text-white ml-0.5" />
+          )}
+        </div>
+      </div>
+      {playing && (
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+          className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          data-testid="button-toggle-mute"
+        >
+          {muted ? <VolumeX className="w-3 h-3 text-white" /> : <Volume2 className="w-3 h-3 text-white" />}
+        </button>
+      )}
+    </div>
+  );
+}
+
+const DUMMY_ANALYSIS: ReferenceAnalysis = {
+  summary: "Analysis pending — upload a video and run AI analysis to get detailed insights on editing style, pacing, transitions, text animations, audio, hooks, and engagement tactics.",
+  tags: ["Editing Style", "SFX", "Text Animation", "Hook", "Pacing", "Transitions"],
+  sections: {
+    hook: {
+      title: "Hook & Opening",
+      observations: ["The opening hook style, first-frame attention grabber, and viewer retention strategy will be analysed here."],
+      whyItWorks: "Run AI analysis to reveal why this hook works."
+    },
+    pacing: {
+      title: "Pacing & Rhythm",
+      observations: ["Cut frequency, beat-synced edits, and overall pacing tempo will be broken down."],
+      whyItWorks: "Run AI analysis to get pacing insights."
+    },
+    transitions: {
+      title: "Transitions & Effects",
+      observations: ["Transition types (whip pan, zoom, morph), VFX overlays, and motion graphics will be identified."],
+      whyItWorks: "Run AI analysis to see transition breakdown."
+    },
+    textStyle: {
+      title: "Text & Captions",
+      observations: ["Text animation style, font choices, caption timing, and kinetic typography will be detailed."],
+      whyItWorks: "Run AI analysis for text style insights."
+    },
+    audio: {
+      title: "Audio & SFX",
+      observations: ["Sound effects, music choices, audio ducking, voiceover style, and beat-matching will be analysed."],
+      whyItWorks: "Run AI analysis to understand the audio strategy."
+    },
+    engagementTactics: {
+      title: "Engagement Tactics",
+      observations: ["CTA placement, loop strategy, comment bait, share triggers, and retention hooks will be identified."],
+      whyItWorks: "Run AI analysis for engagement breakdown."
+    },
+    recommendations: {
+      title: "Editor Recommendations",
+      observations: ["Actionable tips for recreating this style, suggested tools, and adaptation strategies will appear here."],
+      whyItWorks: "Run AI analysis to get editor-ready recommendations."
+    },
+  },
 };
 
 function AnalysisSection({ sectionKey, section }: { sectionKey: string; section: ReferenceAnalysisSection }) {
@@ -244,10 +341,12 @@ export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: s
               </p>
             </div>
           </div>
-          <Button size="sm" className="gap-1.5 text-xs w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-reference">
-            <Plus className="w-3.5 h-3.5" />
-            Add Reference
-          </Button>
+          {isAdmin && (
+            <Button size="sm" className="gap-1.5 text-xs w-full sm:w-auto" onClick={() => setAddOpen(true)} data-testid="button-add-reference">
+              <Plus className="w-3.5 h-3.5" />
+              Add Reference
+            </Button>
+          )}
         </div>
 
         {refs.length === 0 ? (
@@ -260,10 +359,14 @@ export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: s
               <p className="text-sm text-muted-foreground max-w-sm mb-6">
                 Add a viral Reel, TikTok, or Short as a reference. Upload the video and AI will analyze pacing, transitions, audio, text style, and more — giving your editors a clear creative brief.
               </p>
-              <Button onClick={() => setAddOpen(true)} className="gap-2" data-testid="button-add-first-reference">
-                <Plus className="w-4 h-4" />
-                Add your first reference
-              </Button>
+              {isAdmin ? (
+                <Button onClick={() => setAddOpen(true)} className="gap-2" data-testid="button-add-first-reference">
+                  <Plus className="w-4 h-4" />
+                  Add your first reference
+                </Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">References will appear here once added by the workspace admin.</p>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -275,9 +378,13 @@ export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: s
                 <Card key={ref.id} className={`overflow-hidden transition-shadow ${isExpanded ? "shadow-md ring-1 ring-primary/10" : "hover:shadow-sm"}`} data-testid={`card-reference-${ref.id}`}>
                   <div className="px-4 sm:px-5 py-3.5 sm:py-4">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <Video className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-primary" />
-                      </div>
+                      {ref.videoUrl ? (
+                        <VideoPreview src={ref.videoUrl} />
+                      ) : (
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <Video className="w-5 h-5 text-primary" />
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <p className="font-semibold text-sm truncate">{ref.title}</p>
@@ -317,25 +424,34 @@ export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: s
                             </a>
                           )}
                         </div>
-                        {ref.analysis?.summary && (
-                          <p className="text-xs text-muted-foreground/70 mt-2 line-clamp-2 leading-relaxed" data-testid={`text-analysis-preview-${ref.id}`}>
-                            {ref.analysis.summary}
-                          </p>
-                        )}
-                        {ref.analysis?.sections && (
-                          <div className="flex flex-wrap gap-1.5 mt-2">
-                            {Object.entries(ref.analysis.sections).slice(0, 5).map(([key, section]: [string, any]) => {
-                              const Icon = sectionIcons[key] || Sparkles;
-                              const color = sectionColors[key] || "text-primary";
-                              return (
-                                <span key={key} className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted/80 text-muted-foreground" data-testid={`chip-section-${ref.id}-${key}`}>
-                                  <Icon className={`w-2.5 h-2.5 ${color}`} />
-                                  {section.title}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
+                        {(() => {
+                          const displayAnalysis = ref.analysis || (ref.analysisStatus !== "completed" ? DUMMY_ANALYSIS : null);
+                          if (!displayAnalysis) return null;
+                          const isDummy = !ref.analysis;
+                          return (
+                            <>
+                              {displayAnalysis.summary && (
+                                <p className={`text-xs mt-2 line-clamp-2 leading-relaxed ${isDummy ? "text-muted-foreground/50 italic" : "text-muted-foreground/70"}`} data-testid={`text-analysis-preview-${ref.id}`}>
+                                  {displayAnalysis.summary}
+                                </p>
+                              )}
+                              {displayAnalysis.sections && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {Object.entries(displayAnalysis.sections).slice(0, 6).map(([key, section]: [string, any]) => {
+                                    const Icon = sectionIcons[key] || Sparkles;
+                                    const color = isDummy ? "text-muted-foreground/40" : (sectionColors[key] || "text-primary");
+                                    return (
+                                      <span key={key} className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${isDummy ? "bg-muted/50 text-muted-foreground/50" : "bg-muted/80 text-muted-foreground"}`} data-testid={`chip-section-${ref.id}-${key}`}>
+                                        <Icon className={`w-2.5 h-2.5 ${color}`} />
+                                        {section.title}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0 mt-2 sm:mt-0">
                         {ref.analysisStatus === "completed" && ref.analysis && (
@@ -375,45 +491,49 @@ export default function ResourcesTab({ workspaceId, userRole }: { workspaceId: s
                             No video
                           </Badge>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => deleteMutation.mutate(ref.id)}
-                          data-testid={`button-delete-reference-${ref.id}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => deleteMutation.mutate(ref.id)}
+                            data-testid={`button-delete-reference-${ref.id}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
 
-                    {ref.analysisStatus === "completed" && ref.analysis && (
-                      <button
-                        onClick={() => setExpandedRef(isExpanded ? null : ref.id)}
-                        className="mt-3 w-full flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary transition-colors"
-                        data-testid={`button-expand-${ref.id}`}
-                      >
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        {isExpanded ? "Hide summary" : "Show summary"}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setExpandedRef(isExpanded ? null : ref.id)}
+                      className="mt-3 w-full flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary transition-colors"
+                      data-testid={`button-expand-${ref.id}`}
+                    >
+                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      {isExpanded ? "Hide details" : "Show details"}
+                    </button>
                   </div>
 
-                  {isExpanded && ref.analysis && (
-                    <div className="px-5 pb-4 border-t pt-3">
-                      <p className="text-sm text-muted-foreground leading-relaxed">{ref.analysis.summary}</p>
-                      {ref.analysis.tags && ref.analysis.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {ref.analysis.tags.map((tag, i) => (
-                            <span key={i} className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/5 text-primary/70">
-                              <Tag className="w-2.5 h-2.5" />
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {isExpanded && (() => {
+                    const expandAnalysis = ref.analysis || DUMMY_ANALYSIS;
+                    const isDummyExpand = !ref.analysis;
+                    return (
+                      <div className="px-5 pb-4 border-t pt-3">
+                        <p className={`text-sm leading-relaxed ${isDummyExpand ? "text-muted-foreground/50 italic" : "text-muted-foreground"}`}>{expandAnalysis.summary}</p>
+                        {expandAnalysis.tags && expandAnalysis.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-3">
+                            {expandAnalysis.tags.map((tag, i) => (
+                              <span key={i} className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${isDummyExpand ? "bg-muted/40 text-muted-foreground/40" : "bg-primary/5 text-primary/70"}`}>
+                                <Tag className="w-2.5 h-2.5" />
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {ref.analysisStatus === "failed" && ref.errorMessage && (
                     <div className="px-5 pb-3">

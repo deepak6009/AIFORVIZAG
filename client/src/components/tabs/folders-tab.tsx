@@ -175,29 +175,33 @@ export default function FoldersTab({ workspaceId, userRole }: { workspaceId: str
             <FolderOpen className="w-5 h-5 text-primary" />
             {currentFolderId ? crumbs[crumbs.length - 1]?.name || "Folder" : "Files"}
           </h2>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => setCreateOpen(true)} data-testid="button-create-folder">
-              <FolderPlus className="w-4 h-4 mr-1.5" />
-              New Folder
-            </Button>
-            {currentFolderId && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                  data-testid="input-file-upload"
-                />
-                <Button size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-files">
-                  <Upload className="w-4 h-4 mr-1.5" />
-                  {uploading ? "Uploading..." : "Upload"}
+          {userRole !== "viewer" && (
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Button variant="outline" size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => setCreateOpen(true)} data-testid="button-create-folder">
+                  <FolderPlus className="w-4 h-4 mr-1.5" />
+                  New Folder
                 </Button>
-              </>
-            )}
-          </div>
+              )}
+              {currentFolderId && (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    data-testid="input-file-upload"
+                  />
+                  <Button size="sm" className="h-10 sm:h-9 flex-1 sm:flex-initial" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-files">
+                    <Upload className="w-4 h-4 mr-1.5" />
+                    {uploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {foldersLoading ? (
@@ -217,21 +221,23 @@ export default function FoldersTab({ workspaceId, userRole }: { workspaceId: str
                   >
                     <FolderOpen className="w-5 h-5 text-primary shrink-0" />
                     <span className="text-sm font-medium truncate flex-1">{folder.name}</span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-10 w-10" data-testid={`button-folder-menu-${folder.id}`}>
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => { e.stopPropagation(); deleteFolderMutation.mutate(folder.id); }}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {isAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-10 w-10" data-testid={`button-folder-menu-${folder.id}`}>
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => { e.stopPropagation(); deleteFolderMutation.mutate(folder.id); }}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 ))}
               </div>
@@ -277,26 +283,28 @@ export default function FoldersTab({ workspaceId, userRole }: { workspaceId: str
                             ) : (
                               getFileIcon(file.type)
                             )}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="secondary"
-                                  size="icon"
-                                  className="absolute top-1 right-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-8 w-8"
-                                  data-testid={`button-file-menu-${file.id}`}
-                                >
-                                  <MoreVertical className="w-3.5 h-3.5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={(e) => { e.stopPropagation(); deleteFileMutation.mutate(file.id); }}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {isAdmin && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="absolute top-1 right-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-8 w-8"
+                                    data-testid={`button-file-menu-${file.id}`}
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={(e) => { e.stopPropagation(); deleteFileMutation.mutate(file.id); }}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                           <div className="space-y-0.5">
                             <p className="text-xs sm:text-sm font-medium truncate">{file.name}</p>
