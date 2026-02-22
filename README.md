@@ -2,7 +2,7 @@
 
 ### Creator Resource Editor Workspace
 
-> The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts — without the DM chaos.
+> The workspace where short-form creators and their editors upload raw clips, organize drafts, and ship final cuts - without the DM chaos.
 
 ---
 
